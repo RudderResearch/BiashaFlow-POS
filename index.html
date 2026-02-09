@@ -1380,6 +1380,24 @@
                             <div class="card-body"><div class="chart-container"><canvas id="hourlyChart"></canvas></div></div>
                         </div>
                     </div>
+                    
+                    <!-- ADDED: Employee Performance Comparison Section -->
+                    <div class="dashboard-grid-full" style="margin-top:24px;">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">👥 Employee Performance Comparison</h3>
+                                <div class="date-filters" style="display:flex;gap:8px;">
+                                    <button class="date-btn active" onclick="setEmployeeFilterPeriod('today')">Today</button>
+                                    <button class="date-btn" onclick="setEmployeeFilterPeriod('week')">This Week</button>
+                                    <button class="date-btn" onclick="setEmployeeFilterPeriod('month')">This Month</button>
+                                    <button class="date-btn" onclick="setEmployeeFilterPeriod('all')">All Time</button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="employeeComparisonTable"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- KRA/Tax Reports Tab -->
@@ -1599,6 +1617,59 @@
                                 <button class="inv-btn primary" onclick="showOnboardModal()" style="margin-top:12px">🚀 Onboard New Client</button>
                             </div>
                         </div>
+                        
+                        <!-- ADDED: Cloud Sync & Data Management -->
+                        <div class="card">
+                            <div class="card-header"><h3 class="card-title">☁️ Cloud Sync & Data Backup</h3></div>
+                            <div class="card-body">
+                                <div style="padding:16px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:8px;margin-bottom:20px;">
+                                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                                        <div style="font-size:2rem;">☁️</div>
+                                        <div style="flex:1;">
+                                            <div style="font-weight:700;font-size:1.1rem;margin-bottom:4px;">Firebase Cloud Storage</div>
+                                            <div style="font-size:0.85rem;color:var(--text-secondary);">Your data is automatically backed up to Google Cloud</div>
+                                        </div>
+                                        <div id="cloudSyncStatus" style="padding:8px 16px;background:var(--accent-green);color:white;border-radius:20px;font-size:0.85rem;font-weight:600;">
+                                            ✓ Active
+                                        </div>
+                                    </div>
+                                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:16px;">
+                                        <div style="background:var(--bg-dark);padding:12px;border-radius:8px;text-align:center;">
+                                            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px;">Business ID</div>
+                                            <div style="font-weight:700;font-family:'JetBrains Mono',monospace;font-size:0.9rem;" id="displayBusinessId">-</div>
+                                        </div>
+                                        <div style="background:var(--bg-dark);padding:12px;border-radius:8px;text-align:center;">
+                                            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px;">Last Sync</div>
+                                            <div style="font-weight:600;font-size:0.85rem;" id="displayLastSync">-</div>
+                                        </div>
+                                        <div style="background:var(--bg-dark);padding:12px;border-radius:8px;text-align:center;">
+                                            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px;">Pending Queue</div>
+                                            <div style="font-weight:700;font-size:1.2rem;color:var(--accent-yellow);" id="displayQueueCount">0</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                                    <button class="inv-btn primary" onclick="manualSyncToCloud()" style="width:100%;">
+                                        <span id="syncButtonText">☁️ Sync Now</span>
+                                    </button>
+                                    <button class="inv-btn" onclick="exportAllData()" style="width:100%;background:var(--gradient-cyan);">
+                                        💾 Export Backup
+                                    </button>
+                                </div>
+                                
+                                <div style="margin-top:20px;padding:12px;background:rgba(245,158,11,0.1);border-left:3px solid var(--accent-yellow);border-radius:4px;font-size:0.85rem;">
+                                    <strong style="color:var(--accent-yellow);">ℹ️ How it works:</strong>
+                                    <ul style="margin:8px 0 0 20px;color:var(--text-secondary);">
+                                        <li>Data saves to browser (instant, works offline)</li>
+                                        <li>Auto-syncs to Firebase cloud every 60 seconds</li>
+                                        <li>Offline changes queued and synced when back online</li>
+                                        <li>Data persists even if browser history cleared</li>
+                                        <li>Access same data across all your devices</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                         <!-- ADDED: IntaSend API Configuration -->
                         <div class="card" style="border-color:var(--accent-green)">
                             <div class="card-header" style="background:rgba(16,185,129,.1)">
@@ -1772,7 +1843,13 @@
     </nav>
     
     <div class="toast-container" id="toastContainer"></div>
-    <div class="offline-indicator" id="offlineIndicator">📡 Offline Mode</div>
+    <div class="offline-indicator" id="offlineIndicator">
+        <span id="offlineText">📡 Offline Mode</span>
+        <span id="queueCount" style="display:none;background:rgba(0,0,0,0.2);padding:2px 8px;border-radius:12px;font-size:0.75rem;"></span>
+    </div>
+    <div class="offline-indicator" id="syncIndicator" style="background:var(--accent-blue);display:none;">
+        <span>☁️ Syncing...</span>
+    </div>
     <!-- Modals -->
     <div class="modal-overlay" id="quickAddModal" onclick="if(event.target===this)closeModal('quickAddModal')">
         <div class="modal">
@@ -1829,6 +1906,34 @@
                     <div class="form-group"><label class="form-label">Reorder Level</label><input type="number" class="form-input" id="newProductReorder" placeholder="10" value="10"></div>
                 </div>
                 <div class="form-group">
+                    <label class="form-label">Unit/Measure</label>
+                    <select class="form-select" id="newProductUnit">
+                        <option value="piece">Piece(s)</option>
+                        <option value="packet">Packet(s)</option>
+                        <option value="250g">250g</option>
+                        <option value="500g">500g (½kg)</option>
+                        <option value="1kg">1kg</option>
+                        <option value="2kg">2kg</option>
+                        <option value="5kg">5kg</option>
+                        <option value="10kg">10kg</option>
+                        <option value="250ml">250ml</option>
+                        <option value="500ml">500ml (½L)</option>
+                        <option value="1L">1 Liter</option>
+                        <option value="2L">2 Liters</option>
+                        <option value="5L">5 Liters</option>
+                        <option value="bottle">Bottle</option>
+                        <option value="can">Can</option>
+                        <option value="box">Box</option>
+                        <option value="carton">Carton</option>
+                        <option value="dozen">Dozen</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                <div class="form-group" id="customUnitGroup" style="display:none;">
+                    <label class="form-label">Custom Unit Name</label>
+                    <input type="text" class="form-input" id="newProductCustomUnit" placeholder="e.g., Bundle, Set, Roll">
+                </div>
+                <div class="form-group">
                     <label class="form-label">VAT Category</label>
                     <select class="form-select" id="newProductVat"><option value="16">Standard Rate (16%)</option><option value="0">Zero Rated (0%)</option><option value="exempt">Exempt</option></select>
                 </div>
@@ -1854,6 +1959,34 @@
                 <div class="form-row">
                     <div class="form-group"><label class="form-label">Stock</label><input type="number" class="form-input" id="editProductStock" placeholder="50"></div>
                     <div class="form-group"><label class="form-label">Reorder Level</label><input type="number" class="form-input" id="editProductReorder" placeholder="10"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Unit/Measure</label>
+                    <select class="form-select" id="editProductUnit">
+                        <option value="piece">Piece(s)</option>
+                        <option value="packet">Packet(s)</option>
+                        <option value="250g">250g</option>
+                        <option value="500g">500g (½kg)</option>
+                        <option value="1kg">1kg</option>
+                        <option value="2kg">2kg</option>
+                        <option value="5kg">5kg</option>
+                        <option value="10kg">10kg</option>
+                        <option value="250ml">250ml</option>
+                        <option value="500ml">500ml (½L)</option>
+                        <option value="1L">1 Liter</option>
+                        <option value="2L">2 Liters</option>
+                        <option value="5L">5 Liters</option>
+                        <option value="bottle">Bottle</option>
+                        <option value="can">Can</option>
+                        <option value="box">Box</option>
+                        <option value="carton">Carton</option>
+                        <option value="dozen">Dozen</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                <div class="form-group" id="editCustomUnitGroup" style="display:none;">
+                    <label class="form-label">Custom Unit Name</label>
+                    <input type="text" class="form-input" id="editProductCustomUnit" placeholder="e.g., Bundle, Set, Roll">
                 </div>
                 <div class="form-group">
                     <label class="form-label">VAT Category</label>
@@ -2143,6 +2276,95 @@
         let confirmationResult = null;
         let recaptchaVerifier = null;
         
+        // ==================== OFFLINE SYNC MANAGER ====================
+        let offlineQueue = JSON.parse(localStorage.getItem('offline_queue')) || [];
+        let lastSyncTime = localStorage.getItem('last_sync_time') || null;
+        let syncInProgress = false;
+        
+        // Update queue count display
+        function updateQueueDisplay() {
+            const queueCountEl = document.getElementById('queueCount');
+            if (offlineQueue.length > 0) {
+                queueCountEl.textContent = `${offlineQueue.length} pending`;
+                queueCountEl.style.display = 'inline-block';
+            } else {
+                queueCountEl.style.display = 'none';
+            }
+        }
+        
+        // Save offline operation to queue
+        function queueOfflineOperation(operation, data) {
+            const queueItem = {
+                id: 'OP' + Date.now(),
+                operation: operation,
+                data: data,
+                timestamp: new Date().toISOString()
+            };
+            offlineQueue.push(queueItem);
+            localStorage.setItem('offline_queue', JSON.stringify(offlineQueue));
+            updateQueueDisplay();
+            console.log('📦 Queued offline operation:', operation);
+        }
+        
+        // Process offline queue when back online
+        async function processOfflineQueue() {
+            if (syncInProgress || offlineQueue.length === 0 || !isOnline) return;
+            
+            syncInProgress = true;
+            const syncIndicator = document.getElementById('syncIndicator');
+            syncIndicator.style.display = 'flex';
+            
+            console.log('🔄 Processing offline queue:', offlineQueue.length, 'operations');
+            
+            const processed = [];
+            for (const item of offlineQueue) {
+                try {
+                    await syncToFirebase(item.data, item.operation);
+                    processed.push(item.id);
+                    console.log('✅ Synced:', item.operation);
+                } catch (error) {
+                    console.error('❌ Sync failed for:', item.operation, error);
+                    break; // Stop processing on first error
+                }
+            }
+            
+            // Remove processed items
+            offlineQueue = offlineQueue.filter(item => !processed.includes(item.id));
+            localStorage.setItem('offline_queue', JSON.stringify(offlineQueue));
+            updateQueueDisplay();
+            
+            syncIndicator.style.display = 'none';
+            
+            if (processed.length > 0) {
+                showToast(`✅ Synced ${processed.length} offline operations to cloud`, 'success');
+            }
+            
+            syncInProgress = false;
+        }
+        
+        // Auto-process queue when coming online
+        window.addEventListener('online', () => {
+            isOnline = true;
+            document.getElementById('offlineIndicator').classList.remove('show');
+            document.getElementById('offlineText').textContent = '🌐 Back Online';
+            document.getElementById('offlineIndicator').classList.add('show');
+            
+            // Show "back online" briefly, then hide
+            setTimeout(() => {
+                document.getElementById('offlineIndicator').classList.remove('show');
+            }, 3000);
+            
+            console.log('🌐 Back online - processing queue');
+            setTimeout(processOfflineQueue, 2000); // Wait 2s for stable connection
+        });
+        
+        // Update offline indicator when going offline
+        window.addEventListener('offline', () => {
+            isOnline = false;
+            document.getElementById('offlineText').textContent = '📡 Offline Mode';
+            document.getElementById('offlineIndicator').classList.add('show');
+        });
+        
         // ==================== DUKAPOS PRO v3.0 (Firebase Edition) ====================
         // CLOUD-POWERED FEATURES:
         // - Phone authentication with SMS verification (FREE 10/day from Firebase)
@@ -2150,6 +2372,8 @@
         // - Never lose data - stored in Google Cloud
         // - Works across all devices automatically
         // - 100% FREE for small to medium shops
+        // - Offline queue - works offline, syncs when back online
+        // - Dual storage - localStorage backup + Firebase cloud
         
         // ==================== GLOBAL STATE ====================
         let currentUser = null;
@@ -2191,6 +2415,7 @@
         let cart = [], selectedPayment = 'Cash', selectedCategory = 'All', quickAddProduct = null, quickAddQty = 1;
         let restockProduct = null, restockMode = false, mpesaConfirmed = false, mpesaData = null;
         let paymentCreditId = null, dateFilter = 'today', isOnline = navigator.onLine;
+        let employeeFilterPeriod = 'today'; // ADDED: For employee comparison filtering
         let charts = {};
         
         const STORAGE_KEYS = { 
@@ -2208,14 +2433,15 @@
         
         // ==================== INITIALIZATION ====================
         window.addEventListener('load', init);
-        window.addEventListener('online', () => { isOnline = true; document.getElementById('offlineIndicator').classList.remove('show'); });
-        window.addEventListener('offline', () => { isOnline = false; document.getElementById('offlineIndicator').classList.add('show'); });
         
         function init() {
             loadAllData();
             updateTime();
             setInterval(updateTime, 1000);
             if (!isOnline) document.getElementById('offlineIndicator').classList.add('show');
+            
+            // Update queue display
+            updateQueueDisplay();
             
             // Hide demo accounts if real user exists
             updateDemoVisibility();
@@ -2232,10 +2458,16 @@
                 showApp();
                 // Check subscription status after login
                 checkSubscriptionStatus();
+                
+                // Process any pending offline queue after login
+                if (isOnline && offlineQueue.length > 0) {
+                    setTimeout(processOfflineQueue, 3000);
+                }
             }
         }
         
-        function loadAllData() {
+        async function loadAllData() {
+            // First: Load from localStorage (instant, works offline)
             config = JSON.parse(localStorage.getItem(STORAGE_KEYS.config)) || config;
             
             // Load or generate business ID
@@ -2278,13 +2510,18 @@
             suppliers = JSON.parse(localStorage.getItem(STORAGE_KEYS.suppliers)) || [];
             journalEntries = JSON.parse(localStorage.getItem(STORAGE_KEYS.journal)) || [];
             
-            // Try to sync from cloud if enabled
-            if (config.cloudSyncEnabled && config.businessId) {
-                syncFromCloud();
+            // Second: Try to load from Firebase Cloud (gets latest across devices)
+            if (config.businessId && isOnline) {
+                try {
+                    await loadFromFirebase();
+                } catch (error) {
+                    console.log('⚠️ Cloud sync skipped, using local data:', error.message);
+                }
             }
         }
         
-        function saveAllData() {
+        async function saveAllData() {
+            // Always save to localStorage first (instant, works offline)
             localStorage.setItem(STORAGE_KEYS.config, JSON.stringify(config));
             localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
             localStorage.setItem(STORAGE_KEYS.products, JSON.stringify(products));
@@ -2295,9 +2532,27 @@
             localStorage.setItem(STORAGE_KEYS.suppliers, JSON.stringify(suppliers));
             localStorage.setItem(STORAGE_KEYS.journal, JSON.stringify(journalEntries));
             
-            // Auto-sync to cloud if business ID exists (user is logged in with Firebase)
-            if (config.businessId && db) {
-                syncToCloud();
+            // Then sync to Firebase Cloud
+            if (config.businessId) {
+                const dataToSync = {
+                    config, products, sales, creditSales, expenses, 
+                    categories, suppliers, journalEntries,
+                    lastUpdated: new Date().toISOString()
+                };
+                
+                if (isOnline && db) {
+                    try {
+                        await syncToFirebase(dataToSync);
+                        console.log('☁️ Data synced to cloud');
+                    } catch (error) {
+                        console.log('⚠️ Online but sync failed, queuing:', error.message);
+                        queueOfflineOperation('saveAll', dataToSync);
+                    }
+                } else {
+                    // Offline - queue for later
+                    queueOfflineOperation('saveAll', dataToSync);
+                    console.log('📦 Data queued for cloud sync (offline)');
+                }
             }
         }
         
@@ -3750,6 +4005,23 @@
                     e.stopPropagation();
                 });
             }
+            
+            // ADDED: Event listeners for unit custom field toggle
+            const newProductUnit = document.getElementById('newProductUnit');
+            if (newProductUnit) {
+                newProductUnit.addEventListener('change', function() {
+                    const customGroup = document.getElementById('customUnitGroup');
+                    customGroup.style.display = this.value === 'custom' ? 'block' : 'none';
+                });
+            }
+            
+            const editProductUnit = document.getElementById('editProductUnit');
+            if (editProductUnit) {
+                editProductUnit.addEventListener('change', function() {
+                    const customGroup = document.getElementById('editCustomUnitGroup');
+                    customGroup.style.display = this.value === 'custom' ? 'block' : 'none';
+                });
+            }
         });
         
         function renderAll() {
@@ -4001,8 +4273,12 @@
             // Show success message
             showToast(`✓ M-Pesa payment confirmed from ${phone}`, "success");
             
-            // Complete the sale
-            completeSale();
+            // FIXED: Enable the complete sale button after confirming payment
+            renderCart();
+            
+            // Hide confirm button and show completion ready message
+            document.getElementById('confirmMpesaBtn').style.display = 'none';
+            document.getElementById('mpesaConfirmMsg').innerHTML = '✅ <span style="color:#10b981; font-weight:700;">Payment Confirmed! Ready to complete sale.</span>';
         }
 
         function updateMpesaAmount() {
@@ -4370,6 +4646,7 @@
                 document.getElementById('inventoryTableBody').innerHTML = filtered.map(p => {
                     const margin = p.price > 0 ? Math.round((p.price - p.cost) / p.price * 100) : 0;
                     const stockClass = p.stock === 0 ? 'danger' : p.stock <= p.reorder ? 'warning' : 'success';
+                    const unit = p.unit || 'units';
                     return `<tr>
                         <td><strong>${getEmoji(p.category)} ${p.name}</strong></td>
                         <td><code>${p.sku || '-'}</code></td>
@@ -4377,7 +4654,7 @@
                         <td>${formatKsh(p.cost)}</td>
                         <td>${formatKsh(p.price)}</td>
                         <td><span class="table-status ${margin >= 20 ? 'success' : margin >= 10 ? 'warning' : 'danger'}">${margin}%</span></td>
-                        <td><span class="table-status ${stockClass}">${p.stock} units</span></td>
+                        <td><span class="table-status ${stockClass}">${p.stock} ${unit}</span></td>
                         <td>${formatKsh(p.cost * p.stock)}</td>
                         <td><button class="action-btn success" onclick="openRestockModal('${p.id}')">+Stock</button><button class="action-btn primary" onclick="editProduct('${p.id}')">Edit</button><button class="action-btn danger" onclick="deleteProduct('${p.id}')">Delete</button></td>
                     </tr>`;
@@ -4440,6 +4717,12 @@
             const reorder = parseInt(document.getElementById('newProductReorder').value) || 10;
             const vat = parseInt(document.getElementById('newProductVat').value) || 16;
             
+            // ADDED: Get unit value
+            let unit = document.getElementById('newProductUnit').value;
+            if (unit === 'custom') {
+                unit = document.getElementById('newProductCustomUnit').value.trim() || 'piece';
+            }
+            
             if (!name || !price) { showToast('Enter product name and price', 'error'); return; }
             
             // Auto-detect category from product name if not selected
@@ -4481,7 +4764,7 @@
                 }
             }
             
-            products.push({ id: 'P' + Date.now(), sku, name, category, cost, price, stock, reorder, vat });
+            products.push({ id: 'P' + Date.now(), sku, name, category, cost, price, stock, reorder, vat, unit });
             localStorage.setItem(STORAGE_KEYS.products, JSON.stringify(products));
             closeModal('addProductModal');
             showToast(`Product added to ${category}`, 'success');
@@ -4514,6 +4797,22 @@
             document.getElementById('editProductReorder').value = product.reorder;
             document.getElementById('editProductVat').value = product.vat;
             
+            // ADDED: Populate unit field
+            const unit = product.unit || 'piece';
+            const unitSelect = document.getElementById('editProductUnit');
+            const customUnitGroup = document.getElementById('editCustomUnitGroup');
+            
+            // Check if unit is in predefined options
+            const hasOption = Array.from(unitSelect.options).some(opt => opt.value === unit);
+            if (hasOption) {
+                unitSelect.value = unit;
+                customUnitGroup.style.display = 'none';
+            } else {
+                unitSelect.value = 'custom';
+                document.getElementById('editProductCustomUnit').value = unit;
+                customUnitGroup.style.display = 'block';
+            }
+            
             // Show modal
             openModal('editProductModal');
         }
@@ -4531,6 +4830,13 @@
             product.stock = parseInt(document.getElementById('editProductStock').value) || 0;
             product.reorder = parseInt(document.getElementById('editProductReorder').value) || 10;
             product.vat = parseInt(document.getElementById('editProductVat').value) || 16;
+            
+            // ADDED: Update unit value
+            let unit = document.getElementById('editProductUnit').value;
+            if (unit === 'custom') {
+                unit = document.getElementById('editProductCustomUnit').value.trim() || 'piece';
+            }
+            product.unit = unit;
             
             if (!product.name || !product.price) {
                 showToast('Enter product name and price', 'error');
@@ -4788,6 +5094,7 @@
             
             renderReportCharts();
             renderTopProducts();
+            renderEmployeeComparison(); // ADDED: Render employee comparison
         }
         
         function renderReportCharts() {
@@ -4872,6 +5179,127 @@
                     <div class="breakdown-value">${formatKsh(p[1])}</div>
                 </div>
             `).join('') || '<p style="color:var(--text-muted);text-align:center">No sales data</p>';
+        }
+        
+        // ADDED: Employee Comparison Functions
+        function setEmployeeFilterPeriod(period) {
+            employeeFilterPeriod = period;
+            document.querySelectorAll('#reportsTab .date-filters .date-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            renderEmployeeComparison();
+        }
+        
+        function renderEmployeeComparison() {
+            const filtered = getEmployeeFilteredSales();
+            
+            // Group sales by seller
+            const employeeStats = {};
+            filtered.forEach(sale => {
+                const seller = sale.seller || 'Unknown';
+                if (!employeeStats[seller]) {
+                    employeeStats[seller] = {
+                        name: seller,
+                        salesCount: 0,
+                        totalRevenue: 0,
+                        totalProfit: 0,
+                        totalItems: 0
+                    };
+                }
+                employeeStats[seller].salesCount++;
+                employeeStats[seller].totalRevenue += sale.total || 0;
+                employeeStats[seller].totalProfit += sale.profit || 0;
+                employeeStats[seller].totalItems += sale.items.reduce((sum, item) => sum + item.qty, 0);
+            });
+            
+            // Convert to array and sort by revenue
+            const employeeArray = Object.values(employeeStats).sort((a, b) => b.totalRevenue - a.totalRevenue);
+            
+            // Render table
+            const tableContainer = document.getElementById('employeeComparisonTable');
+            if (employeeArray.length === 0) {
+                tableContainer.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px">No sales data for selected period</p>';
+                return;
+            }
+            
+            // Find the best performer (highest revenue)
+            const bestRevenue = Math.max(...employeeArray.map(e => e.totalRevenue));
+            
+            tableContainer.innerHTML = `
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Employee</th>
+                                <th>Sales Count</th>
+                                <th>Items Sold</th>
+                                <th>Total Revenue</th>
+                                <th>Total Profit</th>
+                                <th>Avg per Sale</th>
+                                <th>Performance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${employeeArray.map((emp, index) => {
+                                const avgPerSale = emp.salesCount > 0 ? emp.totalRevenue / emp.salesCount : 0;
+                                const performancePercent = bestRevenue > 0 ? Math.round((emp.totalRevenue / bestRevenue) * 100) : 0;
+                                const isBest = emp.totalRevenue === bestRevenue;
+                                return `
+                                    <tr style="${isBest ? 'background:rgba(16,185,129,0.1);' : ''}">
+                                        <td>
+                                            <span style="font-weight:700;font-size:1.1rem;${index === 0 ? 'color:#f59e0b;' : index === 1 ? 'color:#94a3b8;' : index === 2 ? 'color:#cd7f32;' : ''}">
+                                                ${index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '#' + (index + 1)}
+                                            </span>
+                                        </td>
+                                        <td><strong>${emp.name}</strong>${isBest ? ' <span style="color:#10b981;font-size:0.75rem;">⭐ TOP</span>' : ''}</td>
+                                        <td>${emp.salesCount}</td>
+                                        <td>${emp.totalItems}</td>
+                                        <td><strong>${formatKsh(emp.totalRevenue)}</strong></td>
+                                        <td style="color:${emp.totalProfit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'}">${formatKsh(emp.totalProfit)}</td>
+                                        <td>${formatKsh(avgPerSale)}</td>
+                                        <td>
+                                            <div style="display:flex;align-items:center;gap:8px;">
+                                                <div style="flex:1;height:8px;background:var(--bg-dark);border-radius:4px;overflow:hidden;">
+                                                    <div style="height:100%;background:linear-gradient(90deg,#10b981,#3b82f6);width:${performancePercent}%;transition:width 0.3s;"></div>
+                                                </div>
+                                                <span style="font-weight:600;color:var(--text-secondary);min-width:40px;">${performancePercent}%</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                        <tfoot style="background:var(--bg-dark);font-weight:700;">
+                            <tr>
+                                <td colspan="2">TOTAL</td>
+                                <td>${employeeArray.reduce((s, e) => s + e.salesCount, 0)}</td>
+                                <td>${employeeArray.reduce((s, e) => s + e.totalItems, 0)}</td>
+                                <td>${formatKsh(employeeArray.reduce((s, e) => s + e.totalRevenue, 0))}</td>
+                                <td>${formatKsh(employeeArray.reduce((s, e) => s + e.totalProfit, 0))}</td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+        }
+        
+        function getEmployeeFilteredSales() {
+            const now = new Date();
+            const today = getTodayDate();
+            
+            if (employeeFilterPeriod === 'today') {
+                return sales.filter(s => s.date === today);
+            } else if (employeeFilterPeriod === 'week') {
+                const weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                return sales.filter(s => new Date(s.date) >= weekAgo);
+            } else if (employeeFilterPeriod === 'month') {
+                const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+                return sales.filter(s => new Date(s.date) >= monthStart);
+            } else { // all
+                return sales;
+            }
         }
         
         // ==================== KRA COMPLIANCE ====================
@@ -5525,8 +5953,37 @@
             document.getElementById('settingIntasendEnvironment').value = config.intasendEnvironment || 'test';
             toggleIntasendFields();
             
+            // ADDED: Display cloud sync status
+            updateCloudSyncDisplay();
+            
             // ADDED: Check for pending IntaSend registration
             checkPendingIntasendRegistration();
+        }
+        
+        function updateCloudSyncDisplay() {
+            const businessIdEl = document.getElementById('displayBusinessId');
+            const lastSyncEl = document.getElementById('displayLastSync');
+            const queueCountEl = document.getElementById('displayQueueCount');
+            
+            if (businessIdEl) businessIdEl.textContent = config.businessId || 'Not set';
+            if (queueCountEl) queueCountEl.textContent = offlineQueue.length;
+            
+            if (lastSyncEl && lastSyncTime) {
+                const syncDate = new Date(lastSyncTime);
+                const now = new Date();
+                const diffMinutes = Math.floor((now - syncDate) / 60000);
+                
+                if (diffMinutes < 1) {
+                    lastSyncEl.textContent = 'Just now';
+                } else if (diffMinutes < 60) {
+                    lastSyncEl.textContent = `${diffMinutes}m ago`;
+                } else {
+                    const hours = Math.floor(diffMinutes / 60);
+                    lastSyncEl.textContent = `${hours}h ago`;
+                }
+            } else if (lastSyncEl) {
+                lastSyncEl.textContent = 'Never';
+            }
         }
         
         function checkPendingIntasendRegistration() {
@@ -5597,6 +6054,67 @@
             }
             
             showToast('✅ Settings saved and synced!', 'success');
+        }
+        
+        // ADDED: Manual cloud sync function
+        async function manualSyncToCloud() {
+            const button = document.getElementById('syncButtonText');
+            const originalText = button.textContent;
+            
+            button.textContent = '⏳ Syncing...';
+            
+            try {
+                // First process any offline queue
+                if (offlineQueue.length > 0) {
+                    await processOfflineQueue();
+                }
+                
+                // Then do a full sync
+                await saveAllData();
+                
+                updateCloudSyncDisplay();
+                showToast('✅ All data synced to cloud successfully!', 'success');
+            } catch (error) {
+                console.error('Manual sync error:', error);
+                showToast('❌ Sync failed: ' + error.message, 'error');
+            } finally {
+                button.textContent = originalText;
+            }
+        }
+        
+        // ADDED: Export all data as backup file
+        function exportAllData() {
+            const backup = {
+                version: '3.0',
+                exportDate: new Date().toISOString(),
+                businessId: config.businessId,
+                businessName: config.businessName,
+                data: {
+                    config: config,
+                    users: users,
+                    products: products,
+                    sales: sales,
+                    creditSales: creditSales,
+                    expenses: expenses,
+                    categories: categories,
+                    suppliers: suppliers,
+                    journalEntries: journalEntries
+                },
+                offlineQueue: offlineQueue,
+                lastSyncTime: lastSyncTime
+            };
+            
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `BiasharaFlow_Backup_${config.businessName || 'Business'}_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast('✅ Backup file downloaded!', 'success');
         }
         
         // Update M-Pesa display in cart with saved till number
@@ -5903,99 +6421,129 @@
         }
         
         // ==================== CLOUD SYNC ====================
-        async function syncFromCloud() {
-            if (!config.businessId) return;
+        // ==================== FIREBASE CLOUD SYNC ====================
+        async function loadFromFirebase() {
+            if (!config.businessId || !db) {
+                throw new Error('No business ID or database connection');
+            }
             
             try {
-                // Use simple key-value storage from localStorage with business ID prefix
-                const cloudKey = `cloud_${config.businessId}`;
-                const cloudData = localStorage.getItem(cloudKey);
+                const docRef = db.collection('businesses').doc(config.businessId);
+                const doc = await docRef.get();
                 
-                if (cloudData) {
-                    const data = JSON.parse(cloudData);
+                if (doc.exists) {
+                    const cloudData = doc.data();
+                    console.log('☁️ Loading data from Firebase...');
                     
-                    // Merge cloud data with local data
-                    if (data.users && data.users.length > 0) {
-                        // Keep local users and merge with cloud users
-                        const localUserIds = users.map(u => u.id);
-                        const newCloudUsers = data.users.filter(u => !localUserIds.includes(u.id));
-                        users = [...users, ...newCloudUsers];
-                        localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
-                    }
-                    
-                    // Update other data if cloud is newer
-                    if (data.products) products = data.products;
-                    if (data.sales) sales = data.sales;
-                    if (data.config) {
-                        // Merge config but keep local businessId
+                    // Update local data with cloud data (cloud is source of truth)
+                    if (cloudData.products) products = cloudData.products;
+                    if (cloudData.sales) sales = cloudData.sales;
+                    if (cloudData.creditSales) creditSales = cloudData.creditSales;
+                    if (cloudData.expenses) expenses = cloudData.expenses;
+                    if (cloudData.categories) categories = cloudData.categories;
+                    if (cloudData.suppliers) suppliers = cloudData.suppliers;
+                    if (cloudData.journalEntries) journalEntries = cloudData.journalEntries;
+                    if (cloudData.config) {
                         const localBusinessId = config.businessId;
-                        config = { ...config, ...data.config, businessId: localBusinessId };
+                        config = { ...config, ...cloudData.config, businessId: localBusinessId };
                     }
                     
-                    saveAllData();
-                    console.log('✅ Synced from cloud');
+                    // Save to localStorage as backup
+                    localStorage.setItem(STORAGE_KEYS.config, JSON.stringify(config));
+                    localStorage.setItem(STORAGE_KEYS.products, JSON.stringify(products));
+                    localStorage.setItem(STORAGE_KEYS.sales, JSON.stringify(sales));
+                    localStorage.setItem(STORAGE_KEYS.credit, JSON.stringify(creditSales));
+                    localStorage.setItem(STORAGE_KEYS.expenses, JSON.stringify(expenses));
+                    localStorage.setItem(STORAGE_KEYS.categories, JSON.stringify(categories));
+                    localStorage.setItem(STORAGE_KEYS.suppliers, JSON.stringify(suppliers));
+                    localStorage.setItem(STORAGE_KEYS.journal, JSON.stringify(journalEntries));
+                    
+                    lastSyncTime = new Date().toISOString();
+                    localStorage.setItem('last_sync_time', lastSyncTime);
+                    
+                    console.log('✅ Data loaded from Firebase cloud');
+                    return true;
+                } else {
+                    console.log('ℹ️ No cloud data found - first time setup');
+                    // Save current local data to cloud
+                    await syncToFirebase({
+                        config, products, sales, creditSales, expenses,
+                        categories, suppliers, journalEntries,
+                        lastUpdated: new Date().toISOString()
+                    });
+                    return false;
                 }
             } catch (error) {
-                console.error('Cloud sync error:', error);
+                console.error('❌ Failed to load from Firebase:', error);
+                throw error;
+            }
+        }
+        
+        async function syncToFirebase(dataToSync = null, operation = 'saveAll') {
+            if (!config.businessId || !db) {
+                throw new Error('No business ID or database connection');
+            }
+            
+            try {
+                const syncData = dataToSync || {
+                    config,
+                    products,
+                    sales,
+                    creditSales,
+                    expenses,
+                    categories,
+                    suppliers,
+                    journalEntries,
+                    lastUpdated: new Date().toISOString(),
+                    lastSyncTime: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                const docRef = db.collection('businesses').doc(config.businessId);
+                await docRef.set(syncData, { merge: true });
+                
+                lastSyncTime = new Date().toISOString();
+                localStorage.setItem('last_sync_time', lastSyncTime);
+                
+                return true;
+            } catch (error) {
+                console.error('❌ Failed to sync to Firebase:', error);
+                throw error;
+            }
+        }
+        
+        // Legacy function for backwards compatibility
+        async function syncFromCloud() {
+            try {
+                await loadFromFirebase();
+            } catch (error) {
+                console.log('⚠️ Cloud sync skipped:', error.message);
             }
         }
         
         async function syncToCloud() {
-            // Skip if offline, no business ID, or no database connection
-            if (!navigator.onLine || !config.businessId || !db) {
-                if (!navigator.onLine) {
-                    console.log('⚠️ Offline - sync skipped, data saved locally');
-                }
-                return false; // Return false to indicate sync didn't happen
+            if (!isOnline || !config.businessId || !db) {
+                return false;
             }
             
             try {
-                // CRITICAL: Filter users to only sync those from this business
-                const businessUsers = users.filter(u => 
-                    !u.businessId || u.businessId === config.businessId
-                );
-                
-                // Add timestamp to track when this sync happened
-                const syncData = {
-                    users: businessUsers, // CRITICAL: Sync users so admin and sellers share user list
-                    products: products,
-                    sales: sales,
-                    creditSales: creditSales,
-                    expenses: expenses,
-                    categories: categories,
-                    suppliers: suppliers,
-                    journalEntries: journalEntries,
-                    config: {
-                        ...config,
-                        lastSyncTime: new Date().toISOString()
-                    },
-                    lastSync: firebase.firestore.FieldValue.serverTimestamp()
-                };
-                
-                // Use set with merge: true instead of update
-                // This creates the document if it doesn't exist, or updates it if it does
-                await db.collection('data').doc(config.businessId).set(syncData, { merge: true });
-                
-                console.log('✅ Synced to Firebase at', new Date().toLocaleTimeString());
-                return true; // Return true to indicate successful sync
+                await syncToFirebase();
+                return true;
             } catch (error) {
-                // Silent fail for offline mode
-                if (error.code === 'unavailable' || error.message.includes('network')) {
-                    console.log('⚠️ Network unavailable - data saved locally only');
-                } else {
-                    console.error('Firebase sync error:', error);
-                    showToast('⚠️ Sync failed - data saved locally', 'warning');
-                }
+                console.log('⚠️ Cloud sync failed:', error.message);
                 return false;
             }
         }
         
-        // Auto-sync every 30 seconds
-        setInterval(() => {
-            if (config.businessId && currentUser && db) {
-                syncToCloud();
+        // Auto-sync every 60 seconds if online and logged in
+        setInterval(async () => {
+            if (config.businessId && currentUser && db && isOnline) {
+                await syncToCloud();
             }
-        }, 30000);
+            // Also process any pending offline queue
+            if (isOnline && offlineQueue.length > 0) {
+                await processOfflineQueue();
+            }
+        }, 60000); // Every 60 seconds
         
         // ==================== EXPORT ====================
         function exportToExcel() {
