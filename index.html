@@ -22,6 +22,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
@@ -617,6 +618,83 @@
         /* Error Message */
         .login-error{display:none;margin-bottom:20px;padding:14px 16px;background:rgba(239,68,68,0.15);border:2px solid rgba(239,68,68,0.5);border-radius:var(--radius-md);color:#ff6b6b;font-size:0.95rem;font-weight:600;text-align:center;box-shadow:0 4px 6px rgba(239,68,68,0.2)}
         .login-error.show{display:block;animation:errorShake 0.4s ease}
+    
+        /* Three-dot menu for products */
+        .product-menu {
+            position: relative;
+            display: inline-block;
+        }
+        .product-menu-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 4px 8px;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+        .product-menu-btn:hover {
+            color: var(--text-primary);
+            background: var(--bg-card-hover);
+            border-radius: 4px;
+        }
+        .product-menu-dropdown {
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            min-width: 150px;
+            z-index: 1000;
+            display: none;
+        }
+        .product-menu-dropdown.show {
+            display: block;
+        }
+        .product-menu-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .product-menu-item:last-child {
+            border-bottom: none;
+        }
+        .product-menu-item:hover {
+            background: var(--bg-card-hover);
+        }
+        .product-menu-item.danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--accent-red);
+        }
+
+    
+        /* Theme customization */
+        .theme-picker {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 12px;
+            margin: 12px 0;
+        }
+        .theme-color-box {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        .theme-color-box:hover {
+            transform: scale(1.1);
+        }
+        .theme-color-box.active {
+            border-color: white;
+            box-shadow: 0 0 0 2px var(--accent-blue);
+        }
+
     </style>
 </head>
 <body>
@@ -701,31 +779,31 @@
                 <div class="login-form">
                     <div class="login-input-group">
                         <label class="login-label">Business Name *</label>
-                        <input type="text" class="login-input" id="setupBusinessName" placeholder="e.g., Mary's General Store">
+                        <input type="text" class="login-input" id="setupBusinessName" placeholder="e.g., Mary's General Store" autocomplete="organization" inputmode="text">
                     </div>
                     <div class="login-input-group">
                         <label class="login-label">Your Full Name *</label>
-                        <input type="text" class="login-input" id="setupName" placeholder="e.g., Mary Wanjiku">
+                        <input type="text" class="login-input" id="setupName" placeholder="e.g., Mary Wanjiku" autocomplete="name" inputmode="text">
                     </div>
                     <div class="login-input-group">
                         <label class="login-label">Email Address *</label>
-                        <input type="email" class="login-input" id="setupEmail" placeholder="your.email@example.com">
+                        <input type="email" class="login-input" id="setupEmail" placeholder="your.email@example.com" autocomplete="email" inputmode="email">
                     </div>
                     <div class="login-input-group">
                         <label class="login-label">Phone Number (Optional)</label>
-                        <input type="tel" class="login-input" id="setupPhone" placeholder="0712345678" maxlength="10">
+                        <input type="tel" class="login-input" id="setupPhone" placeholder="0712345678" maxlength="10" autocomplete="tel" inputmode="tel">
                     </div>
                     <div class="login-input-group">
                         <label class="login-label">Username *</label>
-                        <input type="text" class="login-input" id="setupUsername" placeholder="Choose a username">
+                        <input type="text" class="login-input" id="setupUsername" placeholder="Choose a username" autocomplete="username" inputmode="text">
                     </div>
                     <div class="login-input-group">
                         <label class="login-label">Password *</label>
-                        <input type="password" class="login-input" id="setupPassword" placeholder="Create a strong password">
+                        <input type="password" class="login-input" id="setupPassword" placeholder="Create a strong password" autocomplete="new-password">
                     </div>
                     <div class="login-input-group">
                         <label class="login-label">Confirm Password *</label>
-                        <input type="password" class="login-input" id="setupPasswordConfirm" placeholder="Re-enter password">
+                        <input type="password" class="login-input" id="setupPasswordConfirm" placeholder="Re-enter password" autocomplete="new-password">
                     </div>
                     <div class="login-input-group">
                         <label class="login-label">Admin Authorization Key *</label>
@@ -1801,6 +1879,38 @@
                         </div>
                         <div class="card">
                             <div class="card-header"><h3 class="card-title">Tax Settings</h3></div>
+                        
+                        <!-- Theme Customization -->
+                        <div class="card">
+                            <div class="card-header"><h3 class="card-title">🎨 Theme & Branding</h3></div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label class="form-label">Business Logo</label>
+                                    <input type="file" class="form-input" id="businessLogo" accept="image/*">
+                                    <div id="logoPreview" style="margin-top:12px;max-width:200px;display:none;">
+                                        <img id="logoPreviewImg" style="width:100%;border-radius:8px;border:1px solid var(--border);">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group" style="margin-top:20px;">
+                                    <label class="form-label">Theme Color</label>
+                                    <div class="theme-picker">
+                                        <div class="theme-color-box active" style="background:#3b82f6;" onclick="setTheme('#3b82f6')" title="Blue (Default)"></div>
+                                        <div class="theme-color-box" style="background:#10b981;" onclick="setTheme('#10b981')" title="Green"></div>
+                                        <div class="theme-color-box" style="background:#8b5cf6;" onclick="setTheme('#8b5cf6')" title="Purple"></div>
+                                        <div class="theme-color-box" style="background:#f59e0b;" onclick="setTheme('#f59e0b')" title="Orange"></div>
+                                        <div class="theme-color-box" style="background:#ef4444;" onclick="setTheme('#ef4444')" title="Red"></div>
+                                        <div class="theme-color-box" style="background:#06b6d4;" onclick="setTheme('#06b6d4')" title="Cyan"></div>
+                                    </div>
+                                    <div style="margin-top:12px;">
+                                        <label class="form-label">Custom Color</label>
+                                        <input type="color" class="form-input" id="customThemeColor" style="height:50px;padding:4px;">
+                                    </div>
+                                </div>
+                                
+                                <button class="inv-btn success" onclick="saveThemeSettings()" style="margin-top:16px;">💾 Save Theme</button>
+                            </div>
+                        </div>
                             <div class="card-body">
                                 <div class="form-group">
                                     <label class="form-label">VAT Rate (%)</label>
@@ -2016,7 +2126,7 @@
             <div class="modal-body">
                 <div class="form-group"><label class="form-label">Customer Name *</label><input type="text" class="form-input" id="creditCustomerName" placeholder="e.g., Mama Njeri"></div>
                 <div class="form-group"><label class="form-label">Phone Number *</label><input type="tel" class="form-input" id="creditCustomerPhone" placeholder="07XXXXXXXX"></div>
-                <div class="form-group"><label class="form-label">Due Date</label><input type="date" class="form-input" id="creditDueDate"></div>
+                <div class="form-group"><label class="form-label">Due Date</label><input type="date" class="form-input" id="creditDueDate" min="" ></div>
             </div>
             <div class="modal-footer"><button class="modal-btn cancel" onclick="closeModal('creditSaleModal')">Cancel</button><button class="modal-btn success" onclick="confirmCreditSale()">Complete Credit Sale</button></div>
         </div>
@@ -2435,7 +2545,16 @@
         window.addEventListener('load', init);
         
         function init() {
-            loadAllData();
+            
+            loadTheme(); // Load saved theme
+            fixCreditSaleDates(); // Set min date for credit sales
+            
+            // Add product image upload listener
+            const productImageInput = document.getElementById('newProductImage');
+            if (productImageInput) {
+                productImageInput.addEventListener('change', handleProductImageChange);
+            }
+loadAllData();
             updateTime();
             setInterval(updateTime, 1000);
             if (!isOnline) document.getElementById('offlineIndicator').classList.add('show');
@@ -4656,7 +4775,16 @@
                         <td><span class="table-status ${margin >= 20 ? 'success' : margin >= 10 ? 'warning' : 'danger'}">${margin}%</span></td>
                         <td><span class="table-status ${stockClass}">${p.stock} ${unit}</span></td>
                         <td>${formatKsh(p.cost * p.stock)}</td>
-                        <td><button class="action-btn success" onclick="openRestockModal('${p.id}')">+Stock</button><button class="action-btn primary" onclick="editProduct('${p.id}')">Edit</button><button class="action-btn danger" onclick="deleteProduct('${p.id}')">Delete</button></td>
+                        <td>
+                            <div class="product-menu">
+                                <button class="product-menu-btn" onclick="toggleProductMenu('${p.id}', event)">⋮</button>
+                                <div class="product-menu-dropdown" id="productMenu${p.id}">
+                                    <div class="product-menu-item" onclick="openRestockModal('${p.id}')">+ Add Stock</div>
+                                    <div class="product-menu-item" onclick="editProduct('${p.id}')">✏️ Edit</div>
+                                    <div class="product-menu-item danger" onclick="deleteProduct('${p.id}')">🗑️ Delete</div>
+                                </div>
+                            </div>
+                        </td>
                     </tr>`;
                 }).join('') + `<tr style="background:var(--bg-dark);font-weight:700"><td colspan="7">Total Inventory Value</td><td colspan="2">${formatKsh(totalValue)}</td></tr>`;
             }
@@ -4898,6 +5026,29 @@
             localStorage.setItem(STORAGE_KEYS.suppliers, JSON.stringify(suppliers));
             renderSuppliers();
             showToast('Supplier added', 'success');
+        }
+        
+        function editSupplier(id) {
+            const supplier = suppliers.find(s => s.id === id);
+            if (!supplier) return;
+            
+            const name = prompt('Supplier Name:', supplier.name);
+            if (!name) return;
+            
+            const contact = prompt('Contact Person:', supplier.contact) || '';
+            const phone = prompt('Phone Number:', supplier.phone) || '';
+            const email = prompt('Email:', supplier.email) || '';
+            const prods = prompt('Products Supplied:', supplier.products) || '';
+            
+            supplier.name = name;
+            supplier.contact = contact;
+            supplier.phone = phone;
+            supplier.email = email;
+            supplier.products = prods;
+            
+            localStorage.setItem(STORAGE_KEYS.suppliers, JSON.stringify(suppliers));
+            renderSuppliers();
+            showToast('✅ Supplier updated!', 'success');
         }
         
         function deleteSupplier(id) {
@@ -6545,6 +6696,260 @@
             }
         }, 60000); // Every 60 seconds
         
+
+        // ==================== THEME CUSTOMIZATION ====================
+        function setTheme(color) {
+            document.documentElement.style.setProperty('--accent-blue', color);
+            config.themeColor = color;
+            localStorage.setItem(STORAGE_KEYS.config, JSON.stringify(config));
+            
+            // Update active state
+            document.querySelectorAll('.theme-color-box').forEach(box => box.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            showToast('Theme updated!', 'success');
+        }
+        
+        function saveThemeSettings() {
+            const customColor = document.getElementById('customThemeColor').value;
+            if (customColor) {
+                setTheme(customColor);
+            }
+            
+            // Handle logo upload
+            const logoInput = document.getElementById('businessLogo');
+            if (logoInput.files && logoInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    config.businessLogo = e.target.result;
+                    localStorage.setItem(STORAGE_KEYS.config, JSON.stringify(config));
+                    document.getElementById('logoPreviewImg').src = e.target.result;
+                    document.getElementById('logoPreview').style.display = 'block';
+                    showToast('✅ Logo uploaded successfully!', 'success');
+                };
+                reader.readAsDataURL(logoInput.files[0]);
+            }
+        }
+        
+        // Load saved theme on startup
+        function loadTheme() {
+            if (config.themeColor) {
+                document.documentElement.style.setProperty('--accent-blue', config.themeColor);
+            }
+            if (config.businessLogo) {
+                const logoImg = document.getElementById('logoPreviewImg');
+                const logoPreview = document.getElementById('logoPreview');
+                if (logoImg && logoPreview) {
+                    logoImg.src = config.businessLogo;
+                    logoPreview.style.display = 'block';
+                }
+            }
+        }
+        
+        // ==================== PRODUCT IMAGE UPLOAD ====================
+        function handleProductImageChange() {
+            const input = document.getElementById('newProductImage');
+            const preview = document.getElementById('productImagePreview');
+            const img = document.getElementById('previewImg');
+            
+            if (input && input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    img.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        
+        // ==================== THREE-DOT MENU FOR PRODUCTS ====================
+        function toggleProductMenu(productId, event) {
+            event.stopPropagation();
+            const menu = document.getElementById('productMenu' + productId);
+            
+            // Close all other menus
+            document.querySelectorAll('.product-menu-dropdown').forEach(m => {
+                if (m.id !== 'productMenu' + productId) {
+                    m.classList.remove('show');
+                }
+            });
+            
+            // Toggle this menu
+            menu.classList.toggle('show');
+        }
+        
+        // Close menus when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.product-menu')) {
+                document.querySelectorAll('.product-menu-dropdown').forEach(m => {
+                    m.classList.remove('show');
+                });
+            }
+        });
+        
+        // ==================== CHART OF ACCOUNTS ====================
+        function openAddAccountModal() {
+            // Create modal if it doesn't exist
+            const modalHTML = `
+                <div class="modal-overlay" id="addAccountModal" style="display:flex;">
+                    <div class="modal">
+                        <div class="modal-header">
+                            <h3 class="modal-title">Add Account</h3>
+                            <button class="modal-close" onclick="closeModal('addAccountModal')">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="modal-input-group">
+                                <label class="modal-label">Account Code</label>
+                                <input type="text" class="form-input" id="newAccountCode" placeholder="e.g., 1000">
+                            </div>
+                            <div class="modal-input-group">
+                                <label class="modal-label">Account Name</label>
+                                <input type="text" class="form-input" id="newAccountName" placeholder="e.g., Cash">
+                            </div>
+                            <div class="modal-input-group">
+                                <label class="modal-label">Account Type</label>
+                                <select class="form-input" id="newAccountType">
+                                    <option value="Asset">Asset</option>
+                                    <option value="Liability">Liability</option>
+                                    <option value="Equity">Equity</option>
+                                    <option value="Revenue">Revenue</option>
+                                    <option value="Expense">Expense</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="modal-btn secondary" onclick="closeModal('addAccountModal')">Cancel</button>
+                            <button class="modal-btn primary" onclick="addNewAccount()">Add Account</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            const existing = document.getElementById('addAccountModal');
+            if (existing) existing.remove();
+            
+            // Add new modal
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+        
+        function addNewAccount() {
+            const code = document.getElementById('newAccountCode').value.trim();
+            const name = document.getElementById('newAccountName').value.trim();
+            const type = document.getElementById('newAccountType').value;
+            
+            if (!code || !name) {
+                showToast('Please fill all fields', 'error');
+                return;
+            }
+            
+            // Add to chart of accounts (you'll need to define this array)
+            if (!window.chartOfAccounts) window.chartOfAccounts = [];
+            window.chartOfAccounts.push({ code, name, type, balance: 0 });
+            
+            closeModal('addAccountModal');
+            showToast('✅ Account added successfully!', 'success');
+            
+            // Refresh the display if function exists
+            if (typeof renderChartOfAccounts === 'function') {
+                renderChartOfAccounts();
+            }
+        }
+        
+        // ==================== JOURNAL ENTRY ====================
+        function openAddJournalEntryModal() {
+            const modalHTML = `
+                <div class="modal-overlay" id="addJournalModal" style="display:flex;">
+                    <div class="modal">
+                        <div class="modal-header">
+                            <h3 class="modal-title">Add Journal Entry</h3>
+                            <button class="modal-close" onclick="closeModal('addJournalModal')">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="modal-input-group">
+                                <label class="modal-label">Date</label>
+                                <input type="date" class="form-input" id="journalDate" value="${getTodayDate()}">
+                            </div>
+                            <div class="modal-input-group">
+                                <label class="modal-label">Reference</label>
+                                <input type="text" class="form-input" id="journalRef" placeholder="e.g., JE001">
+                            </div>
+                            <div class="modal-input-group">
+                                <label class="modal-label">Description</label>
+                                <input type="text" class="form-input" id="journalDesc" placeholder="e.g., Office supplies">
+                            </div>
+                            <div class="modal-input-group">
+                                <label class="modal-label">Debit Account</label>
+                                <input type="text" class="form-input" id="journalDebit" placeholder="e.g., Office Expenses">
+                            </div>
+                            <div class="modal-input-group">
+                                <label class="modal-label">Credit Account</label>
+                                <input type="text" class="form-input" id="journalCredit" placeholder="e.g., Cash">
+                            </div>
+                            <div class="modal-input-group">
+                                <label class="modal-label">Amount (KSh)</label>
+                                <input type="number" class="form-input" id="journalAmount" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="modal-btn secondary" onclick="closeModal('addJournalModal')">Cancel</button>
+                            <button class="modal-btn primary" onclick="addJournalEntry()">Add Entry</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const existing = document.getElementById('addJournalModal');
+            if (existing) existing.remove();
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+        
+        function addJournalEntry() {
+            const date = document.getElementById('journalDate').value;
+            const ref = document.getElementById('journalRef').value.trim();
+            const desc = document.getElementById('journalDesc').value.trim();
+            const debit = document.getElementById('journalDebit').value.trim();
+            const credit = document.getElementById('journalCredit').value.trim();
+            const amount = parseFloat(document.getElementById('journalAmount').value);
+            
+            if (!date || !ref || !desc || !debit || !credit || !amount) {
+                showToast('Please fill all fields', 'error');
+                return;
+            }
+            
+            journalEntries.push({
+                id: 'JE' + Date.now(),
+                date,
+                ref,
+                description: desc,
+                debit,
+                credit,
+                amount
+            });
+            
+            localStorage.setItem(STORAGE_KEYS.journal, JSON.stringify(journalEntries));
+            closeModal('addJournalModal');
+            showToast('✅ Journal entry added!', 'success');
+            
+            if (typeof renderJournalEntries === 'function') {
+                renderJournalEntries();
+            }
+        }
+        
+        // ==================== CREDIT SALE DATE FIX ====================
+        function fixCreditSaleDates() {
+            const today = new Date().toISOString().split('T')[0];
+            const creditDateInput = document.getElementById('creditDueDate');
+            if (creditDateInput) {
+                creditDateInput.min = today;
+                // Set default to 30 days from today
+                const defaultDate = new Date();
+                defaultDate.setDate(defaultDate.getDate() + 30);
+                creditDateInput.value = defaultDate.toISOString().split('T')[0];
+            }
+        }
+        
+
         // ==================== EXPORT ====================
         function exportToExcel() {
             const wb = XLSX.utils.book_new();
