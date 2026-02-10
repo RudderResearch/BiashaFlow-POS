@@ -22,7 +22,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
@@ -619,80 +618,39 @@
         .login-error{display:none;margin-bottom:20px;padding:14px 16px;background:rgba(239,68,68,0.15);border:2px solid rgba(239,68,68,0.5);border-radius:var(--radius-md);color:#ff6b6b;font-size:0.95rem;font-weight:600;text-align:center;box-shadow:0 4px 6px rgba(239,68,68,0.2)}
         .login-error.show{display:block;animation:errorShake 0.4s ease}
     
-        /* Three-dot menu for products */
-        .product-menu {
-            position: relative;
-            display: inline-block;
-        }
-        .product-menu-btn {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 4px 8px;
-            color: var(--text-secondary);
-            transition: all 0.2s;
-        }
-        .product-menu-btn:hover {
-            color: var(--text-primary);
-            background: var(--bg-card-hover);
-            border-radius: 4px;
-        }
-        .product-menu-dropdown {
-            position: absolute;
-            right: 0;
-            top: 100%;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            min-width: 150px;
-            z-index: 1000;
-            display: none;
-        }
-        .product-menu-dropdown.show {
-            display: block;
-        }
-        .product-menu-item {
-            padding: 10px 16px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.9rem;
-            border-bottom: 1px solid var(--border);
-        }
-        .product-menu-item:last-child {
-            border-bottom: none;
-        }
-        .product-menu-item:hover {
-            background: var(--bg-card-hover);
-        }
-        .product-menu-item.danger:hover {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--accent-red);
-        }
-
-    
-        /* Theme customization */
+        /* Theme Customization */
         .theme-picker {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-            gap: 12px;
-            margin: 12px 0;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin: 16px 0;
         }
-        .theme-color-box {
-            width: 60px;
-            height: 60px;
+        .theme-color-option {
+            width: 50px;
+            height: 50px;
             border-radius: 8px;
             cursor: pointer;
             border: 3px solid transparent;
             transition: all 0.2s;
+            position: relative;
         }
-        .theme-color-box:hover {
+        .theme-color-option:hover {
             transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
-        .theme-color-box.active {
+        .theme-color-option.active {
             border-color: white;
-            box-shadow: 0 0 0 2px var(--accent-blue);
+            box-shadow: 0 0 0 3px var(--accent-blue);
+        }
+        .theme-color-option.active::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
         }
 
     </style>
@@ -779,31 +737,31 @@
                 <div class="login-form">
                     <div class="login-input-group">
                         <label class="login-label">Business Name *</label>
-                        <input type="text" class="login-input" id="setupBusinessName" placeholder="e.g., Mary's General Store" autocomplete="organization" inputmode="text">
+                        <input type="text" class="login-input" id="setupBusinessName" placeholder="e.g., Mary's General Store">
                     </div>
                     <div class="login-input-group">
                         <label class="login-label">Your Full Name *</label>
-                        <input type="text" class="login-input" id="setupName" placeholder="e.g., Mary Wanjiku" autocomplete="name" inputmode="text">
+                        <input type="text" class="login-input" id="setupName" placeholder="e.g., Mary Wanjiku">
                     </div>
                     <div class="login-input-group">
                         <label class="login-label">Email Address *</label>
-                        <input type="email" class="login-input" id="setupEmail" placeholder="your.email@example.com" autocomplete="email" inputmode="email">
+                        <input type="email" class="login-input" id="setupEmail" placeholder="your.email@example.com">
                     </div>
                     <div class="login-input-group">
                         <label class="login-label">Phone Number (Optional)</label>
-                        <input type="tel" class="login-input" id="setupPhone" placeholder="0712345678" maxlength="10" autocomplete="tel" inputmode="tel">
+                        <input type="tel" class="login-input" id="setupPhone" placeholder="0712345678" maxlength="10">
                     </div>
                     <div class="login-input-group">
                         <label class="login-label">Username *</label>
-                        <input type="text" class="login-input" id="setupUsername" placeholder="Choose a username" autocomplete="username" inputmode="text">
+                        <input type="text" class="login-input" id="setupUsername" placeholder="Choose a username">
                     </div>
                     <div class="login-input-group">
                         <label class="login-label">Password *</label>
-                        <input type="password" class="login-input" id="setupPassword" placeholder="Create a strong password" autocomplete="new-password">
+                        <input type="password" class="login-input" id="setupPassword" placeholder="Create a strong password">
                     </div>
                     <div class="login-input-group">
                         <label class="login-label">Confirm Password *</label>
-                        <input type="password" class="login-input" id="setupPasswordConfirm" placeholder="Re-enter password" autocomplete="new-password">
+                        <input type="password" class="login-input" id="setupPasswordConfirm" placeholder="Re-enter password">
                     </div>
                     <div class="login-input-group">
                         <label class="login-label">Admin Authorization Key *</label>
@@ -1394,7 +1352,7 @@
                     <div class="inventory-header">
                         <h2 class="inventory-title">Journal Entries</h2>
                         <div class="inventory-actions">
-                            <button class="inv-btn primary" onclick="showAddJournalModal()">➕ New Entry</button>
+                            <button class="inv-btn primary" onclick="showAddJournalModal()">➕ Add Journal Entry</button>
                         </div>
                     </div>
                     <div class="table-container">
@@ -1510,6 +1468,10 @@
                             <div class="kra-stat">
                                 <div class="kra-stat-value" id="kraNetVat">Ksh 0</div>
                                 <div class="kra-stat-label">Net VAT Payable</div>
+                            </div>
+                            <div class="kra-stat">
+                                <div class="kra-stat-value" id="kraVatClaimable">Ksh 0</div>
+                                <div class="kra-stat-label">VAT Claimable</div>
                             </div>
                         </div>
                     </div>
@@ -1748,6 +1710,36 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- Theme & Branding -->
+                        <div class="card">
+                            <div class="card-header"><h3 class="card-title">🎨 Theme & Branding</h3></div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label class="form-label">Business Logo</label>
+                                    <input type="file" class="form-input" id="logoUploadInput" accept="image/*" onchange="handleLogoUpload()">
+                                    <div id="logoPreview" style="margin-top:12px;display:none;">
+                                        <img id="logoPreviewImg" style="max-width:150px;border:2px solid var(--border);border-radius:8px;">
+                                    </div>
+                                    <div style="margin-top:8px;font-size:0.85rem;color:var(--text-muted);">
+                                        Logo will appear in the sidebar
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group" style="margin-top:24px;">
+                                    <label class="form-label">Theme Color</label>
+                                    <div class="theme-picker">
+                                        <div class="theme-color-option active" style="background:#3b82f6;" onclick="setThemeColor('#3b82f6')" title="Blue"></div>
+                                        <div class="theme-color-option" style="background:#10b981;" onclick="setThemeColor('#10b981')" title="Green"></div>
+                                        <div class="theme-color-option" style="background:#8b5cf6;" onclick="setThemeColor('#8b5cf6')" title="Purple"></div>
+                                        <div class="theme-color-option" style="background:#f59e0b;" onclick="setThemeColor('#f59e0b')" title="Orange"></div>
+                                        <div class="theme-color-option" style="background:#ef4444;" onclick="setThemeColor('#ef4444')" title="Red"></div>
+                                        <div class="theme-color-option" style="background:#06b6d4;" onclick="setThemeColor('#06b6d4')" title="Cyan"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <!-- ADDED: IntaSend API Configuration -->
                         <div class="card" style="border-color:var(--accent-green)">
                             <div class="card-header" style="background:rgba(16,185,129,.1)">
@@ -1879,38 +1871,6 @@
                         </div>
                         <div class="card">
                             <div class="card-header"><h3 class="card-title">Tax Settings</h3></div>
-                        
-                        <!-- Theme Customization -->
-                        <div class="card">
-                            <div class="card-header"><h3 class="card-title">🎨 Theme & Branding</h3></div>
-                            <div class="card-body">
-                                <div class="form-group">
-                                    <label class="form-label">Business Logo</label>
-                                    <input type="file" class="form-input" id="businessLogo" accept="image/*">
-                                    <div id="logoPreview" style="margin-top:12px;max-width:200px;display:none;">
-                                        <img id="logoPreviewImg" style="width:100%;border-radius:8px;border:1px solid var(--border);">
-                                    </div>
-                                </div>
-                                
-                                <div class="form-group" style="margin-top:20px;">
-                                    <label class="form-label">Theme Color</label>
-                                    <div class="theme-picker">
-                                        <div class="theme-color-box active" style="background:#3b82f6;" onclick="setTheme('#3b82f6')" title="Blue (Default)"></div>
-                                        <div class="theme-color-box" style="background:#10b981;" onclick="setTheme('#10b981')" title="Green"></div>
-                                        <div class="theme-color-box" style="background:#8b5cf6;" onclick="setTheme('#8b5cf6')" title="Purple"></div>
-                                        <div class="theme-color-box" style="background:#f59e0b;" onclick="setTheme('#f59e0b')" title="Orange"></div>
-                                        <div class="theme-color-box" style="background:#ef4444;" onclick="setTheme('#ef4444')" title="Red"></div>
-                                        <div class="theme-color-box" style="background:#06b6d4;" onclick="setTheme('#06b6d4')" title="Cyan"></div>
-                                    </div>
-                                    <div style="margin-top:12px;">
-                                        <label class="form-label">Custom Color</label>
-                                        <input type="color" class="form-input" id="customThemeColor" style="height:50px;padding:4px;">
-                                    </div>
-                                </div>
-                                
-                                <button class="inv-btn success" onclick="saveThemeSettings()" style="margin-top:16px;">💾 Save Theme</button>
-                            </div>
-                        </div>
                             <div class="card-body">
                                 <div class="form-group">
                                     <label class="form-label">VAT Rate (%)</label>
@@ -2126,7 +2086,7 @@
             <div class="modal-body">
                 <div class="form-group"><label class="form-label">Customer Name *</label><input type="text" class="form-input" id="creditCustomerName" placeholder="e.g., Mama Njeri"></div>
                 <div class="form-group"><label class="form-label">Phone Number *</label><input type="tel" class="form-input" id="creditCustomerPhone" placeholder="07XXXXXXXX"></div>
-                <div class="form-group"><label class="form-label">Due Date</label><input type="date" class="form-input" id="creditDueDate" min="" ></div>
+                <div class="form-group"><label class="form-label">Due Date</label><input type="date" class="form-input" id="creditDueDate"></div>
             </div>
             <div class="modal-footer"><button class="modal-btn cancel" onclick="closeModal('creditSaleModal')">Cancel</button><button class="modal-btn success" onclick="confirmCreditSale()">Complete Credit Sale</button></div>
         </div>
@@ -2544,17 +2504,94 @@
         // ==================== INITIALIZATION ====================
         window.addEventListener('load', init);
         
-        function init() {
+
+        // Theme Customization Functions
+        function setThemeColor(color) {
+            // Update CSS variables
+            document.documentElement.style.setProperty('--accent-blue', color);
             
-            loadTheme(); // Load saved theme
-            fixCreditSaleDates(); // Set min date for credit sales
+            // Save to config
+            config.themeColor = color;
+            localStorage.setItem(STORAGE_KEYS.config, JSON.stringify(config));
             
-            // Add product image upload listener
-            const productImageInput = document.getElementById('newProductImage');
-            if (productImageInput) {
-                productImageInput.addEventListener('change', handleProductImageChange);
+            // Update active state
+            document.querySelectorAll('.theme-color-option').forEach(opt => {
+                opt.classList.remove('active');
+                if (opt.style.backgroundColor === color) {
+                    opt.classList.add('active');
+                }
+            });
+            
+            showToast('✅ Theme color updated!', 'success');
+        }
+        
+        function handleLogoUpload() {
+            const input = document.getElementById('logoUploadInput');
+            const preview = document.getElementById('logoPreview');
+            const previewImg = document.getElementById('logoPreviewImg');
+            
+            if (input && input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const logoData = e.target.result;
+                    config.businessLogo = logoData;
+                    localStorage.setItem(STORAGE_KEYS.config, JSON.stringify(config));
+                    
+                    // Show preview
+                    previewImg.src = logoData;
+                    preview.style.display = 'block';
+                    
+                    // Update logo in sidebar
+                    updateLogoInSidebar();
+                    
+                    showToast('✅ Logo uploaded successfully!', 'success');
+                };
+                reader.readAsDataURL(input.files[0]);
             }
-loadAllData();
+        }
+        
+        function updateLogoInSidebar() {
+            if (config.businessLogo) {
+                const logoIcon = document.querySelector('.logo-icon');
+                if (logoIcon) {
+                    logoIcon.innerHTML = `<img src="${config.businessLogo}" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">`;
+                }
+            }
+        }
+        
+        function loadSavedTheme() {
+            // Load theme color
+            if (config.themeColor) {
+                document.documentElement.style.setProperty('--accent-blue', config.themeColor);
+                // Set active state
+                document.querySelectorAll('.theme-color-option').forEach(opt => {
+                    if (opt.style.backgroundColor === config.themeColor) {
+                        opt.classList.add('active');
+                    }
+                });
+            }
+            
+            // Load logo
+            if (config.businessLogo) {
+                updateLogoInSidebar();
+                const preview = document.getElementById('logoPreview');
+                const previewImg = document.getElementById('logoPreviewImg');
+                if (preview && previewImg) {
+                    previewImg.src = config.businessLogo;
+                    preview.style.display = 'block';
+                }
+            }
+        }
+        
+
+        function init() {
+            loadSavedTheme();
+            
+            // Load chart of accounts and journal entries from localStorage
+            if (localStorage.getItem('chartOfAccounts')) {
+                window.chartOfAccounts = JSON.parse(localStorage.getItem('chartOfAccounts'));
+            } // Load saved theme and logo
+            loadAllData();
             updateTime();
             setInterval(updateTime, 1000);
             if (!isOnline) document.getElementById('offlineIndicator').classList.add('show');
@@ -3948,6 +3985,9 @@ loadAllData();
                 return;
             }
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+
+            if (tab === 'accounts') renderChartOfAccounts();
+            if (tab === 'journal') renderJournalEntries();
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.querySelectorAll('.bottom-nav-item').forEach(n => n.classList.remove('active'));
             
@@ -4357,9 +4397,11 @@ loadAllData();
             const msg = document.getElementById('mpesaConfirmMsg');
             const btn = document.getElementById('confirmMpesaBtn');
             
-            // Check if Till/Paybill is configured
-            if (!config.mpesaTill || config.mpesaTill === '') {
-                msg.innerHTML = '⚠️ <span style="color:#f59e0b;">Configure Till/Paybill in Settings first!</span>';
+            // Check if ANY M-Pesa payment method is configured
+            const hasMpesaConfig = config.mpesaTill || config.mpesaPaybillNumber || config.mpesaPochi || config.mpesaSend;
+            
+            if (!hasMpesaConfig) {
+                msg.innerHTML = '⚠️ <span style="color:#f59e0b;">Configure M-Pesa payment method in Settings first!</span>';
                 btn.disabled = true;
                 return;
             }
@@ -4380,14 +4422,33 @@ loadAllData();
             const phone = document.getElementById('mpesaPhoneConfirm').value.trim().replace(/\D/g,'');
             if (!phone.match(/^07\d{8}$/)) return showToast("Invalid phone number", "error");
             
-            // Check if Till/Paybill is configured
-            if (!config.mpesaTill || config.mpesaTill === '') {
-                showToast("Please configure M-Pesa Till/Paybill in Settings first!", "error");
+            // Check if ANY M-Pesa payment method is configured
+            const hasMpesaConfig = config.mpesaTill || config.mpesaPaybillNumber || config.mpesaPochi || config.mpesaSend;
+            
+            if (!hasMpesaConfig) {
+                showToast("Please configure an M-Pesa payment method in Settings first!", "error");
                 return;
+            }
+            
+            // Get the configured payment method details
+            let paymentDetails = {};
+            if (config.mpesaTill) {
+                paymentDetails = { phone, method: 'M-Pesa Till', number: config.mpesaTill };
+            } else if (config.mpesaPaybillNumber) {
+                paymentDetails = { 
+                    phone, 
+                    method: 'M-Pesa Paybill', 
+                    paybill: config.mpesaPaybillNumber,
+                    account: config.mpesaPaybillAccount || ''
+                };
+            } else if (config.mpesaPochi) {
+                paymentDetails = { phone, method: 'M-Pesa Pochi', number: config.mpesaPochi };
+            } else if (config.mpesaSend) {
+                paymentDetails = { phone, method: 'M-Pesa Send Money', number: config.mpesaSend };
             }
 
             mpesaConfirmed = true;
-            mpesaData = { phone, method: 'M-Pesa', till: config.mpesaTill };
+            mpesaData = paymentDetails;
             
             // Show success message
             showToast(`✓ M-Pesa payment confirmed from ${phone}`, "success");
@@ -4404,21 +4465,12 @@ loadAllData();
             const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
             const amountEl = document.getElementById('mpesaAmount');
             const amountIntasendEl = document.getElementById('mpesaAmountIntasend');
-            const tillEl = document.getElementById('mpesaTillDisplay');
             
             if (amountEl) amountEl.textContent = formatKsh(total);
             if (amountIntasendEl) amountIntasendEl.textContent = formatKsh(total);
             
-            if (tillEl) {
-                const tillNumber = config.mpesaTill || 'NOT SET';
-                tillEl.textContent = tillNumber;
-                if (!config.mpesaTill || config.mpesaTill === '') {
-                    tillEl.style.color = '#f59e0b';
-                    tillEl.textContent = 'NOT CONFIGURED';
-                } else {
-                    tillEl.style.color = '#10b981';
-                }
-            }
+            // Use the comprehensive updateMpesaDisplay function
+            updateMpesaDisplay();
         }
         
         // ADDED: IntaSend STK Push Integration
@@ -4767,7 +4819,10 @@ loadAllData();
                     const stockClass = p.stock === 0 ? 'danger' : p.stock <= p.reorder ? 'warning' : 'success';
                     const unit = p.unit || 'units';
                     return `<tr>
-                        <td><strong>${getEmoji(p.category)} ${p.name}</strong></td>
+                        <td>
+                        ${p.productImage ? `<img src="${p.productImage}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;margin-right:10px;vertical-align:middle;">` : getEmoji(p.category) + ' '}
+                        <strong>${p.name}</strong>
+                    </td>
                         <td><code>${p.sku || '-'}</code></td>
                         <td>${p.category}</td>
                         <td>${formatKsh(p.cost)}</td>
@@ -4775,16 +4830,7 @@ loadAllData();
                         <td><span class="table-status ${margin >= 20 ? 'success' : margin >= 10 ? 'warning' : 'danger'}">${margin}%</span></td>
                         <td><span class="table-status ${stockClass}">${p.stock} ${unit}</span></td>
                         <td>${formatKsh(p.cost * p.stock)}</td>
-                        <td>
-                            <div class="product-menu">
-                                <button class="product-menu-btn" onclick="toggleProductMenu('${p.id}', event)">⋮</button>
-                                <div class="product-menu-dropdown" id="productMenu${p.id}">
-                                    <div class="product-menu-item" onclick="openRestockModal('${p.id}')">+ Add Stock</div>
-                                    <div class="product-menu-item" onclick="editProduct('${p.id}')">✏️ Edit</div>
-                                    <div class="product-menu-item danger" onclick="deleteProduct('${p.id}')">🗑️ Delete</div>
-                                </div>
-                            </div>
-                        </td>
+                        <td><button class="action-btn success" onclick="openRestockModal('${p.id}')">+Stock</button><button class="action-btn primary" onclick="editProduct('${p.id}')">Edit</button><button class="action-btn danger" onclick="deleteProduct('${p.id}')">Delete</button></td>
                     </tr>`;
                 }).join('') + `<tr style="background:var(--bg-dark);font-weight:700"><td colspan="7">Total Inventory Value</td><td colspan="2">${formatKsh(totalValue)}</td></tr>`;
             }
@@ -4836,6 +4882,24 @@ loadAllData();
         }
         
         // UPDATED: Added SKU auto-generation and auto-category detection
+
+        function previewProductImage() {
+            const input = document.getElementById('productImageInput');
+            const preview = document.getElementById('productImagePreview');
+            const img = document.getElementById('productImagePreviewImg');
+            
+            if (input && input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    img.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+        
         function addNewProduct() {
             const name = document.getElementById('newProductName').value.trim();
             let category = document.getElementById('newProductCategory').value;
@@ -5028,29 +5092,6 @@ loadAllData();
             showToast('Supplier added', 'success');
         }
         
-        function editSupplier(id) {
-            const supplier = suppliers.find(s => s.id === id);
-            if (!supplier) return;
-            
-            const name = prompt('Supplier Name:', supplier.name);
-            if (!name) return;
-            
-            const contact = prompt('Contact Person:', supplier.contact) || '';
-            const phone = prompt('Phone Number:', supplier.phone) || '';
-            const email = prompt('Email:', supplier.email) || '';
-            const prods = prompt('Products Supplied:', supplier.products) || '';
-            
-            supplier.name = name;
-            supplier.contact = contact;
-            supplier.phone = phone;
-            supplier.email = email;
-            supplier.products = prods;
-            
-            localStorage.setItem(STORAGE_KEYS.suppliers, JSON.stringify(suppliers));
-            renderSuppliers();
-            showToast('✅ Supplier updated!', 'success');
-        }
-        
         function deleteSupplier(id) {
             if (!confirm('Delete this supplier?')) return;
             suppliers = suppliers.filter(s => s.id !== id);
@@ -5224,11 +5265,231 @@ loadAllData();
         }
         
         function showAddAccountModal() {
-            showToast('Chart of accounts feature coming soon!', 'info');
+            const modalHTML = `
+                <div class="modal-overlay" id="addAccountModal" style="display:flex;">
+                    <div class="modal">
+                        <div class="modal-header">
+                            <h3 class="modal-title">Add New Account</h3>
+                            <button class="modal-close" onclick="closeModal('addAccountModal')">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="modal-input-group">
+                                <label class="modal-label">Account Code *</label>
+                                <input type="text" class="form-input" id="newAccountCode" placeholder="e.g., 1000">
+                            </div>
+                            <div class="modal-input-group">
+                                <label class="modal-label">Account Name *</label>
+                                <input type="text" class="form-input" id="newAccountName" placeholder="e.g., Cash at Bank">
+                            </div>
+                            <div class="modal-input-group">
+                                <label class="modal-label">Account Type *</label>
+                                <select class="form-input" id="newAccountType">
+                                    <option value="">Select Type</option>
+                                    <option value="Asset">Asset</option>
+                                    <option value="Liability">Liability</option>
+                                    <option value="Equity">Equity</option>
+                                    <option value="Revenue">Revenue</option>
+                                    <option value="Expense">Expense</option>
+                                </select>
+                            </div>
+                            <div class="modal-input-group">
+                                <label class="modal-label">Opening Balance (Optional)</label>
+                                <input type="number" class="form-input" id="newAccountBalance" placeholder="0" value="0">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="modal-btn secondary" onclick="closeModal('addAccountModal')">Cancel</button>
+                            <button class="modal-btn primary" onclick="saveNewAccount()">Add Account</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const existing = document.getElementById('addAccountModal');
+            if (existing) existing.remove();
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+        
+        function saveNewAccount() {
+            const code = document.getElementById('newAccountCode').value.trim();
+            const name = document.getElementById('newAccountName').value.trim();
+            const type = document.getElementById('newAccountType').value;
+            const balance = parseFloat(document.getElementById('newAccountBalance').value) || 0;
+            
+            if (!code || !name || !type) {
+                showToast('Please fill all required fields', 'error');
+                return;
+            }
+            
+            // Initialize chartOfAccounts if not exists
+            if (!window.chartOfAccounts) window.chartOfAccounts = [];
+            
+            // Check for duplicate code
+            if (window.chartOfAccounts.find(a => a.code === code)) {
+                showToast('Account code already exists!', 'error');
+                return;
+            }
+            
+            window.chartOfAccounts.push({
+                id: 'ACC' + Date.now(),
+                code: code,
+                name: name,
+                type: type,
+                balance: balance
+            });
+            
+            localStorage.setItem('chartOfAccounts', JSON.stringify(window.chartOfAccounts));
+            closeModal('addAccountModal');
+            renderChartOfAccounts();
+            showToast('✅ Account added successfully!', 'success');
+        }
+        
+        function renderChartOfAccounts() {
+            if (!window.chartOfAccounts) {
+                window.chartOfAccounts = JSON.parse(localStorage.getItem('chartOfAccounts') || '[]');
+            }
+            
+            const tbody = document.getElementById('accountsTableBody');
+            if (!tbody) return;
+            
+            if (window.chartOfAccounts.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">No accounts yet. Click "Add Account" to create one.</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = window.chartOfAccounts.map(acc => `
+                <tr>
+                    <td><code>${acc.code}</code></td>
+                    <td><strong>${acc.name}</strong></td>
+                    <td><span class="table-badge">${acc.type}</span></td>
+                    <td>${formatKsh(acc.balance)}</td>
+                    <td>
+                        <button class="action-btn danger" onclick="deleteAccount('${acc.id}')">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function deleteAccount(id) {
+            if (!confirm('Delete this account?')) return;
+            window.chartOfAccounts = window.chartOfAccounts.filter(a => a.id !== id);
+            localStorage.setItem('chartOfAccounts', JSON.stringify(window.chartOfAccounts));
+            renderChartOfAccounts();
+            showToast('Account deleted', 'success');
+        }
+        
+        function showAddJournalModal() {
+            const modalHTML = `
+                <div class="modal-overlay" id="addJournalModal" style="display:flex;">
+                    <div class="modal">
+                        <div class="modal-header">
+                            <h3 class="modal-title">Add Journal Entry</h3>
+                            <button class="modal-close" onclick="closeModal('addJournalModal')">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="modal-input-group">
+                                <label class="modal-label">Date *</label>
+                                <input type="date" class="form-input" id="journalDate" value="${new Date().toISOString().split('T')[0]}">
+                            </div>
+                            <div class="modal-input-group">
+                                <label class="modal-label">Reference Number *</label>
+                                <input type="text" class="form-input" id="journalRef" placeholder="e.g., JE001">
+                            </div>
+                            <div class="modal-input-group">
+                                <label class="modal-label">Description *</label>
+                                <input type="text" class="form-input" id="journalDesc" placeholder="e.g., Office supplies purchase">
+                            </div>
+                            <div class="modal-input-group">
+                                <label class="modal-label">Debit Account *</label>
+                                <input type="text" class="form-input" id="journalDebit" placeholder="e.g., Office Expenses">
+                            </div>
+                            <div class="modal-input-group">
+                                <label class="modal-label">Credit Account *</label>
+                                <input type="text" class="form-input" id="journalCredit" placeholder="e.g., Cash">
+                            </div>
+                            <div class="modal-input-group">
+                                <label class="modal-label">Amount (KSh) *</label>
+                                <input type="number" class="form-input" id="journalAmount" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="modal-btn secondary" onclick="closeModal('addJournalModal')">Cancel</button>
+                            <button class="modal-btn primary" onclick="saveJournalEntry()">Add Entry</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const existing = document.getElementById('addJournalModal');
+            if (existing) existing.remove();
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+        
+        function saveJournalEntry() {
+            const date = document.getElementById('journalDate').value;
+            const ref = document.getElementById('journalRef').value.trim();
+            const desc = document.getElementById('journalDesc').value.trim();
+            const debit = document.getElementById('journalDebit').value.trim();
+            const credit = document.getElementById('journalCredit').value.trim();
+            const amount = parseFloat(document.getElementById('journalAmount').value);
+            
+            if (!date || !ref || !desc || !debit || !credit || !amount || amount <= 0) {
+                showToast('Please fill all fields correctly', 'error');
+                return;
+            }
+            
+            const entry = {
+                id: 'JE' + Date.now(),
+                date: date,
+                ref: ref,
+                description: desc,
+                debit: debit,
+                credit: credit,
+                amount: amount
+            };
+            
+            journalEntries.unshift(entry);
+            localStorage.setItem(STORAGE_KEYS.journal, JSON.stringify(journalEntries));
+            closeModal('addJournalModal');
+            renderJournalEntries();
+            showToast('✅ Journal entry added!', 'success');
+        }
+        
+        function renderJournalEntries() {
+            const tbody = document.getElementById('journalTableBody');
+            if (!tbody) return;
+            
+            if (journalEntries.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted);">No journal entries yet</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = journalEntries.map(je => `
+                <tr>
+                    <td>${je.date}</td>
+                    <td><code>${je.ref}</code></td>
+                    <td>${je.description}</td>
+                    <td>${je.debit}</td>
+                    <td>${je.credit}</td>
+                    <td>
+                        <button class="action-btn danger" onclick="deleteJournalEntry('${je.id}')">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function deleteJournalEntry(id) {
+            if (!confirm('Delete this entry?')) return;
+            journalEntries = journalEntries.filter(je => je.id !== id);
+            localStorage.setItem(STORAGE_KEYS.journal, JSON.stringify(journalEntries));
+            renderJournalEntries();
+            showToast('Entry deleted', 'success');
         }
         
         function viewJournalEntry(id) {
-            showToast('Journal entry details coming soon!', 'info');
+            const entry = journalEntries.find(je => je.id === id);
+            if (!entry) return;
+            showToast(\`Entry: \${entry.description} - \${formatKsh(entry.amount)}\`, 'info');
         }
         // ==================== REPORTS & ANALYTICS ====================
         function renderReports() {
@@ -6279,11 +6540,13 @@ loadAllData();
             if (tillEl) {
                 let displayText = '';
                 let labelText = 'Till/Paybill Number';
+                let isConfigured = false;
                 
                 // Priority: Till > Paybill > Pochi > Send Money
                 if (config.mpesaTill) {
                     displayText = config.mpesaTill;
                     labelText = '🏪 Buy Goods Till Number';
+                    isConfigured = true;
                     console.log('Using Till:', config.mpesaTill);
                 } else if (config.mpesaPaybillNumber) {
                     displayText = config.mpesaPaybillNumber;
@@ -6291,23 +6554,29 @@ loadAllData();
                         displayText += ' (Acc: ' + config.mpesaPaybillAccount + ')';
                     }
                     labelText = '🏢 Paybill Number' + (config.mpesaPaybillAccount ? ' & Account' : '');
+                    isConfigured = true;
                     console.log('Using Paybill:', config.mpesaPaybillNumber);
                 } else if (config.mpesaPochi) {
                     displayText = config.mpesaPochi;
                     labelText = '💼 Pochi la Biashara Number';
+                    isConfigured = true;
                     console.log('Using Pochi:', config.mpesaPochi);
                 } else if (config.mpesaSend) {
                     displayText = config.mpesaSend;
                     labelText = '💸 Send Money Number';
+                    isConfigured = true;
                     console.log('Using Send Money:', config.mpesaSend);
                 } else {
-                    displayText = 'Not set';
-                    labelText = 'Till/Paybill Number';
+                    displayText = 'NOT CONFIGURED';
+                    labelText = 'M-Pesa Payment Method';
+                    isConfigured = false;
                     console.log('No payment method configured');
                 }
                 
+                // Set display text and color
                 tillEl.textContent = displayText;
-                console.log('Updated tillEl to:', displayText);
+                tillEl.style.color = isConfigured ? '#10b981' : '#f59e0b';
+                console.log('Updated tillEl to:', displayText, 'Color:', isConfigured ? 'green' : 'orange');
                 
                 // Update label if element exists
                 if (labelEl) {
@@ -6318,7 +6587,7 @@ loadAllData();
                 }
                 
                 // CRITICAL: Re-enable Complete Sale button if M-Pesa is now configured
-                if (selectedPayment === 'M-Pesa' && displayText !== 'Not set') {
+                if (selectedPayment === 'M-Pesa' && isConfigured) {
                     // Re-check the phone number validation
                     const mpesaPhoneInput = document.getElementById('mpesaPhoneConfirm');
                     if (mpesaPhoneInput && mpesaPhoneInput.value) {
@@ -6696,260 +6965,6 @@ loadAllData();
             }
         }, 60000); // Every 60 seconds
         
-
-        // ==================== THEME CUSTOMIZATION ====================
-        function setTheme(color) {
-            document.documentElement.style.setProperty('--accent-blue', color);
-            config.themeColor = color;
-            localStorage.setItem(STORAGE_KEYS.config, JSON.stringify(config));
-            
-            // Update active state
-            document.querySelectorAll('.theme-color-box').forEach(box => box.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            showToast('Theme updated!', 'success');
-        }
-        
-        function saveThemeSettings() {
-            const customColor = document.getElementById('customThemeColor').value;
-            if (customColor) {
-                setTheme(customColor);
-            }
-            
-            // Handle logo upload
-            const logoInput = document.getElementById('businessLogo');
-            if (logoInput.files && logoInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    config.businessLogo = e.target.result;
-                    localStorage.setItem(STORAGE_KEYS.config, JSON.stringify(config));
-                    document.getElementById('logoPreviewImg').src = e.target.result;
-                    document.getElementById('logoPreview').style.display = 'block';
-                    showToast('✅ Logo uploaded successfully!', 'success');
-                };
-                reader.readAsDataURL(logoInput.files[0]);
-            }
-        }
-        
-        // Load saved theme on startup
-        function loadTheme() {
-            if (config.themeColor) {
-                document.documentElement.style.setProperty('--accent-blue', config.themeColor);
-            }
-            if (config.businessLogo) {
-                const logoImg = document.getElementById('logoPreviewImg');
-                const logoPreview = document.getElementById('logoPreview');
-                if (logoImg && logoPreview) {
-                    logoImg.src = config.businessLogo;
-                    logoPreview.style.display = 'block';
-                }
-            }
-        }
-        
-        // ==================== PRODUCT IMAGE UPLOAD ====================
-        function handleProductImageChange() {
-            const input = document.getElementById('newProductImage');
-            const preview = document.getElementById('productImagePreview');
-            const img = document.getElementById('previewImg');
-            
-            if (input && input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    img.src = e.target.result;
-                    preview.style.display = 'block';
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-        
-        // ==================== THREE-DOT MENU FOR PRODUCTS ====================
-        function toggleProductMenu(productId, event) {
-            event.stopPropagation();
-            const menu = document.getElementById('productMenu' + productId);
-            
-            // Close all other menus
-            document.querySelectorAll('.product-menu-dropdown').forEach(m => {
-                if (m.id !== 'productMenu' + productId) {
-                    m.classList.remove('show');
-                }
-            });
-            
-            // Toggle this menu
-            menu.classList.toggle('show');
-        }
-        
-        // Close menus when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.product-menu')) {
-                document.querySelectorAll('.product-menu-dropdown').forEach(m => {
-                    m.classList.remove('show');
-                });
-            }
-        });
-        
-        // ==================== CHART OF ACCOUNTS ====================
-        function openAddAccountModal() {
-            // Create modal if it doesn't exist
-            const modalHTML = `
-                <div class="modal-overlay" id="addAccountModal" style="display:flex;">
-                    <div class="modal">
-                        <div class="modal-header">
-                            <h3 class="modal-title">Add Account</h3>
-                            <button class="modal-close" onclick="closeModal('addAccountModal')">×</button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="modal-input-group">
-                                <label class="modal-label">Account Code</label>
-                                <input type="text" class="form-input" id="newAccountCode" placeholder="e.g., 1000">
-                            </div>
-                            <div class="modal-input-group">
-                                <label class="modal-label">Account Name</label>
-                                <input type="text" class="form-input" id="newAccountName" placeholder="e.g., Cash">
-                            </div>
-                            <div class="modal-input-group">
-                                <label class="modal-label">Account Type</label>
-                                <select class="form-input" id="newAccountType">
-                                    <option value="Asset">Asset</option>
-                                    <option value="Liability">Liability</option>
-                                    <option value="Equity">Equity</option>
-                                    <option value="Revenue">Revenue</option>
-                                    <option value="Expense">Expense</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button class="modal-btn secondary" onclick="closeModal('addAccountModal')">Cancel</button>
-                            <button class="modal-btn primary" onclick="addNewAccount()">Add Account</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // Remove existing modal if any
-            const existing = document.getElementById('addAccountModal');
-            if (existing) existing.remove();
-            
-            // Add new modal
-            document.body.insertAdjacentHTML('beforeend', modalHTML);
-        }
-        
-        function addNewAccount() {
-            const code = document.getElementById('newAccountCode').value.trim();
-            const name = document.getElementById('newAccountName').value.trim();
-            const type = document.getElementById('newAccountType').value;
-            
-            if (!code || !name) {
-                showToast('Please fill all fields', 'error');
-                return;
-            }
-            
-            // Add to chart of accounts (you'll need to define this array)
-            if (!window.chartOfAccounts) window.chartOfAccounts = [];
-            window.chartOfAccounts.push({ code, name, type, balance: 0 });
-            
-            closeModal('addAccountModal');
-            showToast('✅ Account added successfully!', 'success');
-            
-            // Refresh the display if function exists
-            if (typeof renderChartOfAccounts === 'function') {
-                renderChartOfAccounts();
-            }
-        }
-        
-        // ==================== JOURNAL ENTRY ====================
-        function openAddJournalEntryModal() {
-            const modalHTML = `
-                <div class="modal-overlay" id="addJournalModal" style="display:flex;">
-                    <div class="modal">
-                        <div class="modal-header">
-                            <h3 class="modal-title">Add Journal Entry</h3>
-                            <button class="modal-close" onclick="closeModal('addJournalModal')">×</button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="modal-input-group">
-                                <label class="modal-label">Date</label>
-                                <input type="date" class="form-input" id="journalDate" value="${getTodayDate()}">
-                            </div>
-                            <div class="modal-input-group">
-                                <label class="modal-label">Reference</label>
-                                <input type="text" class="form-input" id="journalRef" placeholder="e.g., JE001">
-                            </div>
-                            <div class="modal-input-group">
-                                <label class="modal-label">Description</label>
-                                <input type="text" class="form-input" id="journalDesc" placeholder="e.g., Office supplies">
-                            </div>
-                            <div class="modal-input-group">
-                                <label class="modal-label">Debit Account</label>
-                                <input type="text" class="form-input" id="journalDebit" placeholder="e.g., Office Expenses">
-                            </div>
-                            <div class="modal-input-group">
-                                <label class="modal-label">Credit Account</label>
-                                <input type="text" class="form-input" id="journalCredit" placeholder="e.g., Cash">
-                            </div>
-                            <div class="modal-input-group">
-                                <label class="modal-label">Amount (KSh)</label>
-                                <input type="number" class="form-input" id="journalAmount" placeholder="0">
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button class="modal-btn secondary" onclick="closeModal('addJournalModal')">Cancel</button>
-                            <button class="modal-btn primary" onclick="addJournalEntry()">Add Entry</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            const existing = document.getElementById('addJournalModal');
-            if (existing) existing.remove();
-            document.body.insertAdjacentHTML('beforeend', modalHTML);
-        }
-        
-        function addJournalEntry() {
-            const date = document.getElementById('journalDate').value;
-            const ref = document.getElementById('journalRef').value.trim();
-            const desc = document.getElementById('journalDesc').value.trim();
-            const debit = document.getElementById('journalDebit').value.trim();
-            const credit = document.getElementById('journalCredit').value.trim();
-            const amount = parseFloat(document.getElementById('journalAmount').value);
-            
-            if (!date || !ref || !desc || !debit || !credit || !amount) {
-                showToast('Please fill all fields', 'error');
-                return;
-            }
-            
-            journalEntries.push({
-                id: 'JE' + Date.now(),
-                date,
-                ref,
-                description: desc,
-                debit,
-                credit,
-                amount
-            });
-            
-            localStorage.setItem(STORAGE_KEYS.journal, JSON.stringify(journalEntries));
-            closeModal('addJournalModal');
-            showToast('✅ Journal entry added!', 'success');
-            
-            if (typeof renderJournalEntries === 'function') {
-                renderJournalEntries();
-            }
-        }
-        
-        // ==================== CREDIT SALE DATE FIX ====================
-        function fixCreditSaleDates() {
-            const today = new Date().toISOString().split('T')[0];
-            const creditDateInput = document.getElementById('creditDueDate');
-            if (creditDateInput) {
-                creditDateInput.min = today;
-                // Set default to 30 days from today
-                const defaultDate = new Date();
-                defaultDate.setDate(defaultDate.getDate() + 30);
-                creditDateInput.value = defaultDate.toISOString().split('T')[0];
-            }
-        }
-        
-
         // ==================== EXPORT ====================
         function exportToExcel() {
             const wb = XLSX.utils.book_new();
