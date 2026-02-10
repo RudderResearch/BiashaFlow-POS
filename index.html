@@ -1969,6 +1969,20 @@
                     <label class="form-label">SKU (optional – auto-generated)</label>
                     <input type="text" class="form-input" id="newProductSKU" placeholder="e.g. MAI-47291">
                 </div>
+                
+                <!-- Product Image Upload -->
+                <div class="form-group">
+                    <label class="form-label">Product Image (optional)</label>
+                    <input type="file" class="form-input" id="newProductImage" accept="image/*" capture="environment" onchange="previewNewProductImage(this)">
+                    <div id="newProductImagePreview" style="margin-top:12px;display:none;">
+                        <img id="newProductImagePreviewImg" style="max-width:200px;max-height:200px;border:2px solid var(--border);border-radius:8px;object-fit:cover;">
+                        <button type="button" class="action-btn danger" onclick="clearNewProductImage()" style="margin-top:8px;font-size:0.85rem;">Remove Image</button>
+                    </div>
+                    <div style="margin-top:8px;font-size:0.85rem;color:var(--text-muted);">
+                        📸 Click to take photo or upload from gallery
+                    </div>
+                </div>
+                
                 <div class="form-row">
                     <div class="form-group"><label class="form-label">Cost Price (Ksh) *</label><input type="number" class="form-input" id="newProductCost" placeholder="150"></div>
                     <div class="form-group"><label class="form-label">Selling Price (Ksh) *</label><input type="number" class="form-input" id="newProductPrice" placeholder="180"></div>
@@ -1988,11 +2002,16 @@
                         <option value="2kg">2kg</option>
                         <option value="5kg">5kg</option>
                         <option value="10kg">10kg</option>
+                        <option value="15kg">15kg</option>
+                        <option value="20kg">20kg</option>
                         <option value="250ml">250ml</option>
                         <option value="500ml">500ml (½L)</option>
                         <option value="1L">1 Liter</option>
                         <option value="2L">2 Liters</option>
                         <option value="5L">5 Liters</option>
+                        <option value="10L">10 Liters</option>
+                        <option value="15L">15 Liters</option>
+                        <option value="20L">20 Liters</option>
                         <option value="bottle">Bottle</option>
                         <option value="can">Can</option>
                         <option value="box">Box</option>
@@ -2024,6 +2043,20 @@
                     <div class="form-group"><label class="form-label">Product Name *</label><input type="text" class="form-input" id="editProductName" placeholder="e.g., Jogoo Maize Flour 2kg"></div>
                     <div class="form-group"><label class="form-label">Category</label><select class="form-select" id="editProductCategory"></select></div>
                 </div>
+                
+                <!-- Product Image Upload -->
+                <div class="form-group">
+                    <label class="form-label">Product Image (optional)</label>
+                    <input type="file" class="form-input" id="editProductImage" accept="image/*" capture="environment" onchange="previewEditProductImage(this)">
+                    <div id="editProductImagePreview" style="margin-top:12px;display:none;">
+                        <img id="editProductImagePreviewImg" style="max-width:200px;max-height:200px;border:2px solid var(--border);border-radius:8px;object-fit:cover;">
+                        <button type="button" class="action-btn danger" onclick="clearEditProductImage()" style="margin-top:8px;font-size:0.85rem;">Remove Image</button>
+                    </div>
+                    <div style="margin-top:8px;font-size:0.85rem;color:var(--text-muted);">
+                        📸 Click to take photo or upload from gallery
+                    </div>
+                </div>
+                
                 <div class="form-row">
                     <div class="form-group"><label class="form-label">Cost Price (Ksh) *</label><input type="number" class="form-input" id="editProductCost" placeholder="150"></div>
                     <div class="form-group"><label class="form-label">Selling Price (Ksh) *</label><input type="number" class="form-input" id="editProductPrice" placeholder="180"></div>
@@ -2043,11 +2076,16 @@
                         <option value="2kg">2kg</option>
                         <option value="5kg">5kg</option>
                         <option value="10kg">10kg</option>
+                        <option value="15kg">15kg</option>
+                        <option value="20kg">20kg</option>
                         <option value="250ml">250ml</option>
                         <option value="500ml">500ml (½L)</option>
                         <option value="1L">1 Liter</option>
                         <option value="2L">2 Liters</option>
                         <option value="5L">5 Liters</option>
+                        <option value="10L">10 Liters</option>
+                        <option value="15L">15 Liters</option>
+                        <option value="20L">20 Liters</option>
                         <option value="bottle">Bottle</option>
                         <option value="can">Can</option>
                         <option value="box">Box</option>
@@ -4787,6 +4825,51 @@
         
         function printReceipt() { window.print(); }
         
+        // ==================== PRODUCT IMAGE HANDLING ====================
+        function previewNewProductImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('newProductImagePreview');
+                    const img = document.getElementById('newProductImagePreviewImg');
+                    img.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        
+        function clearNewProductImage() {
+            const preview = document.getElementById('newProductImagePreview');
+            const img = document.getElementById('newProductImagePreviewImg');
+            const input = document.getElementById('newProductImage');
+            if (img) img.src = '';
+            if (preview) preview.style.display = 'none';
+            if (input) input.value = '';
+        }
+        
+        function previewEditProductImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('editProductImagePreview');
+                    const img = document.getElementById('editProductImagePreviewImg');
+                    img.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        
+        function clearEditProductImage() {
+            const preview = document.getElementById('editProductImagePreview');
+            const img = document.getElementById('editProductImagePreviewImg');
+            const input = document.getElementById('editProductImage');
+            if (img) img.src = '';
+            if (preview) preview.style.display = 'none';
+            if (input) input.value = '';
+        }
+        
         // ==================== SALES HISTORY ====================
         function renderSalesHistory() {
             const tableBody = document.getElementById('salesHistoryBody');
@@ -4949,6 +5032,10 @@
                 unit = document.getElementById('newProductCustomUnit').value.trim() || 'piece';
             }
             
+            // Get product image if uploaded
+            const imagePreview = document.getElementById('newProductImagePreviewImg');
+            const productImage = imagePreview && imagePreview.src && !imagePreview.src.includes('data:image/svg') ? imagePreview.src : null;
+            
             if (!name || !price) { showToast('Enter product name and price', 'error'); return; }
             
             // Auto-detect category from product name if not selected
@@ -4990,8 +5077,12 @@
                 }
             }
             
-            products.push({ id: 'P' + Date.now(), sku, name, category, cost, price, stock, reorder, vat, unit });
+            products.push({ id: 'P' + Date.now(), sku, name, category, cost, price, stock, reorder, vat, unit, image: productImage });
             localStorage.setItem(STORAGE_KEYS.products, JSON.stringify(products));
+            
+            // Clear the image preview
+            clearNewProductImage();
+            
             closeModal('addProductModal');
             showToast(`Product added to ${category}`, 'success');
             renderInventory();
@@ -5039,6 +5130,16 @@
                 customUnitGroup.style.display = 'block';
             }
             
+            // Display existing product image if available
+            if (product.image) {
+                const previewDiv = document.getElementById('editProductImagePreview');
+                const previewImg = document.getElementById('editProductImagePreviewImg');
+                previewImg.src = product.image;
+                previewDiv.style.display = 'block';
+            } else {
+                clearEditProductImage();
+            }
+            
             // Show modal
             openModal('editProductModal');
         }
@@ -5063,6 +5164,12 @@
                 unit = document.getElementById('editProductCustomUnit').value.trim() || 'piece';
             }
             product.unit = unit;
+            
+            // Update product image if changed
+            const imagePreview = document.getElementById('editProductImagePreviewImg');
+            if (imagePreview && imagePreview.src && !imagePreview.src.includes('data:image/svg')) {
+                product.image = imagePreview.src;
+            }
             
             if (!product.name || !product.price) {
                 showToast('Enter product name and price', 'error');
@@ -5131,6 +5238,34 @@
             suppliers = suppliers.filter(s => s.id !== id);
             localStorage.setItem(STORAGE_KEYS.suppliers, JSON.stringify(suppliers));
             renderSuppliers();
+        }
+        
+        function editSupplier(id) {
+            const supplier = suppliers.find(s => s.id === id);
+            if (!supplier) return;
+            
+            const name = prompt('Supplier Name:', supplier.name);
+            if (name === null) return; // User cancelled
+            
+            const contact = prompt('Contact Person:', supplier.contact);
+            if (contact === null) return;
+            
+            const phone = prompt('Phone Number:', supplier.phone);
+            if (phone === null) return;
+            
+            const email = prompt('Email:', supplier.email);
+            if (email === null) return;
+            
+            const products = prompt('Products Supplied:', supplier.products);
+            if (products === null) return;
+            
+            // Update supplier
+            const index = suppliers.findIndex(s => s.id === id);
+            suppliers[index] = { ...supplier, name, contact, phone, email, products };
+            
+            localStorage.setItem(STORAGE_KEYS.suppliers, JSON.stringify(suppliers));
+            renderSuppliers();
+            showToast('Supplier updated successfully!', 'success');
         }
         
         // ==================== CREDIT SALES ====================
