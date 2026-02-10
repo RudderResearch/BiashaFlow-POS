@@ -4786,6 +4786,38 @@
         }
         
         function printReceipt() { window.print(); }
+        
+        // ==================== SALES HISTORY ====================
+        function renderSalesHistory() {
+            const tableBody = document.getElementById('salesHistoryBody');
+            if (!tableBody) {
+                console.error('salesHistoryBody element not found');
+                return;
+            }
+            
+            // Sort sales by date (newest first)
+            const sortedSales = [...sales].sort((a, b) => {
+                const dateA = new Date(a.date + ' ' + a.time);
+                const dateB = new Date(b.date + ' ' + b.time);
+                return dateB - dateA;
+            });
+            
+            tableBody.innerHTML = sortedSales.map(s => `
+                <tr>
+                    <td><code>${s.id}</code></td>
+                    <td>${s.date}</td>
+                    <td>${s.time}</td>
+                    <td>${s.items.map(i => `${i.name} (${i.qty})`).join(', ')}</td>
+                    <td style="font-weight:600">${formatKsh(s.total)}</td>
+                    <td><span class="table-status ${s.paymentMethod === 'Cash' ? 'success' : 'info'}">${s.paymentMethod}</span></td>
+                    <td>${s.cashier || 'N/A'}</td>
+                    <td>
+                        <button class="action-btn primary" onclick="viewSaleReceipt('${s.id}')">Receipt</button>
+                    </td>
+                </tr>
+            `).join('') || '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted);">No sales yet</td></tr>';
+        }
+        
         // ==================== INVENTORY ====================
         function renderInventory() {
             document.getElementById('invCategoryFilter').innerHTML = '<option value="all">All Categories</option>' + categories.map(c => `<option value="${c}">${c}</option>`).join('');
@@ -5109,11 +5141,22 @@
             const totalPaid = creditSales.reduce((s, c) => s + c.paid, 0);
             const totalBalance = totalCredit - totalPaid;
             
-            document.getElementById('creditTotal').textContent = formatKsh(totalCredit);
-            document.getElementById('creditPaid').textContent = formatKsh(totalPaid);
-            document.getElementById('creditBalance').textContent = formatKsh(totalBalance);
+            // Update summary if elements exist
+            const creditTotalEl = document.getElementById('creditTotal');
+            const creditPaidEl = document.getElementById('creditPaid');
+            const creditBalanceEl = document.getElementById('creditBalance');
             
-            document.getElementById('creditTableBody').innerHTML = creditSales.map(c => {
+            if (creditTotalEl) creditTotalEl.textContent = formatKsh(totalCredit);
+            if (creditPaidEl) creditPaidEl.textContent = formatKsh(totalPaid);
+            if (creditBalanceEl) creditBalanceEl.textContent = formatKsh(totalBalance);
+            
+            const tableBody = document.getElementById('creditTableBody');
+            if (!tableBody) {
+                console.error('creditTableBody element not found');
+                return;
+            }
+            
+            tableBody.innerHTML = creditSales.map(c => {
                 const balance = c.amount - c.paid;
                 const isOverdue = c.dueDate && new Date(c.dueDate) < new Date(today) && balance > 0;
                 return `
@@ -5240,13 +5283,75 @@
                           { name: 'Operating Expenses', balance: expenses.reduce((s,e) => s + e.amount, 0) }]
             };
             
-            const renderAccountList = (list, positive) => list.map(a => `<div class="account-balance"><span class="account-name">${a.name}</span><span class="account-amount ${a.balance >= 0 === positive ? 'positive' : 'negative'}">${formatKsh(Math.abs(a.balance))}</span></div>`).join('');
+            const tableBody = document.getElementById('accountsTableBody');
+            if (!tableBody) {
+                console.error('accountsTableBody element not found');
+                return;
+            }
             
-            document.getElementById('assetAccounts').innerHTML = renderAccountList(accounts.assets, true);
-            document.getElementById('liabilityAccounts').innerHTML = renderAccountList(accounts.liabilities, false);
-            document.getElementById('equityAccounts').innerHTML = renderAccountList(accounts.equity, true);
-            document.getElementById('revenueAccounts').innerHTML = renderAccountList(accounts.revenue, true);
-            document.getElementById('expenseAccounts').innerHTML = renderAccountList(accounts.expense, false);
+            let html = '';
+            let accountCode = 1000;
+            
+            // Assets
+            accounts.assets.forEach(a => {
+                html += `<tr>
+                    <td><code>${accountCode++}</code></td>
+                    <td><strong>${a.name}</strong></td>
+                    <td><span class="table-status info">Asset</span></td>
+                    <td style="color:var(--accent-green);font-weight:600">${formatKsh(a.balance)}</td>
+                    <td><button class="action-btn primary" onclick="viewAccount('${a.name}')">View</button></td>
+                </tr>`;
+            });
+            
+            // Liabilities
+            accounts.liabilities.forEach(a => {
+                html += `<tr>
+                    <td><code>${accountCode++}</code></td>
+                    <td><strong>${a.name}</strong></td>
+                    <td><span class="table-status warning">Liability</span></td>
+                    <td style="color:var(--accent-red);font-weight:600">${formatKsh(a.balance)}</td>
+                    <td><button class="action-btn primary" onclick="viewAccount('${a.name}')">View</button></td>
+                </tr>`;
+            });
+            
+            // Equity
+            accounts.equity.forEach(a => {
+                html += `<tr>
+                    <td><code>${accountCode++}</code></td>
+                    <td><strong>${a.name}</strong></td>
+                    <td><span class="table-status success">Equity</span></td>
+                    <td style="color:var(--accent-blue);font-weight:600">${formatKsh(a.balance)}</td>
+                    <td><button class="action-btn primary" onclick="viewAccount('${a.name}')">View</button></td>
+                </tr>`;
+            });
+            
+            // Revenue
+            accounts.revenue.forEach(a => {
+                html += `<tr>
+                    <td><code>${accountCode++}</code></td>
+                    <td><strong>${a.name}</strong></td>
+                    <td><span class="table-status success">Revenue</span></td>
+                    <td style="color:var(--accent-green);font-weight:600">${formatKsh(a.balance)}</td>
+                    <td><button class="action-btn primary" onclick="viewAccount('${a.name}')">View</button></td>
+                </tr>`;
+            });
+            
+            // Expenses
+            accounts.expense.forEach(a => {
+                html += `<tr>
+                    <td><code>${accountCode++}</code></td>
+                    <td><strong>${a.name}</strong></td>
+                    <td><span class="table-status danger">Expense</span></td>
+                    <td style="color:var(--accent-red);font-weight:600">${formatKsh(a.balance)}</td>
+                    <td><button class="action-btn primary" onclick="viewAccount('${a.name}')">View</button></td>
+                </tr>`;
+            });
+            
+            tableBody.innerHTML = html || '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">No accounts configured yet</td></tr>';
+        }
+        
+        function viewAccount(name) {
+            showToast(`Viewing account: ${name}`, 'info');
         }
         
         function renderJournal() {
