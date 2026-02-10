@@ -5503,24 +5503,24 @@
         
         function showAddAccountModal() {
             const modalHTML = `
-                <div class="modal-overlay" id="addAccountModal" style="display:flex;">
+                <div class="modal-overlay" id="addAccountModal">
                     <div class="modal">
                         <div class="modal-header">
                             <h3 class="modal-title">Add New Account</h3>
                             <button class="modal-close" onclick="closeModal('addAccountModal')">×</button>
                         </div>
                         <div class="modal-body">
-                            <div class="modal-input-group">
-                                <label class="modal-label">Account Code *</label>
+                            <div class="form-group">
+                                <label class="form-label">Account Code *</label>
                                 <input type="text" class="form-input" id="newAccountCode" placeholder="e.g., 1000">
                             </div>
-                            <div class="modal-input-group">
-                                <label class="modal-label">Account Name *</label>
+                            <div class="form-group">
+                                <label class="form-label">Account Name *</label>
                                 <input type="text" class="form-input" id="newAccountName" placeholder="e.g., Cash at Bank">
                             </div>
-                            <div class="modal-input-group">
-                                <label class="modal-label">Account Type *</label>
-                                <select class="form-input" id="newAccountType">
+                            <div class="form-group">
+                                <label class="form-label">Account Type *</label>
+                                <select class="form-select" id="newAccountType">
                                     <option value="">Select Type</option>
                                     <option value="Asset">Asset</option>
                                     <option value="Liability">Liability</option>
@@ -5529,14 +5529,14 @@
                                     <option value="Expense">Expense</option>
                                 </select>
                             </div>
-                            <div class="modal-input-group">
-                                <label class="modal-label">Opening Balance (Optional)</label>
+                            <div class="form-group">
+                                <label class="form-label">Opening Balance (Optional)</label>
                                 <input type="number" class="form-input" id="newAccountBalance" placeholder="0" value="0">
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button class="modal-btn secondary" onclick="closeModal('addAccountModal')">Cancel</button>
-                            <button class="modal-btn primary" onclick="saveNewAccount()">Add Account</button>
+                            <button class="modal-btn cancel" onclick="closeModal('addAccountModal')">Cancel</button>
+                            <button class="modal-btn success" onclick="saveNewAccount()">Add Account</button>
                         </div>
                     </div>
                 </div>
@@ -5545,6 +5545,9 @@
             const existing = document.getElementById('addAccountModal');
             if (existing) existing.remove();
             document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            // Show the modal
+            setTimeout(() => openModal('addAccountModal'), 10);
         }
         
         function saveNewAccount() {
@@ -5617,41 +5620,41 @@
         
         function showAddJournalModal() {
             const modalHTML = `
-                <div class="modal-overlay" id="addJournalModal" style="display:flex;">
+                <div class="modal-overlay" id="addJournalModal">
                     <div class="modal">
                         <div class="modal-header">
                             <h3 class="modal-title">Add Journal Entry</h3>
                             <button class="modal-close" onclick="closeModal('addJournalModal')">×</button>
                         </div>
                         <div class="modal-body">
-                            <div class="modal-input-group">
-                                <label class="modal-label">Date *</label>
+                            <div class="form-group">
+                                <label class="form-label">Date *</label>
                                 <input type="date" class="form-input" id="journalDate" value="${new Date().toISOString().split('T')[0]}">
                             </div>
-                            <div class="modal-input-group">
-                                <label class="modal-label">Reference Number *</label>
+                            <div class="form-group">
+                                <label class="form-label">Reference Number *</label>
                                 <input type="text" class="form-input" id="journalRef" placeholder="e.g., JE001">
                             </div>
-                            <div class="modal-input-group">
-                                <label class="modal-label">Description *</label>
+                            <div class="form-group">
+                                <label class="form-label">Description *</label>
                                 <input type="text" class="form-input" id="journalDesc" placeholder="e.g., Office supplies purchase">
                             </div>
-                            <div class="modal-input-group">
-                                <label class="modal-label">Debit Account *</label>
+                            <div class="form-group">
+                                <label class="form-label">Debit Account *</label>
                                 <input type="text" class="form-input" id="journalDebit" placeholder="e.g., Office Expenses">
                             </div>
-                            <div class="modal-input-group">
-                                <label class="modal-label">Credit Account *</label>
+                            <div class="form-group">
+                                <label class="form-label">Credit Account *</label>
                                 <input type="text" class="form-input" id="journalCredit" placeholder="e.g., Cash">
                             </div>
-                            <div class="modal-input-group">
-                                <label class="modal-label">Amount (KSh) *</label>
+                            <div class="form-group">
+                                <label class="form-label">Amount (KSh) *</label>
                                 <input type="number" class="form-input" id="journalAmount" placeholder="0">
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button class="modal-btn secondary" onclick="closeModal('addJournalModal')">Cancel</button>
-                            <button class="modal-btn primary" onclick="saveJournalEntry()">Add Entry</button>
+                            <button class="modal-btn cancel" onclick="closeModal('addJournalModal')">Cancel</button>
+                            <button class="modal-btn success" onclick="saveJournalEntry()">Add Entry</button>
                         </div>
                     </div>
                 </div>
@@ -5660,6 +5663,9 @@
             const existing = document.getElementById('addJournalModal');
             if (existing) existing.remove();
             document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            // Show the modal
+            setTimeout(() => openModal('addJournalModal'), 10);
         }
         
         function saveJournalEntry() {
