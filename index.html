@@ -2810,30 +2810,58 @@
         // Update KRA status indicators
         function updateKRAStatus() {
             const statusBadge = document.getElementById('kraStatusBadge');
+            const isDemoMode = config.kraPin === 'P000000000D' || 
+                              config.kraDeviceSerial === 'ETIMS-DEMO-TEST-2024' ||
+                              config.kraApiKey === 'demo_api_key_for_testing_only';
             
             if (config.kraEnabled && config.kraApiKey) {
                 statusBadge.classList.remove('inactive');
-                statusBadge.innerHTML = '<span>✓</span><span>KRA Active</span>';
+                if (isDemoMode) {
+                    statusBadge.innerHTML = '<span>🧪</span><span>KRA Demo</span>';
+                    statusBadge.style.background = 'linear-gradient(135deg,#3b82f6,#1d4ed8)';
+                } else {
+                    statusBadge.innerHTML = '<span>✓</span><span>KRA Active</span>';
+                    statusBadge.style.background = 'linear-gradient(135deg,#10b981,#059669)';
+                }
             } else {
                 statusBadge.classList.add('inactive');
                 statusBadge.innerHTML = '<span>⚠️</span><span>KRA Inactive</span>';
+                statusBadge.style.background = '';
             }
             
             // Update main status card in KRA tab
             const mainStatusCard = document.getElementById('kraStatusCardMain');
             if (mainStatusCard) {
                 if (config.kraEnabled && config.kraApiKey) {
-                    mainStatusCard.className = 'kra-status-card';
-                    mainStatusCard.innerHTML = `
-                        <div class="kra-status-icon">✓</div>
-                        <div class="kra-status-info">
-                            <div class="kra-status-title">KRA eTIMS Active</div>
-                            <div class="kra-status-desc">Connected since ${new Date(config.kraConfiguredAt).toLocaleDateString()} | ${config.kraEnvironment === 'production' ? 'Production' : 'Sandbox'} environment</div>
-                        </div>
-                        <button class="action-btn" onclick="event.stopPropagation();openKRAConfig()">Edit Settings</button>
-                    `;
+                    if (isDemoMode) {
+                        mainStatusCard.className = 'kra-status-card';
+                        mainStatusCard.style.background = 'linear-gradient(135deg,rgba(59,130,246,0.1),rgba(29,78,216,0.1))';
+                        mainStatusCard.style.borderColor = 'var(--accent-blue)';
+                        mainStatusCard.innerHTML = `
+                            <div class="kra-status-icon" style="background:var(--accent-blue)">🧪</div>
+                            <div class="kra-status-info">
+                                <div class="kra-status-title" style="color:var(--accent-blue)">KRA Demo/Test Mode Active</div>
+                                <div class="kra-status-desc">Testing KRA integration with demo credentials. Switch to real credentials when approved by KRA (3-7 days)</div>
+                            </div>
+                            <button class="action-btn" onclick="event.stopPropagation();openKRAConfig()">Switch to Real</button>
+                        `;
+                    } else {
+                        mainStatusCard.className = 'kra-status-card';
+                        mainStatusCard.style.background = '';
+                        mainStatusCard.style.borderColor = '';
+                        mainStatusCard.innerHTML = `
+                            <div class="kra-status-icon">✓</div>
+                            <div class="kra-status-info">
+                                <div class="kra-status-title">KRA eTIMS Active</div>
+                                <div class="kra-status-desc">Connected since ${new Date(config.kraConfiguredAt).toLocaleDateString()} | ${config.kraEnvironment === 'production' ? 'Production' : 'Sandbox'} environment</div>
+                            </div>
+                            <button class="action-btn" onclick="event.stopPropagation();openKRAConfig()">Edit Settings</button>
+                        `;
+                    }
                 } else {
                     mainStatusCard.className = 'kra-status-card inactive';
+                    mainStatusCard.style.background = '';
+                    mainStatusCard.style.borderColor = '';
                     mainStatusCard.innerHTML = `
                         <div class="kra-status-icon">⚠️</div>
                         <div class="kra-status-info">
@@ -2916,6 +2944,21 @@
         
         // Call KRA eTIMS API
         async function callKRAAPI(invoiceData) {
+            // Check if using demo credentials
+            const isDemoMode = config.kraPin === 'P000000000D' || 
+                              config.kraDeviceSerial === 'ETIMS-DEMO-TEST-2024' ||
+                              config.kraApiKey === 'demo_api_key_for_testing_only';
+            
+            // Demo mode - simulate success immediately
+            if (isDemoMode) {
+                return {
+                    success: true,
+                    cuNumber: 'CU-DEMO-' + Date.now().toString().slice(-8),
+                    qrCode: 'DEMO-QR-' + invoiceData.invoiceNumber,
+                    message: 'Demo mode - Testing KRA integration'
+                };
+            }
+            
             const endpoint = config.kraEnvironment === 'production'
                 ? 'https://etims.kra.go.ke/api/v1/invoice'
                 : 'https://sandbox.etims.kra.go.ke/api/v1/invoice';
@@ -2946,7 +2989,7 @@
                     };
                 }
             } catch (error) {
-                // In demo mode or if offline, simulate success
+                // In demo business or if offline, simulate success
                 if (config.businessId.includes('demo') || !navigator.onLine) {
                     return {
                         success: true,
@@ -3028,6 +3071,16 @@
                                 <div class="kra-status-info">
                                     <div class="kra-status-title">${config.kraEnabled ? 'KRA eTIMS Active' : 'KRA eTIMS Not Configured'}</div>
                                     <div class="kra-status-desc">${config.kraEnabled ? 'Connected since ' + new Date(config.kraConfiguredAt).toLocaleDateString() : 'Configure your KRA credentials to enable real-time tax compliance'}</div>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-bottom:20px;padding:16px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:var(--radius-md)">
+                                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                                    <div>
+                                        <div style="font-weight:700;color:var(--accent-blue);font-size:.95rem">🧪 Demo/Test Mode</div>
+                                        <div style="font-size:.8rem;color:var(--text-muted);margin-top:4px">Try KRA features while waiting for real credentials (3-7 days)</div>
+                                    </div>
+                                    <button type="button" class="action-btn primary" onclick="useDemoKRACredentials()" style="padding:8px 16px;font-size:.85rem">Use Demo Credentials</button>
                                 </div>
                             </div>
                             
@@ -3125,6 +3178,16 @@
             
             // Process queued invoices
             processKRAQueue();
+        }
+        
+        // Use demo KRA credentials for testing
+        function useDemoKRACredentials() {
+            document.getElementById('kraPinInput').value = 'P000000000D';
+            document.getElementById('kraDeviceSerialInput').value = 'ETIMS-DEMO-TEST-2024';
+            document.getElementById('kraApiKeyInput').value = 'demo_api_key_for_testing_only';
+            document.getElementById('kraEnvironmentInput').value = 'sandbox';
+            
+            showToast('✓ Demo credentials loaded - Perfect for testing!', 'success');
         }
         
         function updateTime() {
@@ -5178,11 +5241,14 @@
         }
         
         function showReceipt(sale) {
+            const isDemoMode = sale.kraData && (sale.kraData.cuNumber.includes('DEMO') || sale.kraData.message === 'Demo mode - Testing KRA integration');
+            
             const kraSection = sale.kraData ? `
-                <div style="text-align:center;margin:20px 0;padding:16px;background:white;border-radius:8px">
+                <div style="text-align:center;margin:20px 0;padding:16px;background:${isDemoMode ? 'rgba(59,130,246,0.1)' : 'white'};border-radius:8px;border:${isDemoMode ? '2px dashed var(--accent-blue)' : 'none'}">
+                    ${isDemoMode ? '<div style="color:var(--accent-blue);font-weight:700;font-size:.85rem;margin-bottom:8px">🧪 DEMO MODE - For Testing Only</div>' : ''}
                     <canvas id="receiptQRCode" style="display:inline-block"></canvas>
-                    <div style="font-weight:700;color:#000;margin-top:8px;font-size:.9rem">KRA CU: ${sale.kraData.cuNumber}</div>
-                    <div style="font-size:.75rem;color:#666;margin-top:4px">Scan for KRA verification</div>
+                    <div style="font-weight:700;color:${isDemoMode ? 'var(--accent-blue)' : '#000'};margin-top:8px;font-size:.9rem">KRA CU: ${sale.kraData.cuNumber}</div>
+                    <div style="font-size:.75rem;color:#666;margin-top:4px">${isDemoMode ? 'Demo QR Code - Not valid for tax purposes' : 'Scan for KRA verification'}</div>
                 </div>
             ` : '';
             
@@ -5208,7 +5274,7 @@
                     ${config.mpesaTill ? '<br>M-Pesa Till: ' + config.mpesaTill : ''}
                     <div class="receipt-kra">
                         ${config.kraPin ? 'KRA PIN: ' + config.kraPin + '<br>' : ''}
-                        ${sale.kraData ? 'eTIMS Invoice - Submitted to KRA<br>' : 'eTIMS Invoice<br>'}
+                        ${sale.kraData ? (isDemoMode ? 'eTIMS Invoice (Demo Mode)<br>' : 'eTIMS Invoice - Submitted to KRA<br>') : 'eTIMS Invoice<br>'}
                         <br>Powered by Rudder Research and Data Analytics
                     </div>
                 </div>
