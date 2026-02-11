@@ -693,7 +693,7 @@
                 </div>
                 <div class="login-logo">🏪</div>
                 <h1 class="login-title">BiasharaFlow POS</h1>
-                <p class="login-subtitle">Complete Business Management System<span class="kra-badge">✓ KRA eTIMS</span></p>
+                <p class="login-subtitle">Complete Business Management System</p>
                 <div class="login-form">
                     <div class="login-input-group">
                         <label class="login-label">Username</label>
@@ -2818,6 +2818,32 @@
                 statusBadge.classList.add('inactive');
                 statusBadge.innerHTML = '<span>⚠️</span><span>KRA Inactive</span>';
             }
+            
+            // Update main status card in KRA tab
+            const mainStatusCard = document.getElementById('kraStatusCardMain');
+            if (mainStatusCard) {
+                if (config.kraEnabled && config.kraApiKey) {
+                    mainStatusCard.className = 'kra-status-card';
+                    mainStatusCard.innerHTML = `
+                        <div class="kra-status-icon">✓</div>
+                        <div class="kra-status-info">
+                            <div class="kra-status-title">KRA eTIMS Active</div>
+                            <div class="kra-status-desc">Connected since ${new Date(config.kraConfiguredAt).toLocaleDateString()} | ${config.kraEnvironment === 'production' ? 'Production' : 'Sandbox'} environment</div>
+                        </div>
+                        <button class="action-btn" onclick="event.stopPropagation();openKRAConfig()">Edit Settings</button>
+                    `;
+                } else {
+                    mainStatusCard.className = 'kra-status-card inactive';
+                    mainStatusCard.innerHTML = `
+                        <div class="kra-status-icon">⚠️</div>
+                        <div class="kra-status-info">
+                            <div class="kra-status-title">KRA eTIMS Not Configured</div>
+                            <div class="kra-status-desc">Click to configure your KRA credentials for real-time tax compliance</div>
+                        </div>
+                        <button class="action-btn success" onclick="event.stopPropagation();openKRAConfig()">Configure Now</button>
+                    `;
+                }
+            }
         }
         
         // Load KRA queue from config
@@ -2990,7 +3016,7 @@
         function openKRAConfig() {
             // Create modal HTML
             const modalHTML = `
-                <div class="modal-overlay" id="kraConfigModal" style="display:flex">
+                <div class="modal-overlay show" id="kraConfigModal">
                     <div class="card" style="max-width:600px;width:100%;max-height:90vh;overflow-y:auto">
                         <div class="card-header">
                             <h3 class="card-title">🏛️ KRA eTIMS Configuration</h3>
@@ -3008,25 +3034,25 @@
                             <form onsubmit="saveKRAConfig(event)" style="display:flex;flex-direction:column;gap:20px">
                                 <div>
                                     <label class="form-label">KRA PIN</label>
-                                    <input type="text" class="form-input" id="kraPin" value="${config.kraPin || ''}" placeholder="P000000000X" required>
+                                    <input type="text" class="form-input" id="kraPinInput" value="${config.kraPin || ''}" placeholder="P000000000X" required>
                                     <div class="form-help">Your business KRA PIN number</div>
                                 </div>
                                 
                                 <div>
                                     <label class="form-label">eTIMS Device Serial Number</label>
-                                    <input type="text" class="form-input" id="kraDeviceSerial" value="${config.kraDeviceSerial || ''}" placeholder="ETIMS-XXXXXXXX" required>
+                                    <input type="text" class="form-input" id="kraDeviceSerialInput" value="${config.kraDeviceSerial || ''}" placeholder="ETIMS-XXXXXXXX" required>
                                     <div class="form-help">Serial number from your KRA eTIMS device</div>
                                 </div>
                                 
                                 <div>
                                     <label class="form-label">eTIMS API Key</label>
-                                    <input type="password" class="form-input" id="kraApiKey" value="${config.kraApiKey || ''}" placeholder="Enter your API key" required>
+                                    <input type="password" class="form-input" id="kraApiKeyInput" value="${config.kraApiKey || ''}" placeholder="Enter your API key" required>
                                     <div class="form-help">API key provided by KRA for eTIMS integration</div>
                                 </div>
                                 
                                 <div>
                                     <label class="form-label">eTIMS Environment</label>
-                                    <select class="form-input" id="kraEnvironment">
+                                    <select class="form-input" id="kraEnvironmentInput">
                                         <option value="sandbox" ${config.kraEnvironment === 'sandbox' ? 'selected' : ''}>Sandbox (Testing)</option>
                                         <option value="production" ${config.kraEnvironment === 'production' ? 'selected' : ''}>Production (Live)</option>
                                     </select>
@@ -3059,10 +3085,10 @@
         
         // Test KRA connection
         async function testKRAConnection() {
-            const pin = document.getElementById('kraPin').value;
-            const deviceSerial = document.getElementById('kraDeviceSerial').value;
-            const apiKey = document.getElementById('kraApiKey').value;
-            const environment = document.getElementById('kraEnvironment').value;
+            const pin = document.getElementById('kraPinInput').value;
+            const deviceSerial = document.getElementById('kraDeviceSerialInput').value;
+            const apiKey = document.getElementById('kraApiKeyInput').value;
+            const environment = document.getElementById('kraEnvironmentInput').value;
             
             if (!pin || !deviceSerial || !apiKey) {
                 showToast('Please fill in all KRA credentials', 'error');
@@ -3085,10 +3111,10 @@
         async function saveKRAConfig(event) {
             event.preventDefault();
             
-            config.kraPin = document.getElementById('kraPin').value;
-            config.kraDeviceSerial = document.getElementById('kraDeviceSerial').value;
-            config.kraApiKey = document.getElementById('kraApiKey').value;
-            config.kraEnvironment = document.getElementById('kraEnvironment').value;
+            config.kraPin = document.getElementById('kraPinInput').value;
+            config.kraDeviceSerial = document.getElementById('kraDeviceSerialInput').value;
+            config.kraApiKey = document.getElementById('kraApiKeyInput').value;
+            config.kraEnvironment = document.getElementById('kraEnvironmentInput').value;
             config.kraEnabled = true;
             config.kraConfiguredAt = new Date().toISOString();
             
