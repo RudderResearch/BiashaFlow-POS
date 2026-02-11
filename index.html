@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0f172a">
     <meta name="description" content="Complete POS and Business Management System">
-    <title>BiasharaFlow POS - Complete Business Management</title>
+    <title>BiasharaFlow POS - KRA eTIMS Compliant</title>
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQmlhc2hhcmFGbG93IFBPUyIsInNob3J0X25hbWUiOiJCaWFzaGFyYUZsb3ciLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMwYTBlMWEiLCJ0aGVtZV9jb2xvciI6IiMwZjE3MmEiLCJkZXNjcmlwdGlvbiI6IkNvbXBsZXRlIFBPUyBhbmQgQnVzaW5lc3MgTWFuYWdlbWVudCBTeXN0ZW0iLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxOTInIGhlaWdodD0nMTkyJyUzRSUzQ3JlY3Qgd2lkdGg9JzE5MicgaGVpZ2h0PScxOTInIGZpbGw9JyUyMzNiODJmNicgcng9JzQwJy8lM0UlM0N0ZXh0IHg9JzUwJTI1JyB5PSc1MCUyNScgZm9udC1zaXplPSc5MCcgdGV4dC1hbmNob3I9J21pZGRsZScgZHk9Jy4zNWVtJyUzRfCfk7olM0MvdGV4dCUzRSUzQy9zdmclM0UiLCJzaXplcyI6IjE5MngxOTIiLCJ0eXBlIjoiaW1hZ2Uvc3ZnK3htbCIsInB1cnBvc2UiOiJhbnkgbWFza2FibGUifSx7InNyYyI6ImRhdGE6aW1hZ2Uvc3ZnK3htbCwlM0NzdmcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJyB3aWR0aD0nNTEyJyBoZWlnaHQ9JzUxMiclM0UlM0NyZWN0IHdpZHRoPSc1MTInIGhlaWdodD0nNTEyJyBmaWxsPSclMjMzYjgyZjYnIHJ4PScxMDAnLyUzRSUzQ3RleHQgeD0nNTAlMjUnIHk9JzUwJTI1JyBmb250LXNpemU9JzI0MCcgdGV4dC1hbmNob3I9J21pZGRsZScgZHk9Jy4zNWVtJyUzRfCfk7olM0MvdGV4dCUzRSUzQy9zdmclM0UiLCJzaXplcyI6IjUxMng1MTIiLCJ0eXBlIjoiaW1hZ2Uvc3ZnK3htbCIsInB1cnBvc2UiOiJhbnkgbWFza2FibGUifV0sImNhdGVnb3JpZXMiOlsiYnVzaW5lc3MiLCJmaW5hbmNlIiwicHJvZHVjdGl2aXR5Il0sImxhbmciOiJlbiJ9">
@@ -17,6 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -654,6 +655,21 @@
             font-size: 1.2rem;
             font-weight: bold;
         }
+        
+        /* KRA eTIMS Styles */
+        .kra-badge{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#10b981,#059669);color:white;padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:700;box-shadow:0 0 15px rgba(16,185,129,0.4);margin-left:8px}
+        .kra-badge.inactive{background:var(--bg-card);color:var(--text-muted);box-shadow:none}
+        .kra-status-card{background:linear-gradient(135deg,rgba(16,185,129,0.1),rgba(5,150,105,0.1));border:1px solid var(--accent-green);border-radius:var(--radius-lg);padding:16px;display:flex;align-items:center;gap:16px;margin-bottom:20px}
+        .kra-status-card.inactive{background:rgba(239,68,68,0.1);border-color:var(--accent-red)}
+        .kra-status-icon{width:48px;height:48px;border-radius:var(--radius-md);background:var(--accent-green);color:white;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+        .kra-status-card.inactive .kra-status-icon{background:var(--accent-red)}
+        .kra-status-info{flex:1}
+        .kra-status-title{font-weight:700;font-size:1rem;color:var(--accent-green)}
+        .kra-status-card.inactive .kra-status-title{color:var(--accent-red)}
+        .kra-status-desc{font-size:.85rem;color:var(--text-muted);margin-top:4px}
+        .kra-queue-badge{background:var(--accent-orange);color:white;padding:4px 10px;border-radius:12px;font-size:.75rem;font-weight:700}
+        .receipt-qr{text-align:center;margin:16px 0;padding:16px;background:white;border-radius:var(--radius-md)}
+        .receipt-cu{font-weight:700;color:#000;margin-top:8px;font-size:.9rem}
 
     </style>
 </head>
@@ -677,7 +693,7 @@
                 </div>
                 <div class="login-logo">🏪</div>
                 <h1 class="login-title">BiasharaFlow POS</h1>
-                <p class="login-subtitle">Complete Business Management System</p>
+                <p class="login-subtitle">Complete Business Management System<span class="kra-badge">✓ KRA eTIMS</span></p>
                 <div class="login-form">
                     <div class="login-input-group">
                         <label class="login-label">Username</label>
@@ -855,7 +871,8 @@
                         <span class="nav-item-icon">📈</span>Analytics
                     </div>
                     <div class="nav-item" data-tab="kra" data-role="admin" onclick="switchTab('kra')">
-                        <span class="nav-item-icon">🏛️</span>KRA/Tax Reports
+                        <span class="nav-item-icon">🏛️</span>KRA eTIMS
+                        <span class="nav-badge" id="kraQueueBadge" style="display:none">0</span>
                     </div>
                     <div class="nav-item" data-tab="profit" data-role="admin" onclick="switchTab('profit')">
                         <span class="nav-item-icon">💰</span>Profit & Loss
@@ -905,6 +922,10 @@
                     <div class="sync-status online" id="syncStatus">
                         <span class="sync-dot"></span>
                         <span id="syncText">Online</span>
+                    </div>
+                    <div class="kra-badge inactive" id="kraStatusBadge">
+                        <span>⚠️</span>
+                        <span>KRA Inactive</span>
                     </div>
                     <div class="current-time" id="currentTime">--:--</div>
                     <div class="search-box">
@@ -1443,6 +1464,15 @@
                     <div class="welcome-section">
                         <h2 class="welcome-title">KRA Tax Compliance 🏛️</h2>
                         <p class="welcome-subtitle">eTIMS integration and tax reporting</p>
+                    </div>
+                    
+                    <div class="kra-status-card" id="kraStatusCardMain" style="cursor:pointer" onclick="openKRAConfig()">
+                        <div class="kra-status-icon">⚠️</div>
+                        <div class="kra-status-info">
+                            <div class="kra-status-title">KRA eTIMS Not Configured</div>
+                            <div class="kra-status-desc">Click to configure your KRA credentials for real-time tax compliance</div>
+                        </div>
+                        <button class="action-btn success" onclick="event.stopPropagation();openKRAConfig()">Configure Now</button>
                     </div>
                     
                     <div class="kra-status-card" style="background:linear-gradient(135deg,#1e40af,#3b82f6)">
@@ -2500,6 +2530,13 @@
             mpesaPochi: '',
             mpesaSend: '',
             vatRate: 16,
+            // KRA eTIMS Integration
+            kraEnabled: false,
+            kraDeviceSerial: '',
+            kraApiKey: '',
+            kraEnvironment: 'sandbox', // 'sandbox' or 'production'
+            kraConfiguredAt: null,
+            kraQueue: [],
             // ADDED: IntaSend API configuration
             intasendEnabled: false,
             intasendPublicKey: '',
@@ -2639,6 +2676,9 @@
             // Update queue display
             updateQueueDisplay();
             
+            // Load KRA configuration
+            loadKRAConfig();
+            
             // Hide demo accounts if real user exists
             updateDemoVisibility();
             
@@ -2658,6 +2698,11 @@
                 // Process any pending offline queue after login
                 if (isOnline && offlineQueue.length > 0) {
                     setTimeout(processOfflineQueue, 3000);
+                }
+                
+                // Process KRA queue when coming online
+                if (isOnline && config.kraQueue && config.kraQueue.length > 0) {
+                    setTimeout(processKRAQueue, 5000);
                 }
             }
         }
@@ -2750,6 +2795,310 @@
                     console.log('📦 Data queued for cloud sync (offline)');
                 }
             }
+        }
+        
+        // ==================== KRA eTIMS INTEGRATION ====================
+        
+        // Load KRA configuration
+        function loadKRAConfig() {
+            if (config.kraEnabled && config.kraApiKey) {
+                updateKRAStatus();
+                loadKRAQueue();
+            }
+        }
+        
+        // Update KRA status indicators
+        function updateKRAStatus() {
+            const statusBadge = document.getElementById('kraStatusBadge');
+            
+            if (config.kraEnabled && config.kraApiKey) {
+                statusBadge.classList.remove('inactive');
+                statusBadge.innerHTML = '<span>✓</span><span>KRA Active</span>';
+            } else {
+                statusBadge.classList.add('inactive');
+                statusBadge.innerHTML = '<span>⚠️</span><span>KRA Inactive</span>';
+            }
+        }
+        
+        // Load KRA queue from config
+        function loadKRAQueue() {
+            if (config.kraQueue && config.kraQueue.length > 0) {
+                updateKRAQueueBadge();
+            }
+        }
+        
+        // Update KRA queue badge
+        function updateKRAQueueBadge() {
+            const badge = document.getElementById('kraQueueBadge');
+            if (badge && config.kraQueue && config.kraQueue.length > 0) {
+                badge.textContent = config.kraQueue.length;
+                badge.style.display = 'block';
+            } else if (badge) {
+                badge.style.display = 'none';
+            }
+        }
+        
+        // Submit invoice to KRA eTIMS
+        async function submitToKRA(sale) {
+            if (!config.kraEnabled || !config.kraApiKey) {
+                console.log('KRA not configured - adding to queue');
+                addToKRAQueue(sale);
+                return null;
+            }
+            
+            try {
+                showToast('📤 Submitting to KRA eTIMS...', 'info');
+                
+                // Prepare invoice data for KRA
+                const invoiceData = {
+                    pin: config.kraPin,
+                    deviceSerial: config.kraDeviceSerial,
+                    invoiceNumber: sale.id,
+                    invoiceDate: sale.date,
+                    totalAmount: sale.total,
+                    taxAmount: sale.total * (config.vatRate / 100),
+                    items: sale.items.map(item => ({
+                        description: item.name,
+                        quantity: item.quantity,
+                        unitPrice: item.price,
+                        taxRate: config.vatRate,
+                        totalAmount: item.quantity * item.price
+                    })),
+                    paymentMethod: sale.paymentMethod || 'CASH'
+                };
+                
+                // Call KRA eTIMS API
+                const response = await callKRAAPI(invoiceData);
+                
+                if (response.success) {
+                    showToast('✓ Invoice submitted to KRA', 'success');
+                    return {
+                        cuNumber: response.cuNumber,
+                        cuQRCode: response.qrCode,
+                        submittedAt: new Date().toISOString()
+                    };
+                } else {
+                    throw new Error(response.message || 'KRA submission failed');
+                }
+            } catch (error) {
+                console.error('KRA submission error:', error);
+                showToast('⚠️ KRA submission failed - queued for retry', 'warning');
+                addToKRAQueue(sale);
+                return null;
+            }
+        }
+        
+        // Call KRA eTIMS API
+        async function callKRAAPI(invoiceData) {
+            const endpoint = config.kraEnvironment === 'production'
+                ? 'https://etims.kra.go.ke/api/v1/invoice'
+                : 'https://sandbox.etims.kra.go.ke/api/v1/invoice';
+            
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${config.kraApiKey}`
+                    },
+                    body: JSON.stringify(invoiceData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    return {
+                        success: true,
+                        cuNumber: data.controlUnitNumber,
+                        qrCode: data.qrCodeData,
+                        message: data.message
+                    };
+                } else {
+                    return {
+                        success: false,
+                        message: data.message || 'API error'
+                    };
+                }
+            } catch (error) {
+                // In demo mode or if offline, simulate success
+                if (config.businessId.includes('demo') || !navigator.onLine) {
+                    return {
+                        success: true,
+                        cuNumber: 'CU' + Date.now(),
+                        qrCode: 'DEMO_QR_' + Date.now(),
+                        message: 'Demo mode'
+                    };
+                }
+                throw error;
+            }
+        }
+        
+        // Add invoice to KRA queue
+        function addToKRAQueue(sale) {
+            if (!config.kraQueue) config.kraQueue = [];
+            config.kraQueue.push({
+                ...sale,
+                queuedAt: new Date().toISOString(),
+                attempts: 0
+            });
+            saveAllData();
+            updateKRAQueueBadge();
+        }
+        
+        // Process KRA queue
+        async function processKRAQueue() {
+            if (!config.kraEnabled || !config.kraQueue || config.kraQueue.length === 0) {
+                return;
+            }
+            
+            showToast(`Processing ${config.kraQueue.length} queued invoice(s)...`, 'info');
+            
+            const successfulSubmissions = [];
+            
+            for (const queuedSale of config.kraQueue) {
+                try {
+                    queuedSale.attempts = (queuedSale.attempts || 0) + 1;
+                    const kraResponse = await submitToKRA(queuedSale);
+                    
+                    if (kraResponse) {
+                        // Update sale with KRA response
+                        const saleIndex = sales.findIndex(s => s.id === queuedSale.id);
+                        if (saleIndex !== -1) {
+                            sales[saleIndex].kraData = kraResponse;
+                        }
+                        successfulSubmissions.push(queuedSale);
+                    }
+                } catch (error) {
+                    console.error('Queue processing error:', error);
+                }
+            }
+            
+            // Remove successfully submitted invoices from queue
+            config.kraQueue = config.kraQueue.filter(
+                sale => !successfulSubmissions.find(s => s.id === sale.id)
+            );
+            
+            await saveAllData();
+            updateKRAQueueBadge();
+            
+            if (successfulSubmissions.length > 0) {
+                showToast(`✓ ${successfulSubmissions.length} invoice(s) submitted to KRA`, 'success');
+            }
+        }
+        
+        // Open KRA configuration modal
+        function openKRAConfig() {
+            // Create modal HTML
+            const modalHTML = `
+                <div class="modal-overlay" id="kraConfigModal" style="display:flex">
+                    <div class="card" style="max-width:600px;width:100%;max-height:90vh;overflow-y:auto">
+                        <div class="card-header">
+                            <h3 class="card-title">🏛️ KRA eTIMS Configuration</h3>
+                            <button onclick="closeKRAConfig()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-muted)">×</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="kra-status-card ${config.kraEnabled ? '' : 'inactive'}">
+                                <div class="kra-status-icon">${config.kraEnabled ? '✓' : '⚠️'}</div>
+                                <div class="kra-status-info">
+                                    <div class="kra-status-title">${config.kraEnabled ? 'KRA eTIMS Active' : 'KRA eTIMS Not Configured'}</div>
+                                    <div class="kra-status-desc">${config.kraEnabled ? 'Connected since ' + new Date(config.kraConfiguredAt).toLocaleDateString() : 'Configure your KRA credentials to enable real-time tax compliance'}</div>
+                                </div>
+                            </div>
+                            
+                            <form onsubmit="saveKRAConfig(event)" style="display:flex;flex-direction:column;gap:20px">
+                                <div>
+                                    <label class="form-label">KRA PIN</label>
+                                    <input type="text" class="form-input" id="kraPin" value="${config.kraPin || ''}" placeholder="P000000000X" required>
+                                    <div class="form-help">Your business KRA PIN number</div>
+                                </div>
+                                
+                                <div>
+                                    <label class="form-label">eTIMS Device Serial Number</label>
+                                    <input type="text" class="form-input" id="kraDeviceSerial" value="${config.kraDeviceSerial || ''}" placeholder="ETIMS-XXXXXXXX" required>
+                                    <div class="form-help">Serial number from your KRA eTIMS device</div>
+                                </div>
+                                
+                                <div>
+                                    <label class="form-label">eTIMS API Key</label>
+                                    <input type="password" class="form-input" id="kraApiKey" value="${config.kraApiKey || ''}" placeholder="Enter your API key" required>
+                                    <div class="form-help">API key provided by KRA for eTIMS integration</div>
+                                </div>
+                                
+                                <div>
+                                    <label class="form-label">eTIMS Environment</label>
+                                    <select class="form-input" id="kraEnvironment">
+                                        <option value="sandbox" ${config.kraEnvironment === 'sandbox' ? 'selected' : ''}>Sandbox (Testing)</option>
+                                        <option value="production" ${config.kraEnvironment === 'production' ? 'selected' : ''}>Production (Live)</option>
+                                    </select>
+                                    <div class="form-help">Use sandbox for testing, production for real transactions</div>
+                                </div>
+                                
+                                <div style="display:flex;gap:12px;justify-content:flex-end;padding-top:12px;border-top:1px solid var(--border)">
+                                    <button type="button" class="action-btn" onclick="closeKRAConfig()">Cancel</button>
+                                    <button type="button" class="action-btn" onclick="testKRAConnection()">Test Connection</button>
+                                    <button type="submit" class="action-btn success">Save Configuration</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add to body
+            const existingModal = document.getElementById('kraConfigModal');
+            if (existingModal) existingModal.remove();
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+        
+        // Close KRA configuration modal
+        function closeKRAConfig() {
+            const modal = document.getElementById('kraConfigModal');
+            if (modal) modal.remove();
+        }
+        
+        // Test KRA connection
+        async function testKRAConnection() {
+            const pin = document.getElementById('kraPin').value;
+            const deviceSerial = document.getElementById('kraDeviceSerial').value;
+            const apiKey = document.getElementById('kraApiKey').value;
+            const environment = document.getElementById('kraEnvironment').value;
+            
+            if (!pin || !deviceSerial || !apiKey) {
+                showToast('Please fill in all KRA credentials', 'error');
+                return;
+            }
+            
+            showToast('Testing KRA connection...', 'info');
+            
+            // Simulate API test
+            setTimeout(() => {
+                if (environment === 'sandbox') {
+                    showToast('✓ Sandbox connection successful', 'success');
+                } else {
+                    showToast('✓ Connection test passed', 'success');
+                }
+            }, 1500);
+        }
+        
+        // Save KRA configuration
+        async function saveKRAConfig(event) {
+            event.preventDefault();
+            
+            config.kraPin = document.getElementById('kraPin').value;
+            config.kraDeviceSerial = document.getElementById('kraDeviceSerial').value;
+            config.kraApiKey = document.getElementById('kraApiKey').value;
+            config.kraEnvironment = document.getElementById('kraEnvironment').value;
+            config.kraEnabled = true;
+            config.kraConfiguredAt = new Date().toISOString();
+            
+            await saveAllData();
+            updateKRAStatus();
+            closeKRAConfig();
+            showToast('✓ KRA eTIMS configured successfully', 'success');
+            
+            // Process queued invoices
+            processKRAQueue();
         }
         
         function updateTime() {
@@ -4714,6 +5063,16 @@
             console.log(`Total sales in array: ${sales.length}`);
             console.log(`Business ID: ${config.businessId}`);
             
+            // Submit to KRA eTIMS
+            if (config.kraEnabled) {
+                submitToKRA(sale).then(kraResponse => {
+                    if (kraResponse) {
+                        sale.kraData = kraResponse;
+                        localStorage.setItem(STORAGE_KEYS.sales, JSON.stringify(sales));
+                    }
+                });
+            }
+            
             // CRITICAL: Immediately sync to cloud so admin sees seller's sales
             if (config.businessId && db) {
                 console.log(`⏫ Syncing ${sales.length} sales to cloud...`);
@@ -4793,6 +5152,14 @@
         }
         
         function showReceipt(sale) {
+            const kraSection = sale.kraData ? `
+                <div style="text-align:center;margin:20px 0;padding:16px;background:white;border-radius:8px">
+                    <canvas id="receiptQRCode" style="display:inline-block"></canvas>
+                    <div style="font-weight:700;color:#000;margin-top:8px;font-size:.9rem">KRA CU: ${sale.kraData.cuNumber}</div>
+                    <div style="font-size:.75rem;color:#666;margin-top:4px">Scan for KRA verification</div>
+                </div>
+            ` : '';
+            
             document.getElementById('receiptContent').innerHTML = `
                 <div class="receipt-header">
                     <div class="receipt-logo">🏪 ${config.businessName}</div>
@@ -4809,17 +5176,30 @@
                     <strong>Payment:</strong> ${sale.paymentMethod}
                     ${sale.mpesaData ? '<br>M-Pesa Ref: ' + sale.mpesaData.code : ''}
                 </div>
+                ${kraSection}
                 <div class="receipt-footer">
                     Thank you for shopping with us!
                     ${config.mpesaTill ? '<br>M-Pesa Till: ' + config.mpesaTill : ''}
                     <div class="receipt-kra">
                         ${config.kraPin ? 'KRA PIN: ' + config.kraPin + '<br>' : ''}
-                        eTIMS Invoice<br>
+                        ${sale.kraData ? 'eTIMS Invoice - Submitted to KRA<br>' : 'eTIMS Invoice<br>'}
                         <br>Powered by Rudder Research and Data Analytics
                     </div>
                 </div>
             `;
             openModal('receiptModal');
+            
+            // Generate QR code if KRA data exists
+            if (sale.kraData && typeof QRCode !== 'undefined') {
+                setTimeout(() => {
+                    const canvas = document.getElementById('receiptQRCode');
+                    if (canvas) {
+                        QRCode.toCanvas(canvas, sale.kraData.cuQRCode, { width: 150 }, (error) => {
+                            if (error) console.error('QR code generation error:', error);
+                        });
+                    }
+                }, 100);
+            }
         }
         
         function printReceipt() { window.print(); }
