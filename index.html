@@ -3196,6 +3196,40 @@
         }
         
         // ==================== AUTHENTICATION ====================
+        
+        // Cache user credentials for offline authentication
+        function cacheOfflineAuth(username, password, userData) {
+            try {
+                const offlineUsers = JSON.parse(localStorage.getItem('offlineAuthCache') || '{}');
+                const userKey = username.toLowerCase();
+                
+                offlineUsers[userKey] = {
+                    password: password,
+                    businessId: userData.businessId,
+                    role: userData.role,
+                    name: userData.name,
+                    username: userData.username || username,
+                    email: userData.email || username,
+                    cachedAt: new Date().toISOString()
+                };
+                
+                // Also cache by email if different from username
+                if (userData.email && userData.email.toLowerCase() !== userKey) {
+                    offlineUsers[userData.email.toLowerCase()] = offlineUsers[userKey];
+                }
+                
+                // Also cache by username if different from email
+                if (userData.username && userData.username.toLowerCase() !== userKey) {
+                    offlineUsers[userData.username.toLowerCase()] = offlineUsers[userKey];
+                }
+                
+                localStorage.setItem('offlineAuthCache', JSON.stringify(offlineUsers));
+                console.log('✅ Cached credentials for offline access');
+            } catch (error) {
+                console.error('Failed to cache offline credentials:', error);
+            }
+        }
+        
         async function handleLogin() {
             console.log('Login button clicked');
             const emailOrUsername = document.getElementById('loginUsername').value.trim();
@@ -3236,14 +3270,13 @@
                 return;
             }
             
-            // Check if offline or Firebase not configured
+            // Check if offline or Firebase not configured - go straight to local login
             if (!navigator.onLine || !auth || !db) {
                 console.log('Offline mode or Firebase not configured - using local login');
-                showToast(navigator.onLine ? 'Firebase not configured! Using demo mode.' : 'Offline mode - using local data', 'warning');
                 setTimeout(() => {
                     hideLoginLoading();
                     handleLocalLogin(emailOrUsername, password);
-                }, 1000);
+                }, 500);
                 return;
             }
             
@@ -3303,6 +3336,9 @@
                     
                     // Load business data
                     await loadUserData(userData.businessId);
+                    
+                    // Cache credentials for offline access
+                    cacheOfflineAuth(emailOrUsername, password, userData);
                     
                     hideLoginLoading();
                     // Show app
@@ -3365,6 +3401,9 @@
                         
                         // Load business data
                         await loadUserData(userData.businessId);
+                        
+                        // Cache credentials for offline access
+                        cacheOfflineAuth(emailOrUsername, password, userData);
                         
                         hideLoginLoading();
                         // Show app
@@ -3709,6 +3748,64 @@
         
         // Fallback local login (for demo mode)
         function handleLocalLogin(username, password) {
+            // First check if we have a cached user session from previous online login
+            const offlineUsers = JSON.parse(localStorage.getItem('offlineAuthCache') || '{}');
+            const userKey = username.toLowerCase();
+            
+            if (offlineUsers[userKey] && offlineUsers[userKey].password === password) {
+                // Found cached authentication - load their business data
+                const cachedAuth = offlineUsers[userKey];
+                
+                // Try to load their business data from cloud backup
+                if (cachedAuth.businessId) {
+                    const businessKey = `cloud_${cachedAuth.businessId}`;
+                    try {
+                        const cloudData = JSON.parse(localStorage.getItem(businessKey));
+                        if (cloudData) {
+                            config.businessId = cloudData.businessId;
+                            config = { ...config, ...cloudData.config };
+                            users = cloudData.users || users;
+                            products = cloudData.products || [];
+                            sales = cloudData.sales || [];
+                            creditSales = cloudData.creditSales || [];
+                            expenses = cloudData.expenses || [];
+                            categories = cloudData.categories || [];
+                            suppliers = cloudData.suppliers || [];
+                            journalEntries = cloudData.journalEntries || [];
+                            
+                            // Find the actual user object
+                            let user = users.find(u => 
+                                (u.username === username || u.email === username) && u.password === password
+                            );
+                            
+                            if (user) {
+                                const selectedType = document.getElementById('selectedLoginType').value;
+                                if (user.role !== selectedType) {
+                                    showLoginError(`This account is ${user.role === 'admin' ? 'an Admin' : 'a Seller'}. Please select the correct login type.`);
+                                    return;
+                                }
+                                
+                                const sessionId = 'SESSION_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                                user.lastLogin = new Date().toISOString();
+                                user.currentSessionId = sessionId;
+                                
+                                currentUser = user;
+                                sessionStorage.setItem('currentUser', JSON.stringify(user));
+                                localStorage.setItem('lastLoggedUser', JSON.stringify(user));
+                                saveAllData();
+                                
+                                showApp();
+                                showToast(`Welcome back, ${user.name}!`, 'success');
+                                return;
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Error loading cached business data:', e);
+                    }
+                }
+            }
+            
+            // Fallback to original method - search in current users array
             let user = users.find(u => (u.username === username || u.email === username) && u.password === password);
             
             if (!user) {
@@ -3729,9 +3826,12 @@
                                 sales = cloudData.sales || [];
                                 creditSales = cloudData.creditSales || [];
                                 expenses = cloudData.expenses || [];
+                                categories = cloudData.categories || [];
+                                suppliers = cloudData.suppliers || [];
+                                journalEntries = cloudData.journalEntries || [];
                                 saveAllData();
                                 user = cloudUser;
-                                showToast(`Welcome back ${user.name}! Loaded your business data.`, 'success');
+                                console.log(`Welcome back ${user.name}! Loaded your business data.`);
                                 break;
                             }
                         } catch (e) {
@@ -3772,7 +3872,7 @@
                 localStorage.setItem('lastLoggedUser', JSON.stringify(user));
                 saveAllData();
                 
-                if (config.businessId) {
+                if (config.businessId && navigator.onLine) {
                     syncToCloud();
                 }
                 
@@ -4305,7 +4405,7 @@
                             // Refresh UI if we're on a relevant tab
                             refreshCurrentView();
                             
-                            showToast('✅ Data synced from cloud', 'success');
+                            console.log('✅ Data synced from cloud');
                         }
                     }
                 },
@@ -6727,13 +6827,13 @@
                         await auth.signInWithEmailAndPassword(currentUser.email, currentUser.password);
                     }
                     
-                    showToast(`✅ ${name} created and synced!`, 'success');
+                    console.log(`✅ ${name} created and synced`);
                 } else {
-                    showToast('⚠️ Created locally (offline)', 'warning');
+                    console.log('⚠️ Created locally (offline)');
                 }
             } catch (error) {
                 console.error('Firebase user creation error:', error);
-                showToast('⚠️ Created locally, will sync later', 'warning');
+                console.log('⚠️ Created locally, will sync later');
             }
 
             closeModal('addUserModal');
@@ -7047,7 +7147,8 @@
                         permissions: user.permissions,
                         permissionsUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
-                    showToast('✅ Permissions updated and synced!', 'success');
+                    console.log('✅ Permissions updated and synced');
+                    showToast('✅ Permissions updated!', 'success');
                 } catch (error) {
                     console.error('Error updating permissions in Firestore:', error);
                     showToast('✅ Permissions saved locally', 'success');
@@ -7180,7 +7281,7 @@
                 renderPOS(); // Re-render POS to update payment modal
             }
             
-            showToast('✅ Settings saved and synced!', 'success');
+            showToast('✅ Settings saved!', 'success');
         }
         
         // ADDED: Manual cloud sync function
@@ -7917,11 +8018,11 @@
                 if (syncText) syncText.textContent = 'Online';
                 console.log('[Status] Online - Data will sync');
                 
-                // IMMEDIATELY sync when coming back online
+                // IMMEDIATELY sync when coming back online (silently)
                 if (config.businessId && currentUser && db) {
                     console.log('🔄 Back online - syncing now...');
                     syncToCloud().then(() => {
-                        showToast('✅ Back online - data synced!', 'success');
+                        console.log('✅ Data synced successfully');
                     });
                 }
             } else {
@@ -7932,7 +8033,6 @@
                 }
                 if (syncText) syncText.textContent = 'Offline';
                 console.log('[Status] Offline - Working locally');
-                showToast('⚠️ Offline - changes saved locally', 'warning');
             }
         }
         
