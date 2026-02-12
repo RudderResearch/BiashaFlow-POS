@@ -1936,7 +1936,7 @@
     
     <div class="toast-container" id="toastContainer"></div>
     <div class="offline-indicator" id="offlineIndicator">
-        <span id="offlineText">📡 Offline Mode</span>
+        <span id="offlineText"></span>
         <span id="queueCount" style="display:none;background:rgba(0,0,0,0.2);padding:2px 8px;border-radius:12px;font-size:0.75rem;"></span>
     </div>
     <div class="offline-indicator" id="syncIndicator" style="background:var(--accent-blue);display:none;">
@@ -2491,7 +2491,6 @@
         // Update offline indicator when going offline
         window.addEventListener('offline', () => {
             isOnline = false;
-            document.getElementById('offlineText').textContent = '📡 Offline Mode';
             document.getElementById('offlineIndicator').classList.add('show');
         });
         
@@ -2762,6 +2761,24 @@
             localStorage.setItem(STORAGE_KEYS.categories, JSON.stringify(categories));
             localStorage.setItem(STORAGE_KEYS.suppliers, JSON.stringify(suppliers));
             localStorage.setItem(STORAGE_KEYS.journal, JSON.stringify(journalEntries));
+            
+            // ALSO: Create a complete business backup for offline access
+            if (config.businessId) {
+                const completeBackup = {
+                    businessId: config.businessId,
+                    config: config,
+                    users: users,
+                    products: products,
+                    sales: sales,
+                    creditSales: creditSales,
+                    expenses: expenses,
+                    categories: categories,
+                    suppliers: suppliers,
+                    journalEntries: journalEntries,
+                    lastBackup: new Date().toISOString()
+                };
+                localStorage.setItem(`cloud_${config.businessId}`, JSON.stringify(completeBackup));
+            }
             
             // Then sync to Firebase Cloud
             if (config.businessId) {
