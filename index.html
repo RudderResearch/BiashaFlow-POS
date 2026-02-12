@@ -2390,16 +2390,20 @@
             appId: "1:107440683990:web:398c54ab823a814399c277"
         };
         
-        // Initialize Firebase
+        // Initialize Firebase (Optional - app works offline without it)
         let auth, db;
         try {
-            firebase.initializeApp(firebaseConfig);
-            auth = firebase.auth();
-            db = firebase.firestore();
-            console.log('✅ Firebase initialized successfully');
+            if (typeof firebase !== 'undefined') {
+                firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                db = firebase.firestore();
+                console.log('✅ Firebase initialized successfully');
+            } else {
+                console.log('📱 Running in offline mode - Firebase not loaded');
+            }
         } catch (error) {
-            console.error('Firebase initialization error:', error);
-            showToast('Firebase not configured. See setup guide.', 'warning');
+            console.log('⚠️ Firebase initialization skipped:', error.message);
+            // App continues to work offline without Firebase
         }
         
         // Global variables for Firebase operations
@@ -2486,6 +2490,16 @@
             
             console.log('🌐 Back online - processing queue');
             setTimeout(processOfflineQueue, 2000); // Wait 2s for stable connection
+        });
+        
+        // ==================== OFFLINE/ONLINE MODE DETECTION ====================
+        let isOnline = navigator.onLine;
+        let firebaseReady = false;
+        
+        // Detect when Firebase is ready
+        window.addEventListener('load', () => {
+            firebaseReady = (typeof firebase !== 'undefined' && auth && db);
+            console.log(firebaseReady ? '✅ Firebase ready' : '📱 Running in offline-only mode');
         });
         
         // Update offline indicator when going offline
@@ -2740,13 +2754,19 @@
             suppliers = JSON.parse(localStorage.getItem(STORAGE_KEYS.suppliers)) || [];
             journalEntries = JSON.parse(localStorage.getItem(STORAGE_KEYS.journal)) || [];
             
-            // Second: Try to load from Firebase Cloud (gets latest across devices)
-            if (config.businessId && isOnline) {
+            console.log('✅ Loaded all data from localStorage');
+            console.log('📊 Users:', users.length, 'Products:', products.length, 'Sales:', sales.length);
+            
+            // Second: Try to load from Firebase Cloud ONLY if online and Firebase is ready
+            if (config.businessId && isOnline && db) {
                 try {
+                    console.log('🔄 Attempting to sync with cloud...');
                     await loadFromFirebase();
                 } catch (error) {
-                    console.log('⚠️ Cloud sync skipped, using local data:', error.message);
+                    console.log('⚠️ Cloud sync skipped (offline or Firebase unavailable)');
                 }
+            } else {
+                console.log('📱 Working offline - using local data only');
             }
         }
         
@@ -3431,39 +3451,14 @@
             } catch (error) {
                 console.error('Login Error:', error);
                 
-                // If network error or Firebase unavailable, try local login
-                if (error.code === 'auth/network-request-failed' || error.message.includes('network') || error.message.includes('offline')) {
-                    console.log('Network error detected - switching to offline mode');
-                    showToast('Network error - trying offline mode...', 'warning');
-                    setTimeout(() => {
-                        hideLoginLoading();
-                        handleLocalLogin(emailOrUsername, password);
-                    }, 1000);
-                    return;
-                }
-                
-                hideLoginLoading();
-                
-                // Clear, user-friendly error messages
-                let errorMsg = '';
-                
-                if (error.code === 'auth/user-not-found') {
-                    errorMsg = 'No account found with this email. Please check your email or sign up.';
-                } else if (error.code === 'auth/wrong-password') {
-                    errorMsg = 'Wrong password. Please try again or reset your password.';
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMsg = 'Invalid email format. Please enter a valid email address.';
-                } else if (error.code === 'auth/invalid-credential') {
-                    errorMsg = 'Invalid email or password. Please try again.';
-                } else if (error.code === 'auth/too-many-requests') {
-                    errorMsg = 'Too many failed attempts. Please try again in a few minutes.';
-                } else if (error.code === 'auth/user-disabled') {
-                    errorMsg = 'This account has been disabled. Contact support.';
-                } else {
-                    errorMsg = 'Login failed. ' + (error.message || 'Please try again.');
-                }
-                
-                showLoginError(errorMsg);
+                // ALWAYS try local login as fallback for ANY Firebase error
+                // This ensures offline login works even when Firebase is unreachable
+                console.log('Firebase login failed - trying local/offline login');
+                setTimeout(() => {
+                    hideLoginLoading();
+                    handleLocalLogin(emailOrUsername, password);
+                }, 500);
+                return;
             }
         }
         
