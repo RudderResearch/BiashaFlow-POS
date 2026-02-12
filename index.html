@@ -604,11 +604,6 @@
         /* Print Styles */
         @media print{body *{visibility:hidden}.receipt,.receipt *{visibility:visible}.receipt{position:absolute;left:0;top:0;width:80mm}}
         
-        /* Offline Banner */
-        .offline-banner{position:fixed;top:64px;left:0;right:0;background:linear-gradient(135deg,#f59e0b,#f97316);color:#000;padding:12px 24px;text-align:center;font-weight:600;font-size:.9rem;z-index:60;box-shadow:0 4px 6px rgba(0,0,0,0.3);animation:slideDown .3s ease}
-        .offline-banner.hidden{display:none}
-        @keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
-        
         /* Loading Spinner */
         .login-loading{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;align-items:center;justify-content:center;flex-direction:column;gap:20px}
         .login-loading.show{display:flex}
@@ -674,11 +669,6 @@
     </style>
 </head>
 <body>
-    <!-- Offline Banner -->
-    <div class="offline-banner hidden" id="offlineBanner">
-        ⚠️ You are currently offline. All data is being saved locally and will sync when connection is restored.
-    </div>
-    
     <!-- Login Screen -->
     <div class="login-screen" id="loginScreen">
         <div class="login-container">
@@ -7151,10 +7141,10 @@
                     showToast('✅ Permissions updated!', 'success');
                 } catch (error) {
                     console.error('Error updating permissions in Firestore:', error);
-                    showToast('✅ Permissions saved locally', 'success');
+                    showToast('✅ Permissions updated!', 'success');
                 }
             } else {
-                showToast('✅ Permissions saved locally', 'success');
+                showToast('✅ Permissions updated!', 'success');
             }
             
             closeModal('permissionsModal');
@@ -8002,15 +7992,13 @@
             });
         }
         
-        // Online/Offline Status Monitoring with AUTO-SYNC
+        // Online/Offline Status Monitoring with AUTO-SYNC (Silent Mode)
         function updateOnlineStatus() {
             const isOnline = navigator.onLine;
-            const offlineBanner = document.getElementById('offlineBanner');
             const syncStatus = document.getElementById('syncStatus');
             const syncText = document.getElementById('syncText');
             
             if (isOnline) {
-                if (offlineBanner) offlineBanner.classList.add('hidden');
                 if (syncStatus) {
                     syncStatus.classList.remove('offline');
                     syncStatus.classList.add('online');
@@ -8026,7 +8014,6 @@
                     });
                 }
             } else {
-                if (offlineBanner) offlineBanner.classList.remove('hidden');
                 if (syncStatus) {
                     syncStatus.classList.remove('online');
                     syncStatus.classList.add('offline');
