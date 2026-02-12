@@ -2493,7 +2493,6 @@
         });
         
         // ==================== OFFLINE/ONLINE MODE DETECTION ====================
-        let isOnline = navigator.onLine;
         let firebaseReady = false;
         
         // Detect when Firebase is ready
@@ -2800,25 +2799,11 @@
                 localStorage.setItem(`cloud_${config.businessId}`, JSON.stringify(completeBackup));
             }
             
-            // Then sync to Firebase Cloud
-            if (config.businessId) {
-                const dataToSync = {
-                    config, products, sales, creditSales, expenses, 
-                    categories, suppliers, journalEntries,
-                    lastUpdated: new Date().toISOString()
-                };
-                
-                if (isOnline && db) {
-                    try {
-                        await syncToFirebase(dataToSync);
-                        console.log('☁️ Data synced to cloud');
-                    } catch (error) {
-                        console.log('⚠️ Online but sync failed, queuing:', error.message);
-                        queueOfflineOperation('saveAll', dataToSync);
-                    }
-                } else {
-                    // Offline - queue for later
-                    queueOfflineOperation('saveAll', dataToSync);
+            // NOTE: Cloud sync is now MANUAL ONLY
+            // Users must click the sync button to sync to Firebase
+            // This prevents automatic syncing and gives user control
+            console.log('💾 Data saved to local storage');
+        }
                     console.log('📦 Data queued for cloud sync (offline)');
                 }
             }
@@ -7772,16 +7757,9 @@
             }
         }
         
-        // Auto-sync every 60 seconds if online and logged in
-        setInterval(async () => {
-            if (config.businessId && currentUser && db && isOnline) {
-                await syncToCloud();
-            }
-            // Also process any pending offline queue
-            if (isOnline && offlineQueue.length > 0) {
-                await processOfflineQueue();
-            }
-        }, 60000); // Every 60 seconds
+        // NOTE: Auto-sync is DISABLED - all syncing is manual only
+        // Users must click the sync button to sync to Firebase
+        // This gives users full control over when data syncs to cloud
         
         // ==================== EXPORT ====================
         function exportToExcel() {
@@ -8016,15 +7994,10 @@
                     syncStatus.classList.add('online');
                 }
                 if (syncText) syncText.textContent = 'Online';
-                console.log('[Status] Online - Data will sync');
+                console.log('[Status] Online - Data ready to sync (manual)');
                 
-                // IMMEDIATELY sync when coming back online (silently)
-                if (config.businessId && currentUser && db) {
-                    console.log('🔄 Back online - syncing now...');
-                    syncToCloud().then(() => {
-                        console.log('✅ Data synced successfully');
-                    });
-                }
+                // NOTE: Auto-sync is DISABLED
+                // Users must manually click the sync button to sync to cloud
             } else {
                 if (syncStatus) {
                     syncStatus.classList.remove('online');
