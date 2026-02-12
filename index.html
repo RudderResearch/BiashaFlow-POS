@@ -119,6 +119,11 @@
         .search-box input::placeholder{color:var(--text-muted)}
         .top-btn{width:40px;height:40px;border:1px solid var(--border);background:var(--bg-card);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-secondary);transition:all .2s;position:relative}
         .top-btn:hover{background:var(--bg-card-hover);color:var(--text-primary)}
+        .top-btn.sync-btn{width:auto;gap:6px;padding:0 14px;background:var(--gradient-green);color:white;border:none;font-weight:600;box-shadow:var(--shadow-glow-green)}
+        .top-btn.sync-btn:hover{transform:translateY(-2px)}
+        .top-btn.sync-btn.syncing{opacity:0.7;pointer-events:none}
+        .top-btn.sync-btn.syncing #syncIcon{animation:spin 0.6s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
         .sync-status{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);font-size:.85rem;font-weight:500}
         .sync-status.online{color:var(--accent-green);border-color:rgba(16,185,129,0.3)}
         .sync-status.offline{color:var(--accent-yellow);border-color:rgba(245,158,11,0.3)}
@@ -909,6 +914,10 @@
                     </div>
                 </div>
                 <div class="top-bar-right">
+                    <button class="top-btn sync-btn" id="syncButton" onclick="manualSyncToCloud()" title="Sync Data">
+                        <span id="syncIcon">🔄</span>
+                        <span>Sync</span>
+                    </button>
                     <div class="sync-status online" id="syncStatus">
                         <span class="sync-dot"></span>
                         <span id="syncText">Online</span>
@@ -2390,20 +2399,16 @@
             appId: "1:107440683990:web:398c54ab823a814399c277"
         };
         
-        // Initialize Firebase (Optional - app works offline without it)
+        // Initialize Firebase
         let auth, db;
         try {
-            if (typeof firebase !== 'undefined') {
-                firebase.initializeApp(firebaseConfig);
-                auth = firebase.auth();
-                db = firebase.firestore();
-                console.log('✅ Firebase initialized successfully');
-            } else {
-                console.log('📱 Running in offline mode - Firebase not loaded');
-            }
+            firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            db = firebase.firestore();
+            console.log('✅ Firebase initialized successfully');
         } catch (error) {
-            console.log('⚠️ Firebase initialization skipped:', error.message);
-            // App continues to work offline without Firebase
+            console.error('Firebase initialization error:', error);
+            showToast('Firebase not configured. See setup guide.', 'warning');
         }
         
         // Global variables for Firebase operations
@@ -2490,15 +2495,6 @@
             
             console.log('🌐 Back online - processing queue');
             setTimeout(processOfflineQueue, 2000); // Wait 2s for stable connection
-        });
-        
-        // ==================== OFFLINE/ONLINE MODE DETECTION ====================
-        let firebaseReady = false;
-        
-        // Detect when Firebase is ready
-        window.addEventListener('load', () => {
-            firebaseReady = (typeof firebase !== 'undefined' && auth && db);
-            console.log(firebaseReady ? '✅ Firebase ready' : '📱 Running in offline-only mode');
         });
         
         // Update offline indicator when going offline
@@ -2753,19 +2749,13 @@
             suppliers = JSON.parse(localStorage.getItem(STORAGE_KEYS.suppliers)) || [];
             journalEntries = JSON.parse(localStorage.getItem(STORAGE_KEYS.journal)) || [];
             
-            console.log('✅ Loaded all data from localStorage');
-            console.log('📊 Users:', users.length, 'Products:', products.length, 'Sales:', sales.length);
-            
-            // Second: Try to load from Firebase Cloud ONLY if online and Firebase is ready
-            if (config.businessId && isOnline && db) {
+            // Second: Try to load from Firebase Cloud (gets latest across devices)
+            if (config.businessId && isOnline) {
                 try {
-                    console.log('🔄 Attempting to sync with cloud...');
                     await loadFromFirebase();
                 } catch (error) {
-                    console.log('⚠️ Cloud sync skipped (offline or Firebase unavailable)');
+                    console.log('⚠️ Cloud sync skipped, using local data:', error.message);
                 }
-            } else {
-                console.log('📱 Working offline - using local data only');
             }
         }
         
@@ -2799,11 +2789,25 @@
                 localStorage.setItem(`cloud_${config.businessId}`, JSON.stringify(completeBackup));
             }
             
-            // NOTE: Cloud sync is now MANUAL ONLY
-            // Users must click the sync button to sync to Firebase
-            // This prevents automatic syncing and gives user control
-            console.log('💾 Data saved to local storage');
-        }
+            // Then sync to Firebase Cloud
+            if (config.businessId) {
+                const dataToSync = {
+                    config, products, sales, creditSales, expenses, 
+                    categories, suppliers, journalEntries,
+                    lastUpdated: new Date().toISOString()
+                };
+                
+                if (isOnline && db) {
+                    try {
+                        await syncToFirebase(dataToSync);
+                        console.log('☁️ Data synced to cloud');
+                    } catch (error) {
+                        console.log('⚠️ Online but sync failed, queuing:', error.message);
+                        queueOfflineOperation('saveAll', dataToSync);
+                    }
+                } else {
+                    // Offline - queue for later
+                    queueOfflineOperation('saveAll', dataToSync);
                     console.log('📦 Data queued for cloud sync (offline)');
                 }
             }
@@ -3436,14 +3440,39 @@
             } catch (error) {
                 console.error('Login Error:', error);
                 
-                // ALWAYS try local login as fallback for ANY Firebase error
-                // This ensures offline login works even when Firebase is unreachable
-                console.log('Firebase login failed - trying local/offline login');
-                setTimeout(() => {
-                    hideLoginLoading();
-                    handleLocalLogin(emailOrUsername, password);
-                }, 500);
-                return;
+                // If network error or Firebase unavailable, try local login
+                if (error.code === 'auth/network-request-failed' || error.message.includes('network') || error.message.includes('offline')) {
+                    console.log('Network error detected - switching to offline mode');
+                    showToast('Network error - trying offline mode...', 'warning');
+                    setTimeout(() => {
+                        hideLoginLoading();
+                        handleLocalLogin(emailOrUsername, password);
+                    }, 1000);
+                    return;
+                }
+                
+                hideLoginLoading();
+                
+                // Clear, user-friendly error messages
+                let errorMsg = '';
+                
+                if (error.code === 'auth/user-not-found') {
+                    errorMsg = 'No account found with this email. Please check your email or sign up.';
+                } else if (error.code === 'auth/wrong-password') {
+                    errorMsg = 'Wrong password. Please try again or reset your password.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMsg = 'Invalid email format. Please enter a valid email address.';
+                } else if (error.code === 'auth/invalid-credential') {
+                    errorMsg = 'Invalid email or password. Please try again.';
+                } else if (error.code === 'auth/too-many-requests') {
+                    errorMsg = 'Too many failed attempts. Please try again in a few minutes.';
+                } else if (error.code === 'auth/user-disabled') {
+                    errorMsg = 'This account has been disabled. Contact support.';
+                } else {
+                    errorMsg = 'Login failed. ' + (error.message || 'Please try again.');
+                }
+                
+                showLoginError(errorMsg);
             }
         }
         
@@ -3859,9 +3888,7 @@
                 localStorage.setItem('lastLoggedUser', JSON.stringify(user));
                 saveAllData();
                 
-                if (config.businessId && navigator.onLine) {
-                    syncToCloud();
-                }
+                // Manual sync only - removed auto-sync on login
                 
                 showApp();
                 showToast(`Welcome back, ${user.name}!`, 'success');
@@ -4157,9 +4184,9 @@
                         });
                     }
                     
-                    // Sync logout to cloud
+                    // Manual sync only - removed auto-sync on logout
                     if (config.businessId && db) {
-                        syncToCloud();
+                        // Data will be synced when user clicks sync button
                     }
                 }
                 
@@ -5251,16 +5278,9 @@
             
             // CRITICAL: Immediately sync to cloud so admin sees seller's sales
             if (config.businessId && db) {
-                console.log(`⏫ Syncing ${sales.length} sales to cloud...`);
-                syncToCloud().then((success) => {
-                    if (success) {
-                        console.log('✅ Sale synced to cloud - Admin will see this');
-                    } else {
-                        console.warn('⚠️ Sync failed - sale saved locally only');
-                    }
-                });
+                console.log('💾 Sale saved locally - Click sync button to sync to cloud');
             } else {
-                console.warn('⚠️ No businessId or db - sync skipped');
+                console.warn('⚠️ No businessId or db - working offline');
             }
             
             // Update stock
@@ -5274,9 +5294,9 @@
             });
             localStorage.setItem(STORAGE_KEYS.products, JSON.stringify(products));
             
-            // CRITICAL: Sync products to cloud so stock updates everywhere
+            // Manual sync only - stock updates saved locally
             if (config.businessId && db) {
-                syncToCloud();
+                console.log('💾 Stock updated locally - Click sync to upload');
             }
             
             // Create journal entry
@@ -6918,10 +6938,9 @@
                     }
                 }
                 
-                // Sync to cloud immediately so all users see the change
+                // Manual sync only - user deletion saved locally
                 if (config.businessId && db) {
-                    await syncToCloud();
-                    console.log('✅ User deletion synced to cloud');
+                    console.log('💾 User deleted locally - Click sync to upload');
                 }
                 
                 showToast(`✅ ${user.name} deleted successfully`, 'success');
@@ -7252,11 +7271,9 @@
             
             localStorage.setItem(STORAGE_KEYS.config, JSON.stringify(config));
             
-            // CRITICAL: Sync settings to cloud so sellers see payment updates immediately
+            // Manual sync only - settings saved locally
             if (config.businessId && db) {
-                syncToCloud().then(() => {
-                    console.log('✅ Settings synced to cloud - All sellers will see updates');
-                });
+                console.log('💾 Settings saved locally - Click sync to upload');
             }
             
             // CRITICAL FIX: Update M-Pesa display in POS cart immediately
@@ -7271,29 +7288,46 @@
             showToast('✅ Settings saved!', 'success');
         }
         
-        // ADDED: Manual cloud sync function
+        // Manual cloud sync function (Silent Mode - No Firebase/localStorage messages)
         async function manualSyncToCloud() {
-            const button = document.getElementById('syncButtonText');
-            const originalText = button.textContent;
+            // Check if online
+            if (!navigator.onLine) {
+                showToast('⚠️ Cannot sync while offline', 'warning');
+                return;
+            }
             
-            button.textContent = '⏳ Syncing...';
+            const button = document.getElementById('syncButton');
+            const icon = document.getElementById('syncIcon');
+            
+            if (!button) return;
+            
+            // Show syncing state
+            button.classList.add('syncing');
+            button.disabled = true;
             
             try {
-                // First process any offline queue
-                if (offlineQueue.length > 0) {
+                // Process offline queue silently
+                if (offlineQueue && offlineQueue.length > 0) {
                     await processOfflineQueue();
                 }
                 
-                // Then do a full sync
+                // Sync all data silently
                 await saveAllData();
                 
-                updateCloudSyncDisplay();
-                showToast('✅ All data synced to cloud successfully!', 'success');
+                // Update sync display
+                if (typeof updateCloudSyncDisplay === 'function') {
+                    updateCloudSyncDisplay();
+                }
+                
+                // Silent success - just log it
+                console.log('✅ Data synced successfully');
             } catch (error) {
-                console.error('Manual sync error:', error);
-                showToast('❌ Sync failed: ' + error.message, 'error');
+                console.error('Sync error:', error);
+                showToast('⚠️ Sync incomplete', 'warning');
             } finally {
-                button.textContent = originalText;
+                // Remove syncing state
+                button.classList.remove('syncing');
+                button.disabled = false;
             }
         }
         
@@ -7757,9 +7791,8 @@
             }
         }
         
-        // NOTE: Auto-sync is DISABLED - all syncing is manual only
-        // Users must click the sync button to sync to Firebase
-        // This gives users full control over when data syncs to cloud
+        // Manual sync only - no auto-sync
+        // User must click the sync button to sync data
         
         // ==================== EXPORT ====================
         function exportToExcel() {
@@ -7982,7 +8015,7 @@
             });
         }
         
-        // Online/Offline Status Monitoring with AUTO-SYNC (Silent Mode)
+        // Online/Offline Status Monitoring (Manual Sync Only)
         function updateOnlineStatus() {
             const isOnline = navigator.onLine;
             const syncStatus = document.getElementById('syncStatus');
@@ -7994,10 +8027,7 @@
                     syncStatus.classList.add('online');
                 }
                 if (syncText) syncText.textContent = 'Online';
-                console.log('[Status] Online - Data ready to sync (manual)');
-                
-                // NOTE: Auto-sync is DISABLED
-                // Users must manually click the sync button to sync to cloud
+                console.log('[Status] Online - Ready to sync (click sync button)');
             } else {
                 if (syncStatus) {
                     syncStatus.classList.remove('online');
