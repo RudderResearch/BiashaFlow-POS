@@ -598,13 +598,63 @@
             .stats-grid{grid-template-columns:1fr}
             .quick-actions{grid-template-columns:1fr 1fr}
             .pos-product-grid{grid-template-columns:repeat(2,1fr)}
-            .page-content{padding:16px;height:calc(100vh - 56px);overflow-y:auto;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:90px}
+            .page-content{padding:12px;height:calc(100vh - 56px);overflow-y:auto;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:90px}
             .pos-cart{position:fixed;bottom:0;left:0;right:0;height:65vh;border-radius:var(--radius-xl) var(--radius-xl) 0 0;transform:translateY(calc(100% - 80px));transition:transform .3s;z-index:100}
             .pos-cart.expanded{transform:translateY(0)}
             .pos-products{height:calc(100vh - 180px);padding-bottom:90px}
             .form-row{grid-template-columns:1fr}
             .current-time{display:none}
+            
+            /* Mobile table styles - compact */
+            .table-container{overflow-x:auto;-webkit-overflow-scrolling:touch}
+            .data-table{font-size:0.75rem;min-width:auto}
+            .data-table th{padding:8px 6px;font-size:0.65rem;white-space:nowrap}
+            .data-table td{padding:8px 6px;font-size:0.75rem}
+            .data-table code{font-size:0.7rem;padding:2px 4px}
+            .action-btn{padding:4px 6px;font-size:0.65rem;margin:2px}
+            .table-status{padding:2px 6px;font-size:0.65rem}
+            
+            /* Card and form mobile styles */
+            .card{min-width:auto}
+            .card-header{padding:12px 14px}
+            .card-title{font-size:0.9rem}
+            .card-body{padding:12px}
+            .form-label{font-size:0.8rem}
+            .form-input{font-size:0.85rem;padding:10px 12px}
+            .form-group{margin-bottom:14px}
+            
+            /* Inventory and settings mobile */
+            .inventory-title{font-size:1.1rem}
+            .inventory-actions{flex-wrap:wrap;gap:6px}
+            .inv-btn{padding:8px 12px;font-size:0.8rem}
+            
+            /* Welcome section mobile */
+            .welcome-title{font-size:1.2rem}
+            .welcome-subtitle{font-size:0.8rem}
+            
+            /* Dashboard grid mobile */
+            .dashboard-grid-full{gap:12px}
         }
+        
+        /* Compact table for users - always apply */
+        .users-table-compact{font-size:0.8rem}
+        .users-table-compact th{padding:10px 8px;font-size:0.7rem}
+        .users-table-compact td{padding:10px 8px;font-size:0.8rem;vertical-align:top}
+        .users-table-compact .action-btn{padding:4px 8px;font-size:0.7rem;margin:2px 2px 2px 0}
+        
+        /* Action dropdown menu for mobile */
+        .action-menu{position:relative;display:inline-block}
+        .action-dots-btn{padding:6px 10px;background:var(--bg-dark);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:1rem;line-height:1;transition:all .2s}
+        .action-dots-btn:hover{background:var(--bg-card-hover);border-color:var(--accent-blue)}
+        .action-dropdown{position:absolute;right:0;top:100%;margin-top:4px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);min-width:140px;box-shadow:var(--shadow-lg);z-index:1000;display:none}
+        .action-dropdown.show{display:block}
+        .action-dropdown-item{padding:10px 14px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;font-size:0.8rem;border-bottom:1px solid var(--border);white-space:nowrap}
+        .action-dropdown-item:last-child{border-bottom:none}
+        .action-dropdown-item:hover{background:var(--bg-card-hover)}
+        .action-dropdown-item.success{color:var(--accent-green)}
+        .action-dropdown-item.primary{color:var(--accent-blue)}
+        .action-dropdown-item.warning{color:var(--accent-yellow)}
+        .action-dropdown-item.danger{color:var(--accent-red)}
         .mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
         .mobile-overlay.show{display:block}
         .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg-sidebar);border-top:1px solid var(--border);padding:8px 16px;z-index:90}
@@ -1655,14 +1705,22 @@
                 <!-- Users Tab -->
                 <div class="tab-content" id="usersTab">
                     <div class="inventory-header">
-                        <h2 class="inventory-title">User Management</h2>
+                        <h2 class="inventory-title">👥 User Management</h2>
                         <div class="inventory-actions">
                             <button class="inv-btn primary" onclick="showAddUserModal()">➕ Add User</button>
                         </div>
                     </div>
-                    <div class="table-container">
-                        <table class="data-table">
-                            <thead><tr><th>Name</th><th>Username</th><th>Password</th><th>Role</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead>
+                    <div class="table-container" style="overflow-x:auto;">
+                        <table class="data-table users-table-compact" style="min-width:600px;">
+                            <thead><tr>
+                                <th style="min-width:100px;">User</th>
+                                <th style="min-width:70px;">Login</th>
+                                <th style="min-width:60px;">Role</th>
+                                <th style="min-width:50px;">Status</th>
+                                <th style="min-width:90px;">Activity</th>
+                                <th style="min-width:70px;">Sales</th>
+                                <th style="min-width:60px;">Actions</th>
+                            </tr></thead>
                             <tbody id="usersTableBody"></tbody>
                         </table>
                     </div>
@@ -4584,14 +4642,15 @@
                     if (doc.exists) {
                         const data = doc.data();
                         
-                        // Only update if lastSync is newer than our current data
-                        const cloudLastSync = data.lastSync?.toDate();
-                        const localLastSync = config.lastSyncTime ? new Date(config.lastSyncTime) : new Date(0);
+                        // Get cloud sync time
+                        const cloudLastSync = data.lastSync?.toDate ? data.lastSync.toDate() : (data.lastSync ? new Date(data.lastSync) : null);
+                        const localLastSync = config.lastSyncTime ? new Date(config.lastSyncTime) : (config.lastSynced ? new Date(config.lastSynced) : new Date(0));
                         
-                        // Also check if the sync was by a different user/device
+                        // Check if the sync was by a different user/device
                         const syncedBySomeoneElse = data.lastSyncBy && data.lastSyncBy !== (currentUser ? currentUser.name : '');
                         
-                        if (!cloudLastSync || cloudLastSync > localLastSync || syncedBySomeoneElse) {
+                        // ALWAYS update if synced by someone else (like a seller)
+                        if (syncedBySomeoneElse || (cloudLastSync && cloudLastSync > localLastSync)) {
                             console.log('📥 Receiving updates from cloud...');
                             console.log(`Cloud synced by: ${data.lastSyncBy || 'Unknown'}`);
                             console.log(`Cloud sales count: ${data.sales?.length || 0}`);
@@ -4599,15 +4658,23 @@
                             
                             // CRITICAL: Update users so admin and sellers stay in sync
                             if (data.users && data.users.length > 0) {
-                                users = data.users;
+                                // Merge users - keep local passwords
+                                const mergedUsers = data.users.map(cloudUser => {
+                                    const localUser = users.find(u => u.id === cloudUser.id || u.email === cloudUser.email);
+                                    if (localUser && localUser.password && !cloudUser.password) {
+                                        return { ...cloudUser, password: localUser.password };
+                                    }
+                                    return cloudUser;
+                                });
+                                users = mergedUsers;
                             }
                             
-                            // SMART MERGE: Merge cloud data with local data
-                            // This preserves any local changes that haven't been synced yet
+                            // SMART MERGE: Take ALL cloud data and add any local unsynced items
                             if (data.products) {
                                 products = mergeDataArrays(products, data.products, 'id');
                             }
                             if (data.sales) {
+                                // For sales - take cloud data as base and add local unsynced
                                 sales = mergeDataArrays(sales, data.sales, 'id');
                             }
                             if (data.creditSales) {
@@ -4633,6 +4700,7 @@
                             const localCloudSyncEnabled = config.cloudSyncEnabled;
                             config = { ...config, ...data.config, businessId: localBusinessId, cloudSyncEnabled: localCloudSyncEnabled };
                             config.lastSyncTime = cloudLastSync ? cloudLastSync.toISOString() : new Date().toISOString();
+                            config.lastSynced = config.lastSyncTime;
                             
                             // CRITICAL: Update M-Pesa display when config changes
                             updateMpesaDisplay();
@@ -4717,6 +4785,7 @@
             else if (tabId === 'credit') renderCreditSales();
             else if (tabId === 'inventory') renderInventory();
             else if (tabId === 'expenses') renderExpenses();
+            else if (tabId === 'users') renderUsers();
         }
         
         function setupRoleBasedAccess() {
@@ -7207,37 +7276,35 @@
                 return `
                 <tr>
                     <td>
-                        <strong>${u.name}</strong><br>
-                        <small style="color:var(--text-muted)">${u.email || 'No email'}</small>
+                        <div style="font-size:0.85rem;font-weight:600;">${u.name}</div>
+                        <div style="font-size:0.7rem;color:var(--text-muted)">${u.email || '-'}</div>
                     </td>
-                    <td>${u.username}</td>
                     <td>
-                        <div style="display:flex;align-items:center;gap:8px">
-                            <code style="background:var(--bg-dark);padding:4px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:0.85rem">${u.password || '••••••'}</code>
-                            <button onclick="copyToClipboard('${u.password}', 'Password copied!')" style="background:transparent;border:none;cursor:pointer;font-size:1rem" title="Copy password">📋</button>
+                        <div style="font-size:0.8rem;">${u.username}</div>
+                        <div style="font-size:0.65rem;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">${u.password || '••••'}</div>
+                    </td>
+                    <td><span class="table-status ${u.role === 'admin' ? 'info' : 'success'}" style="font-size:0.65rem;">${u.role === 'admin' ? '👑' : '🛒'}</span></td>
+                    <td><span class="table-status ${u.status === 'active' ? 'success' : 'danger'}" style="font-size:0.65rem;padding:2px 4px;">${u.status === 'active' ? '✓' : '✗'}</span></td>
+                    <td style="font-size:0.7rem;">
+                        <div>${u.lastLogin ? new Date(u.lastLogin).toLocaleString('en-KE', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : 'Never'}</div>
+                        ${u.lastLogout ? `<div style="color:var(--text-muted);font-size:0.65rem;">Out: ${new Date(u.lastLogout).toLocaleString('en-KE', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}</div>` : ''}
+                    </td>
+                    <td style="font-size:0.75rem;">
+                        <div style="color:var(--accent-green);">${formatKsh(todaySales)}</div>
+                        <div style="color:var(--text-muted);font-size:0.65rem;">Total: ${formatKsh(sellerTotalSales)}</div>
+                    </td>
+                    <td>
+                        <div class="action-menu">
+                            <button class="action-dots-btn" onclick="toggleActionMenu(this)">⋮</button>
+                            <div class="action-dropdown">
+                                <div class="action-dropdown-item primary" onclick="filterSalesBySeller('${u.username}'); closeAllMenus();">📊 View Sales</div>
+                                ${u.role === 'seller' ? `<div class="action-dropdown-item" onclick="openPermissionsModal(${u.id}); closeAllMenus();">🔐 Permissions</div>` : ''}
+                                <div class="action-dropdown-item" onclick="openResetPasswordModal(${u.id}); closeAllMenus();">🔑 Reset Password</div>
+                                ${u.role === 'seller' && u.loginHistory && u.loginHistory.length > 0 ? `<div class="action-dropdown-item" onclick="showLoginHistory(${u.id}); closeAllMenus();">📋 Login History</div>` : ''}
+                                ${u.id !== currentUser.id ? `<div class="action-dropdown-item warning" onclick="toggleUserStatus(${u.id}); closeAllMenus();">${u.status === 'active' ? '⏸️ Disable' : '▶️ Enable'}</div>` : ''}
+                                ${u.id !== currentUser.id ? `<div class="action-dropdown-item danger" onclick="deleteUser(${u.id}); closeAllMenus();">🗑️ Delete</div>` : ''}
+                            </div>
                         </div>
-                    </td>
-                    <td><span class="table-status ${u.role === 'admin' ? 'info' : 'success'}">${u.role === 'admin' ? '👑 Admin' : '🛒 Seller'}</span></td>
-                    <td><span class="table-status ${u.status === 'active' ? 'success' : 'danger'}">${u.status}</span></td>
-                    <td>
-                        <div style="font-size:0.85rem">
-                            <div><strong>Last Login:</strong><br>${u.lastLogin ? new Date(u.lastLogin).toLocaleString('en-KE', {dateStyle: 'short', timeStyle: 'short'}) : 'Never'}</div>
-                            ${u.lastLogout ? `<div style="margin-top:4px;color:var(--text-muted)"><strong>Last Logout:</strong><br>${new Date(u.lastLogout).toLocaleString('en-KE', {dateStyle: 'short', timeStyle: 'short'})}</div>` : ''}
-                        </div>
-                    </td>
-                    <td>
-                        <div style="font-size:0.85rem">
-                            <div><strong>Today:</strong> ${formatKsh(todaySales)}</div>
-                            <div style="margin-top:4px;color:var(--text-secondary)"><strong>Total:</strong> ${formatKsh(sellerTotalSales)}</div>
-                            <div style="margin-top:4px"><a href="#" onclick="filterSalesBySeller('${u.username}'); return false;" style="color:var(--accent-blue);text-decoration:none">📊 View Sales</a></div>
-                        </div>
-                    </td>
-                    <td>
-                        ${u.role === 'seller' ? `<button class="action-btn info" onclick="openPermissionsModal(${u.id})" title="Manage permissions">🔐 Permissions</button>` : ''}
-                        <button class="action-btn primary" onclick="openResetPasswordModal(${u.id})">🔑 Reset</button>
-                        ${u.id !== currentUser.id ? `<button class="action-btn ${u.status === 'active' ? 'warning' : 'success'}" onclick="toggleUserStatus(${u.id})">${u.status === 'active' ? 'Disable' : 'Enable'}</button>` : ''}
-                        ${u.id !== currentUser.id ? `<button class="action-btn danger" onclick="deleteUser(${u.id})" title="Delete permanently">🗑️ Delete</button>` : ''}
-                        ${u.role === 'seller' && u.loginHistory && u.loginHistory.length > 0 ? `<button class="action-btn" onclick="showLoginHistory(${u.id})" title="Login history">📋 History</button>` : ''}
                     </td>
                 </tr>
             `}).join('');
@@ -7245,6 +7312,28 @@
             // Show count
             console.log(`Showing ${myBusinessUsers.length} users from business ${myBusinessId}`);
         }
+        
+        // Toggle action menu dropdown
+        function toggleActionMenu(btn) {
+            const dropdown = btn.nextElementSibling;
+            const isOpen = dropdown.classList.contains('show');
+            closeAllMenus();
+            if (!isOpen) {
+                dropdown.classList.add('show');
+            }
+        }
+        
+        // Close all action menus
+        function closeAllMenus() {
+            document.querySelectorAll('.action-dropdown').forEach(d => d.classList.remove('show'));
+        }
+        
+        // Close menus when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.action-menu')) {
+                closeAllMenus();
+            }
+        });
         
         // Helper function to copy text to clipboard
         function copyToClipboard(text, successMsg) {
