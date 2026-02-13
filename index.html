@@ -2678,30 +2678,6 @@
             businessId: 'dpos_business_id' // Store business ID separately
         };
         
-        // ==================== PASSWORD HASHING ====================
-        // Simple hash function to obfuscate passwords in Firestore
-        // This prevents browser password breach warnings
-        async function hashPassword(password) {
-            // Use a simple but effective encoding that browsers won't detect as plain password
-            const encoder = new TextEncoder();
-            const data = encoder.encode(password + '_BF_SECURE_2024');
-            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-            return 'BFH_' + hashHex; // Prefix to identify hashed passwords
-        }
-        
-        // Check if password matches (handles both plain and hashed)
-        async function verifyPassword(inputPassword, storedPassword) {
-            // If stored password is hashed (starts with BFH_)
-            if (storedPassword && storedPassword.startsWith('BFH_')) {
-                const hashedInput = await hashPassword(inputPassword);
-                return hashedInput === storedPassword;
-            }
-            // Otherwise compare plain text (for backwards compatibility)
-            return inputPassword === storedPassword;
-        }
-        
         // ==================== INITIALIZATION ====================
         window.addEventListener('load', init);
         
@@ -3506,19 +3482,15 @@
                     
                     const userData = userDoc.data();
                     
-                    // CRITICAL: Update last login time in Firestore AND local users array
-                    const loginTime = new Date().toISOString();
+                    // Update last login time and password in Firestore
                     try {
-                        // Hash the password before storing in Firestore
-                        const hashedPassword = await hashPassword(password);
-                        
                         await db.collection('users').doc(firebaseUser.uid).update({
                             lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
-                            password: hashedPassword // Sync hashed password - no breach warning
+                            password: password // Sync password for cross-device login
                         });
-                        console.log('✅ Login time and password hash updated in Firestore');
+                        console.log('✅ Login time updated in Firestore');
                     } catch (error) {
-                        console.error('Failed to update login data:', error);
+                        console.error('Failed to update login time:', error);
                     }
                     
                     // Validate user role matches selected login type
@@ -3533,19 +3505,19 @@
                     // Load business data
                     await loadUserData(userData.businessId);
                     
-                    // Cache credentials for offline access (plain password stored locally)
+                    // Cache credentials for offline access
                     cacheOfflineAuth(emailOrUsername, password, userData);
                     
                     // Also update the local users array with password for offline login
                     const localUser = users.find(u => u.email === emailOrUsername || u.username === userData.username);
                     if (localUser) {
-                        localUser.password = password; // Keep plain password locally
+                        localUser.password = password;
                         localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
                     }
                     
                     hideLoginLoading();
-                    // Show app
-                    showApp(userData.name, userData.username, userData.role, userData.businessId);
+                    // Show app with password and email for re-auth
+                    showApp(userData.name, userData.username, userData.role, userData.businessId, password, userData.email);
                     showToast(`Welcome back, ${userData.name}!`, 'success');
                     
                 } else {
@@ -3570,17 +3542,15 @@
                         const userCredential = await auth.signInWithEmailAndPassword(userEmail, password);
                         const firebaseUser = userCredential.user;
                         
-                        // CRITICAL: Update last login time and hashed password in Firestore
+                        // Update last login time and password in Firestore
                         try {
-                            const hashedPassword = await hashPassword(password);
-                            
                             await db.collection('users').doc(firebaseUser.uid).update({
                                 lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
-                                password: hashedPassword // Sync hashed password - no breach warning
+                                password: password // Sync password for cross-device login
                             });
-                            console.log('✅ Login time and password hash updated in Firestore');
+                            console.log('✅ Login time updated in Firestore');
                         } catch (error) {
-                            console.error('Failed to update login data:', error);
+                            console.error('Failed to update login time:', error);
                         }
                         
                         // Validate user role matches selected login type
@@ -3595,19 +3565,19 @@
                         // Load business data
                         await loadUserData(userData.businessId);
                         
-                        // Cache credentials for offline access (plain password locally)
+                        // Cache credentials for offline access
                         cacheOfflineAuth(emailOrUsername, password, userData);
                         
                         // Also update the local users array with password for offline login
                         const localUser = users.find(u => u.username === emailOrUsername || u.email === userEmail);
                         if (localUser) {
-                            localUser.password = password; // Keep plain password locally
+                            localUser.password = password;
                             localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
                         }
                         
                         hideLoginLoading();
-                        // Show app
-                        showApp(userData.name, userData.username, userData.role, userData.businessId);
+                        // Show app with password and email for re-auth
+                        showApp(userData.name, userData.username, userData.role, userData.businessId, password, userEmail);
                         showToast(`Welcome back, ${userData.name}!`, 'success');
                     } catch (authError) {
                         hideLoginLoading();
@@ -4154,30 +4124,27 @@
                     status: 'active'
                 });
                 
-                // Hash the password before storing in Firestore
-                const hashedPassword = await hashPassword(password);
-                
-                // Create user document with HASHED password
+                // Create user document WITH password in Firestore
                 await db.collection('users').doc(firebaseUser.uid).set({
                     businessId: businessId,
                     name: name,
                     username: username,
                     email: email,
-                    password: hashedPassword, // Hashed - won't trigger breach warnings
+                    password: password,
                     phone: phone || '',
                     role: 'admin',
                     status: 'active',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
-                // Create admin user object for local storage (keep plain password locally)
+                // Create admin user object
                 const adminUser = {
                     id: Date.now(),
                     uid: firebaseUser.uid,
                     name: name,
                     username: username,
                     email: email,
-                    password: password, // Keep plain password locally for offline login
+                    password: password,
                     phone: phone || '',
                     role: 'admin',
                     status: 'active',
@@ -4186,13 +4153,7 @@
                     synced: true
                 };
                 
-                // Create admin user for cloud with hashed password
-                const adminUserForCloud = {
-                    ...adminUser,
-                    password: hashedPassword // Hashed for cloud storage
-                };
-                
-                // Create initial empty data document with admin user (hashed password)
+                // Create initial data document with admin user
                 await db.collection('data').doc(businessId).set({
                     products: [],
                     sales: [],
@@ -4200,25 +4161,25 @@
                     expenses: [],
                     categories: [],
                     suppliers: [],
-                    users: [adminUserForCloud], // Include admin user with hashed password
+                    users: [adminUser], // User WITH password for cross-device login
                     config: {
                         businessName: businessName,
                         phone: phone || '',
                         email: email,
                         businessId: businessId,
-                        cloudSyncEnabled: true, // Enable cloud sync for new accounts
+                        cloudSyncEnabled: true,
                         vatRate: 16,
-                        isRealUser: true, // Mark as real user
+                        isRealUser: true,
                         subscriptionStatus: 'trial',
                         subscriptionStartDate: new Date().toISOString(),
-                        subscriptionNextDue: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+                        subscriptionNextDue: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
                         subscriptionLastPayment: new Date().toISOString(),
                         subscriptionFee: 1500
                     },
                     lastSync: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
-                // Update local users array (with plain password for offline)
+                // Update local users array
                 users = [adminUser];
                 localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
                 
@@ -4254,9 +4215,9 @@
                 
                 showToast(`🎉 Welcome ${name}! 30-Day Trial Started!`, 'success');
                 
-                // Load user data and show app
+                // Load user data and show app with password and email
                 await loadUserData(businessId);
-                showApp(name, username, 'admin', businessId);
+                showApp(name, username, 'admin', businessId, password, email);
                 
             } catch (error) {
                 console.error('Signup Error:', error);
@@ -4411,15 +4372,17 @@
             }
         }
         
-        function showApp(name, username, role, businessId) {
+        function showApp(name, username, role, businessId, password, email) {
             try {
                 // If parameters provided (from Firebase), set currentUser
                 if (name && username && role) {
                     currentUser = {
                         name: name,
                         username: username,
+                        email: email || null, // Include email for re-auth
                         role: role,
                         businessId: businessId,
+                        password: password || null, // Include password for re-auth if provided
                         status: 'active'
                     };
                     sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
@@ -7386,17 +7349,13 @@
                     const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                     const firebaseUser = userCredential.user;
                     
-                    // Hash the password before storing in Firestore
-                    // This prevents browser password breach warnings
-                    const hashedPassword = await hashPassword(password);
-                    
-                    // Store user data in Firestore with HASHED password
+                    // Store user data in Firestore WITH password for cross-device login
                     await db.collection('users').doc(firebaseUser.uid).set({
                         businessId: businessId,
                         name: name,
                         username: username,
                         email: email,
-                        password: hashedPassword, // Hashed - won't trigger breach warnings
+                        password: password,
                         role: role,
                         status: 'active',
                         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -7410,24 +7369,15 @@
                     const userIndex = users.findIndex(u => u.id === newUser.id);
                     if (userIndex !== -1) users[userIndex] = newUser;
                     
-                    // Save to localStorage (keep plain password locally for offline login)
+                    // Save to localStorage
                     localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
                     
                     // CRITICAL: Also sync users array to cloud data document
                     // This ensures other devices can see the new user
                     if (config.businessId) {
                         try {
-                            // Create a copy of users with hashed passwords for cloud storage
-                            const usersForCloud = await Promise.all(users.map(async (u) => {
-                                const userCopy = { ...u };
-                                if (u.password && !u.password.startsWith('BFH_')) {
-                                    userCopy.password = await hashPassword(u.password);
-                                }
-                                return userCopy;
-                            }));
-                            
                             await db.collection('data').doc(config.businessId).update({
-                                users: usersForCloud,
+                                users: users,
                                 lastSync: firebase.firestore.FieldValue.serverTimestamp(),
                                 lastSyncBy: currentUser.name
                             });
@@ -8023,17 +7973,7 @@
                         creditSales.forEach(c => { if (!c.synced) c.synced = true; c.syncedAt = now; });
                         products.forEach(p => { if (!p.synced) p.synced = true; p.syncedAt = now; });
                         
-                        // Hash passwords in users array for cloud storage
-                        const usersForCloud = await Promise.all(users.map(async (u) => {
-                            const userCopy = { ...u };
-                            // Hash password if it's not already hashed
-                            if (u.password && !u.password.startsWith('BFH_')) {
-                                userCopy.password = await hashPassword(u.password);
-                            }
-                            return userCopy;
-                        }));
-                        
-                        // Update the full data document
+                        // Update the full data document - keep passwords for cross-device login
                         updateData.products = products;
                         updateData.sales = sales;
                         updateData.creditSales = creditSales;
@@ -8041,13 +7981,13 @@
                         updateData.categories = categories;
                         updateData.suppliers = suppliers;
                         updateData.journalEntries = journalEntries;
-                        updateData.users = usersForCloud; // Use hashed passwords for cloud
+                        updateData.users = users; // Keep users WITH passwords
                         updateData.config = { ...config, lastSynced: now };
                         
                         // Perform the update
                         await dataRef.set(updateData, { merge: true });
                         
-                        // Save updated sync flags locally (keep plain passwords locally)
+                        // Save updated sync flags locally
                         config.lastSynced = now;
                         localStorage.setItem(STORAGE_KEYS.config, JSON.stringify(config));
                         localStorage.setItem(STORAGE_KEYS.sales, JSON.stringify(sales));
