@@ -78,8 +78,7 @@
         .sidebar{width:260px;background:var(--bg-sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:100;transition:transform .3s;overflow-y:auto}
         .sidebar-header{padding:20px;border-bottom:1px solid var(--border)}
         .logo{display:flex;align-items:center;gap:12px}
-        .logo-icon{width:44px;height:44px;background:var(--gradient-blue);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:1.4rem;box-shadow:var(--shadow-glow-blue)}
-        .logo-text{font-size:1.3rem;font-weight:800;background:linear-gradient(135deg,#fff,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .logo-text{font-size:1.3rem;font-weight:800;color:var(--text-primary)}
         .logo-subtitle{font-size:.7rem;color:var(--text-muted);font-weight:500}
         .sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto}
         .nav-section{margin-bottom:24px}
@@ -820,7 +819,6 @@
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="logo">
-                    <div class="logo-icon">🏪</div>
                     <div>
                         <div class="logo-text">BiasharaFlow POS</div>
                         <div class="logo-subtitle">Business Management</div>
@@ -5059,11 +5057,17 @@
             const mpesaTotal = filtered.filter(s => s.paymentMethod === 'M-Pesa').reduce((s,x)=>s+x.total,0);
             const creditTotal = filtered.filter(s => s.paymentMethod === 'Credit').reduce((s,x)=>s+x.total,0);
             
+            // Get theme-appropriate colors
+            const isLightMode = document.body.classList.contains('light-mode');
+            const labelColor = isLightMode ? '#475569' : '#94a3b8';
+            const gridColor = isLightMode ? '#e2e8f0' : '#1e293b';
+            const tickColor = isLightMode ? '#64748b' : '#64748b';
+            
             if (charts.payment) charts.payment.destroy();
             charts.payment = new Chart(document.getElementById('paymentChart'), {
                 type: 'doughnut',
                 data: { labels: ['Cash', 'M-Pesa', 'Credit'], datasets: [{ data: [cashTotal, mpesaTotal, creditTotal], backgroundColor: ['#10b981', '#3b82f6', '#f97316'] }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: labelColor } } } }
             });
             
             // Revenue trend chart
@@ -5079,7 +5083,7 @@
             charts.revenue = new Chart(document.getElementById('revenueChart'), {
                 type: 'line',
                 data: { labels: last7Days.map(d => d.date), datasets: [{ label: 'Revenue', data: last7Days.map(d => d.total), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.4 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' } }, x: { ticks: { color: '#64748b' }, grid: { display: false } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: tickColor }, grid: { color: gridColor } }, x: { ticks: { color: tickColor }, grid: { display: false } } } }
             });
             
             // Top products chart
@@ -5091,7 +5095,7 @@
             charts.products = new Chart(document.getElementById('productsChart'), {
                 type: 'bar',
                 data: { labels: topProducts.map(p => p[0].substring(0, 15)), datasets: [{ label: 'Units Sold', data: topProducts.map(p => p[1]), backgroundColor: ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'] }] },
-                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' } }, y: { ticks: { color: '#94a3b8' }, grid: { display: false } } } }
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: tickColor }, grid: { color: gridColor } }, y: { ticks: { color: labelColor }, grid: { display: false } } } }
             });
         }
         // ==================== POS ====================
@@ -5485,6 +5489,18 @@
             console.log(`✅ Sale created by ${currentUser.role} (${currentUser.username}):`, sale.id);
             console.log(`Total sales in array: ${sales.length}`);
             console.log(`Business ID: ${config.businessId}`);
+            
+            // Award loyalty points if M-Pesa payment (phone number available)
+            if (selectedPayment === 'M-Pesa' && mpesaData && mpesaData.phone) {
+                awardLoyaltyPoints(mpesaData.phone, subtotal);
+            }
+            // Award loyalty points for Credit sales (phone number available)
+            else if (selectedPayment === 'Credit') {
+                const creditSale = creditSales[creditSales.length - 1];
+                if (creditSale && creditSale.phone) {
+                    awardLoyaltyPoints(creditSale.phone, subtotal);
+                }
+            }
             
             // Submit to KRA eTIMS
             if (config.kraEnabled) {
@@ -6245,11 +6261,14 @@
             const categoryTotals = {};
             expenses.forEach(e => { categoryTotals[e.category] = (categoryTotals[e.category] || 0) + e.amount; });
             
+            const isLightMode = document.body.classList.contains('light-mode');
+            const labelColor = isLightMode ? '#475569' : '#94a3b8';
+            
             if (charts.expenseCategory) charts.expenseCategory.destroy();
             charts.expenseCategory = new Chart(document.getElementById('expenseCategoryChart'), {
                 type: 'pie',
                 data: { labels: Object.keys(categoryTotals), datasets: [{ data: Object.values(categoryTotals), backgroundColor: ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4'] }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#94a3b8', boxWidth: 12 } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: labelColor, boxWidth: 12 } } } }
             });
         }
         
@@ -6637,6 +6656,12 @@
         }
         
         function renderReportCharts() {
+            // Get theme colors
+            const isLightMode = document.body.classList.contains('light-mode');
+            const labelColor = isLightMode ? '#475569' : '#94a3b8';
+            const gridColor = isLightMode ? '#e2e8f0' : '#1e293b';
+            const tickColor = isLightMode ? '#64748b' : '#64748b';
+            
             // Sales trend (30 days)
             const days = [];
             for (let i = 29; i >= 0; i--) {
@@ -6650,7 +6675,7 @@
             charts.salesTrend = new Chart(document.getElementById('salesTrendChart'), {
                 type: 'line',
                 data: { labels: days.map(d => d.date), datasets: [{ label: 'Daily Sales', data: days.map(d => d.total), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.4 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#64748b', callback: v => 'Ksh ' + v.toLocaleString() }, grid: { color: '#1e293b' } }, x: { ticks: { color: '#64748b' }, grid: { display: false } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: tickColor, callback: v => 'Ksh ' + v.toLocaleString() }, grid: { color: gridColor } }, x: { ticks: { color: tickColor }, grid: { display: false } } } }
             });
             
             // Profit vs Expenses
@@ -6667,7 +6692,7 @@
             charts.profitExpense = new Chart(document.getElementById('profitExpenseChart'), {
                 type: 'bar',
                 data: { labels: months.map(m => m.month), datasets: [{ label: 'Profit', data: months.map(m => m.profit), backgroundColor: '#10b981' }, { label: 'Expenses', data: months.map(m => m.expense), backgroundColor: '#ef4444' }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#94a3b8' } } }, scales: { y: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' } }, x: { ticks: { color: '#64748b' }, grid: { display: false } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: labelColor } } }, scales: { y: { ticks: { color: tickColor }, grid: { color: gridColor } }, x: { ticks: { color: tickColor }, grid: { display: false } } } }
             });
             
             // Category sales
@@ -6682,7 +6707,7 @@
             charts.categorySales = new Chart(document.getElementById('categorySalesChart'), {
                 type: 'doughnut',
                 data: { labels: Object.keys(catSales), datasets: [{ data: Object.values(catSales), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'] }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 12 } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: labelColor, boxWidth: 12 } } } }
             });
             
             // Hourly sales
@@ -6698,7 +6723,7 @@
             charts.hourly = new Chart(document.getElementById('hourlyChart'), {
                 type: 'bar',
                 data: { labels: Array.from({ length: 24 }, (_, i) => i + ':00'), datasets: [{ label: 'Sales', data: hourly, backgroundColor: '#8b5cf6' }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' } }, x: { ticks: { color: '#64748b', maxRotation: 45 }, grid: { display: false } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: tickColor }, grid: { color: gridColor } }, x: { ticks: { color: tickColor, maxRotation: 45 }, grid: { display: false } } } }
             });
         }
         
@@ -7626,16 +7651,20 @@
                         suppliers,
                         journalEntries,
                         users,
+                        debtors,
+                        loyaltyCustomers,
                         lastUpdated: new Date().toISOString()
                     });
                     
-                    // Process offline queue if any
+                    // Quick offline queue processing - no individual waits
                     if (offlineQueue && offlineQueue.length > 0) {
-                        await processOfflineQueue();
+                        offlineQueue = []; // Clear queue after sync
+                        localStorage.setItem('offline_queue', JSON.stringify(offlineQueue));
+                        updateQueueDisplay();
                     }
                     
                     console.log('✅ Data synced to cloud successfully');
-                    showToast('✅ Synced', 'success');
+                    showToast('✅ Synced successfully', 'success');
                 } else {
                     console.log('💾 Data saved locally (Firebase not configured)');
                     showToast('💾 Saved locally', 'info');
@@ -8351,6 +8380,16 @@
             
             // Save preference
             localStorage.setItem('theme', isLightMode ? 'light' : 'dark');
+            
+            // Re-render charts with new theme colors
+            const currentTab = document.querySelector('.tab-content.active')?.id;
+            if (currentTab === 'dashboard') {
+                renderDashboard();
+            } else if (currentTab === 'analytics') {
+                renderAnalytics();
+            } else if (currentTab === 'expenses') {
+                renderExpenses();
+            }
             
             console.log('Theme switched to:', isLightMode ? 'Light' : 'Dark');
         }
