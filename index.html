@@ -3944,38 +3944,32 @@
                     let user = users.find(u => 
                         (u.username === username || u.email === username) && u.password === password
                     );
-                            
-                            if (user) {
-                                const selectedType = document.getElementById('selectedLoginType').value;
-                                if (user.role !== selectedType) {
-                                    showLoginError(`This account is ${user.role === 'admin' ? 'an Admin' : 'a Seller'}. Please select the correct login type.`);
-                                    return;
-                                }
-                                
-                                const sessionId = 'SESSION_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                                user.lastLogin = new Date().toISOString();
-                                user.currentSessionId = sessionId;
-                                
-                                currentUser = user;
-                                sessionStorage.setItem('currentUser', JSON.stringify(user));
-                                localStorage.setItem('lastLoggedUser', JSON.stringify(user));
-                                saveAllData();
-                                
-                                showApp();
-                                showToast(`Welcome back, ${user.name}!`, 'success');
-                                return;
-                            }
+                    
+                    if (user) {
+                        const selectedType = document.getElementById('selectedLoginType').value;
+                        if (user.role !== selectedType) {
+                            showLoginError(`This account is ${user.role === 'admin' ? 'an Admin' : 'a Seller'}. Please select the correct login type.`);
+                            return;
                         }
-                    } catch (e) {
-                        console.error('Error loading cached business data:', e);
+                        
+                        const sessionId = 'SESSION_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                        user.lastLogin = new Date().toISOString();
+                        user.currentSessionId = sessionId;
+                        
+                        currentUser = user;
+                        sessionStorage.setItem('currentUser', JSON.stringify(user));
+                        localStorage.setItem('lastLoggedUser', JSON.stringify(user));
+                        saveAllData();
+                        
+                        showApp();
+                        showToast(`Welcome back, ${user.name}!`, 'success');
+                        return;
                     }
                 }
             }
             
             // Fallback to original method - search in current users array
             let user = users.find(u => (u.username === username || u.email === username) && u.password === password);
-            
-            // No cloud backup fallback needed - data is in regular localStorage
             
             if (user) {
                 if (user.status !== 'active') { 
