@@ -234,6 +234,17 @@
         .table-status.danger{background:rgba(239,68,68,.15);color:var(--accent-red)}
         .table-status.info{background:rgba(59,130,246,.15);color:var(--accent-blue)}
         .action-btn{padding:6px 12px;border-radius:var(--radius-sm);font-size:.75rem;font-weight:600;cursor:pointer;border:none;margin-right:4px;transition:all .2s}
+        .action-menu{position:relative;display:inline-block}
+        .action-menu-btn{padding:6px 10px;background:var(--bg-dark);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:1.2rem;line-height:1;transition:all .2s}
+        .action-menu-btn:hover{background:var(--bg-card-hover);border-color:var(--accent-blue)}
+        .action-dropdown{position:absolute;right:0;top:100%;margin-top:4px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);min-width:150px;box-shadow:var(--shadow-lg);z-index:1000;display:none}
+        .action-dropdown.show{display:block}
+        .action-dropdown-item{padding:10px 16px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;font-size:.85rem;border-bottom:1px solid var(--border)}
+        .action-dropdown-item:last-child{border-bottom:none}
+        .action-dropdown-item:hover{background:var(--bg-card-hover)}
+        .action-dropdown-item.success{color:var(--accent-green)}
+        .action-dropdown-item.primary{color:var(--accent-blue)}
+        .action-dropdown-item.danger{color:var(--accent-red)}
         .action-btn:hover{transform:translateY(-1px)}
         .action-btn.primary{background:rgba(59,130,246,.15);color:var(--accent-blue)}
         .action-btn.success{background:rgba(16,185,129,.15);color:var(--accent-green)}
@@ -1271,7 +1282,7 @@
                     <div class="table-container" id="inventoryTable">
                         <table class="data-table">
                             <thead>
-                                <tr><th>Product</th><th>SKU</th><th>Category</th><th>Cost</th><th>Price</th><th>Margin</th><th>Stock</th><th>Value</th><th>Actions</th></tr>
+                                <tr><th>Product</th><th>Stock</th><th>Price</th><th>Actions</th></tr>
                             </thead>
                             <tbody id="inventoryTableBody"></tbody>
                         </table>
@@ -3522,53 +3533,73 @@
         function loadExtendedDemoData() {
             // Business configuration
             config = { 
-                businessName: 'Demo Supermarket - Nairobi CBD', 
+                businessName: 'HealthPlus Pharmacy - Nairobi', 
                 kraPin: 'P051234567X', 
                 phone: '0712345678', 
                 mpesaTill: '7028833',
                 mpesaPaybillNumber: '400200',
-                mpesaPaybillAccount: 'DEMO2024',
+                mpesaPaybillAccount: 'HLTH2024',
                 vatRate: 16,
-                receiptFooter: 'Thank you for your business! Karibu tena.',
+                receiptFooter: 'Your Health, Our Priority. Get Well Soon!',
                 isRealUser: false,
                 businessId: 'DEMO_BUSINESS'
             };
             
-            // Comprehensive categories
-            categories = ['Maize Flour', 'Sugar', 'Rice', 'Cooking Oil', 'Milk', 'Tea', 'Coffee', 'Soft Drinks', 'Water', 'Bread', 'Soap', 'Detergent', 'Snacks', 'Cereals', 'Spices', 'Pasta', 'Beans'];
+            // Comprehensive pharmacy categories
+            categories = ['Painkillers', 'Antibiotics', 'Antimalarials', 'Vitamins', 'First Aid', 'Baby Care', 'Personal Care', 'Cold & Flu', 'Digestive Health', 'Skin Care', 'Medical Devices', 'Supplements'];
             
-            // Extensive product catalog
+            // Extensive pharmaceutical product catalog
             products = [
-                {id:'P001',sku:'MAI10245',name:'Jogoo Maize Flour 2kg',category:'Maize Flour',cost:165,price:185,stock:50,reorder:20,vat:16},
-                {id:'P002',sku:'MAI10352',name:'Pembe Maize Flour 2kg',category:'Maize Flour',cost:158,price:175,stock:45,reorder:15,vat:16},
-                {id:'P003',sku:'MAI10468',name:'Exe Maize Flour 2kg',category:'Maize Flour',cost:162,price:180,stock:38,reorder:15,vat:16},
-                {id:'P004',sku:'SUG20145',name:'Mumias Sugar 1kg',category:'Sugar',cost:145,price:165,stock:60,reorder:25,vat:16},
-                {id:'P005',sku:'SUG20256',name:'Kabras Sugar 1kg',category:'Sugar',cost:142,price:162,stock:55,reorder:20,vat:16},
-                {id:'P006',sku:'SUG20378',name:'Sony Sugar 1kg',category:'Sugar',cost:140,price:160,stock:48,reorder:20,vat:16},
-                {id:'P007',sku:'RIC30125',name:'Pishori Rice 1kg',category:'Rice',cost:180,price:220,stock:40,reorder:15,vat:16},
-                {id:'P008',sku:'RIC30247',name:'Sindano Rice 1kg',category:'Rice',cost:120,price:150,stock:52,reorder:15,vat:16},
-                {id:'P009',sku:'RIC30389',name:'Basmati Rice 1kg',category:'Rice',cost:250,price:300,stock:25,reorder:10,vat:16},
-                {id:'P010',sku:'OIL40156',name:'Elianto Cooking Oil 1L',category:'Cooking Oil',cost:280,price:320,stock:35,reorder:15,vat:16},
-                {id:'P011',sku:'OIL40278',name:'Fresh Fri Cooking Oil 2L',category:'Cooking Oil',cost:520,price:600,stock:28,reorder:12,vat:16},
-                {id:'P012',sku:'OIL40391',name:'Kimbo 500g',category:'Cooking Oil',cost:180,price:210,stock:42,reorder:15,vat:16},
-                {id:'P013',sku:'MLK50134',name:'Brookside Fresh Milk 500ml',category:'Milk',cost:55,price:70,stock:50,reorder:30,vat:0},
-                {id:'P014',sku:'MLK50245',name:'Tuzo UHT Milk 500ml',category:'Milk',cost:52,price:68,stock:60,reorder:35,vat:0},
-                {id:'P015',sku:'TEA60123',name:'Ketepa Tea 100g',category:'Tea',cost:110,price:140,stock:40,reorder:20,vat:16},
-                {id:'P016',sku:'TEA60234',name:'Chai ya Baba Tea 100g',category:'Tea',cost:95,price:125,stock:35,reorder:18,vat:16},
-                {id:'P017',sku:'COF70145',name:'Dormans Coffee 100g',category:'Coffee',cost:180,price:230,stock:20,reorder:10,vat:16},
-                {id:'P018',sku:'SDK80167',name:'Coca Cola 500ml',category:'Soft Drinks',cost:60,price:80,stock:48,reorder:24,vat:16},
-                {id:'P019',sku:'SDK80278',name:'Fanta Orange 500ml',category:'Soft Drinks',cost:58,price:75,stock:36,reorder:20,vat:16},
-                {id:'P020',sku:'SDK80389',name:'Sprite 500ml',category:'Soft Drinks',cost:58,price:75,stock:40,reorder:20,vat:16},
-                {id:'P021',sku:'WAT90123',name:'Keringet Water 500ml',category:'Water',cost:25,price:40,stock:60,reorder:30,vat:16},
-                {id:'P022',sku:'WAT90234',name:'Dasani Water 500ml',category:'Water',cost:28,price:45,stock:55,reorder:28,vat:16},
-                {id:'P023',sku:'BRD10145',name:'Supa Loaf Bread 400g',category:'Bread',cost:52,price:65,stock:20,reorder:10,vat:0},
-                {id:'P024',sku:'BRD10256',name:'Festive Bread 450g',category:'Bread',cost:55,price:68,stock:18,reorder:10,vat:0},
-                {id:'P025',sku:'SOP11167',name:'Jamaa Bar Soap',category:'Soap',cost:45,price:60,stock:100,reorder:30,vat:16},
-                {id:'P026',sku:'SOP11278',name:'Geisha Bar Soap',category:'Soap',cost:48,price:63,stock:85,reorder:28,vat:16},
-                {id:'P027',sku:'DET12189',name:'Omo Detergent 500g',category:'Detergent',cost:120,price:150,stock:45,reorder:15,vat:16},
-                {id:'P028',sku:'DET12290',name:'Ariel Detergent 500g',category:'Detergent',cost:125,price:155,stock:38,reorder:12,vat:16},
-                {id:'P029',sku:'SNK13101',name:'Tropical Heat Crisps',category:'Snacks',cost:10,price:20,stock:150,reorder:50,vat:16},
-                {id:'P030',sku:'SNK13212',name:'Big G Peanuts 50g',category:'Snacks',cost:15,price:30,stock:120,reorder:40,vat:16}
+                {id:'P001',sku:'PAR10245',name:'Panadol Extra 24 Tablets',category:'Painkillers',cost:180,price:220,stock:50,reorder:20,vat:16},
+                {id:'P002',sku:'PAR10352',name:'Hedex 16 Tablets',category:'Painkillers',cost:120,price:150,stock:45,reorder:15,vat:16},
+                {id:'P003',sku:'PAR10468',name:'Aspirin 100mg 100 Tabs',category:'Painkillers',cost:80,price:120,stock:38,reorder:15,vat:16},
+                {id:'P004',sku:'PAR20145',name:'Ibuprofen 400mg 20 Tabs',category:'Painkillers',cost:60,price:100,stock:60,reorder:25,vat:16},
+                {id:'P005',sku:'PAR20256',name:'Diclofenac 50mg 20 Tabs',category:'Painkillers',cost:50,price:80,stock:55,reorder:20,vat:16},
+                {id:'P006',sku:'ANT30125',name:'Amoxicillin 500mg 21 Caps',category:'Antibiotics',cost:250,price:350,stock:40,reorder:15,vat:16},
+                {id:'P007',sku:'ANT30247',name:'Augmentin 625mg 14 Tabs',category:'Antibiotics',cost:850,price:1100,stock:25,reorder:10,vat:16},
+                {id:'P008',sku:'ANT30389',name:'Ciprofloxacin 500mg 10 Tabs',category:'Antibiotics',cost:180,price:280,stock:30,reorder:12,vat:16},
+                {id:'P009',sku:'ANT40156',name:'Azithromycin 500mg 3 Tabs',category:'Antibiotics',cost:280,price:400,stock:35,reorder:15,vat:16},
+                {id:'P010',sku:'ANT40278',name:'Metronidazole 400mg 21 Tabs',category:'Antibiotics',cost:120,price:200,stock:28,reorder:12,vat:16},
+                {id:'P011',sku:'MAL50134',name:'Coartem 24 Tablets',category:'Antimalarials',cost:180,price:280,stock:50,reorder:20,vat:16},
+                {id:'P012',sku:'MAL50245',name:'Lonart 24 Tablets',category:'Antimalarials',cost:200,price:300,stock:45,reorder:18,vat:16},
+                {id:'P013',sku:'MAL50356',name:'Malarinil Syrup 100ml',category:'Antimalarials',cost:150,price:250,stock:35,reorder:15,vat:16},
+                {id:'P014',sku:'VIT60123',name:'Centrum Multivitamin 30 Tabs',category:'Vitamins',cost:850,price:1200,stock:20,reorder:10,vat:16},
+                {id:'P015',sku:'VIT60234',name:'Vitamin C 1000mg 30 Tabs',category:'Vitamins',cost:280,price:400,stock:40,reorder:15,vat:16},
+                {id:'P016',sku:'VIT60345',name:'Vitamin D3 2000IU 60 Caps',category:'Vitamins',cost:450,price:650,stock:30,reorder:12,vat:16},
+                {id:'P017',sku:'VIT70145',name:'Zinc 50mg 30 Tablets',category:'Vitamins',cost:180,price:280,stock:35,reorder:15,vat:16},
+                {id:'P018',sku:'VIT70256',name:'Folic Acid 5mg 28 Tabs',category:'Vitamins',cost:80,price:150,stock:40,reorder:18,vat:16},
+                {id:'P019',sku:'FRS80167',name:'Cotton Wool 50g',category:'First Aid',cost:80,price:120,stock:60,reorder:25,vat:16},
+                {id:'P020',sku:'FRS80278',name:'Bandages 7.5cm x 4.5m',category:'First Aid',cost:120,price:180,stock:45,reorder:20,vat:16},
+                {id:'P021',sku:'FRS80389',name:'Dettol Antiseptic 50ml',category:'First Aid',cost:150,price:220,stock:50,reorder:20,vat:16},
+                {id:'P022',sku:'FRS90123',name:'Savlon Antiseptic Cream 30g',category:'First Aid',cost:180,price:250,stock:40,reorder:15,vat:16},
+                {id:'P023',sku:'FRS90234',name:'Elastoplast Plasters 20s',category:'First Aid',cost:120,price:180,stock:55,reorder:22,vat:16},
+                {id:'P024',sku:'BAB10145',name:'Pampers Baby Dry Size 3 (58s)',category:'Baby Care',cost:1200,price:1600,stock:25,reorder:10,vat:16},
+                {id:'P025',sku:'BAB10256',name:'Johnsons Baby Lotion 200ml',category:'Baby Care',cost:380,price:550,stock:30,reorder:12,vat:16},
+                {id:'P026',sku:'BAB10367',name:'Gripe Water 100ml',category:'Baby Care',cost:120,price:200,stock:40,reorder:18,vat:16},
+                {id:'P027',sku:'BAB11178',name:'Cerelac Wheat 400g',category:'Baby Care',cost:320,price:450,stock:35,reorder:15,vat:16},
+                {id:'P028',sku:'BAB11289',name:'Lactogen 1 400g',category:'Baby Care',cost:680,price:900,stock:20,reorder:10,vat:16},
+                {id:'P029',sku:'PER12190',name:'Always Ultra Normal 10s',category:'Personal Care',cost:180,price:280,stock:50,reorder:20,vat:16},
+                {id:'P030',sku:'PER12201',name:'Durex Condoms 3s',category:'Personal Care',cost:250,price:350,stock:60,reorder:25,vat:16},
+                {id:'P031',sku:'COL13101',name:'Piriton 4mg 30 Tablets',category:'Cold & Flu',cost:120,price:200,stock:45,reorder:18,vat:16},
+                {id:'P032',sku:'COL13212',name:'Actifed Syrup 100ml',category:'Cold & Flu',cost:280,price:400,stock:30,reorder:15,vat:16},
+                {id:'P033',sku:'COL13323',name:'Vicks VapoRub 50g',category:'Cold & Flu',cost:180,price:280,stock:40,reorder:18,vat:16},
+                {id:'P034',sku:'COL14134',name:'Strepsils Lozenges 24s',category:'Cold & Flu',cost:220,price:320,stock:50,reorder:20,vat:16},
+                {id:'P035',sku:'DIG15145',name:'Buscopan 10mg 20 Tabs',category:'Digestive Health',cost:380,price:550,stock:30,reorder:12,vat:16},
+                {id:'P036',sku:'DIG15256',name:'Eno Fruit Salt 100g',category:'Digestive Health',cost:180,price:280,stock:40,reorder:18,vat:16},
+                {id:'P037',sku:'DIG15367',name:'Andrews Liver Salt 100g',category:'Digestive Health',cost:200,price:300,stock:35,reorder:15,vat:16},
+                {id:'P038',sku:'DIG16178',name:'Loperamide 2mg 20 Caps',category:'Digestive Health',cost:120,price:220,stock:38,reorder:15,vat:16},
+                {id:'P039',sku:'SKN17189',name:'Nivea Body Lotion 250ml',category:'Skin Care',cost:450,price:650,stock:30,reorder:12,vat:16},
+                {id:'P040',sku:'SKN17290',name:'Vaseline Petroleum Jelly 100ml',category:'Skin Care',cost:180,price:280,stock:45,reorder:20,vat:16},
+                {id:'P041',sku:'SKN17301',name:'Calamine Lotion 100ml',category:'Skin Care',cost:120,price:200,stock:40,reorder:18,vat:16},
+                {id:'P042',sku:'SKN18112',name:'Betadine Antiseptic 60ml',category:'Skin Care',cost:280,price:420,stock:35,reorder:15,vat:16},
+                {id:'P043',sku:'MED19123',name:'Digital Thermometer',category:'Medical Devices',cost:450,price:700,stock:20,reorder:8,vat:16},
+                {id:'P044',sku:'MED19234',name:'Blood Pressure Monitor',category:'Medical Devices',cost:2800,price:3800,stock:8,reorder:3,vat:16},
+                {id:'P045',sku:'MED19345',name:'Glucometer + 50 Strips',category:'Medical Devices',cost:1800,price:2500,stock:12,reorder:5,vat:16},
+                {id:'P046',sku:'MED20156',name:'Surgical Face Masks 50s',category:'Medical Devices',cost:280,price:450,stock:60,reorder:25,vat:16},
+                {id:'P047',sku:'SUP21167',name:'Omega 3 Fish Oil 60 Caps',category:'Supplements',cost:680,price:950,stock:25,reorder:10,vat:16},
+                {id:'P048',sku:'SUP21278',name:'Calcium + Vit D 60 Tabs',category:'Supplements',cost:450,price:680,stock:30,reorder:12,vat:16},
+                {id:'P049',sku:'SUP21389',name:'Iron Supplement 30 Tabs',category:'Supplements',cost:280,price:420,stock:35,reorder:15,vat:16},
+                {id:'P050',sku:'SUP22190',name:'Probiotics 30 Capsules',category:'Supplements',cost:850,price:1200,stock:20,reorder:10,vat:16}
             ];
             
             // Generate sales for last 12 months + next 3 months (15 months total)
@@ -3586,11 +3617,11 @@
                     const saleDate = new Date(monthDate.getFullYear(), monthDate.getMonth(), day);
                     const dateStr = saleDate.toISOString().split('T')[0];
                     
-                    // Generate 10-30 sales per day
-                    const numSales = 10 + Math.floor(Math.random() * 20);
+                    // Generate 15-35 sales per day (pharmacy traffic)
+                    const numSales = 15 + Math.floor(Math.random() * 20);
                     
                     for (let i = 0; i < numSales; i++) {
-                        const numItems = 1 + Math.floor(Math.random() * 4); // 1-4 items per sale
+                        const numItems = 1 + Math.floor(Math.random() * 3); // 1-3 items per sale
                         const items = [];
                         let subtotal = 0;
                         let totalVat = 0;
@@ -3598,7 +3629,7 @@
                         
                         for (let j = 0; j < numItems; j++) {
                             const p = products[Math.floor(Math.random() * products.length)];
-                            const qty = 1 + Math.floor(Math.random() * 3);
+                            const qty = 1 + Math.floor(Math.random() * 2);
                             const itemSubtotal = p.price * qty;
                             const itemVat = p.vat === 16 ? Math.round(itemSubtotal * 16 / 116) : 0;
                             
@@ -3616,8 +3647,8 @@
                             totalCost += p.cost * qty;
                         }
                         
-                        const paymentMethods = ['Cash', 'M-Pesa', 'M-Pesa', 'Cash', 'Credit']; // More M-Pesa
-                        const hour = 7 + Math.floor(Math.random() * 13); // 7 AM to 8 PM
+                        const paymentMethods = ['Cash', 'M-Pesa', 'M-Pesa', 'Cash', 'Card']; // More M-Pesa
+                        const hour = 8 + Math.floor(Math.random() * 11); // 8 AM to 7 PM
                         const minute = Math.floor(Math.random() * 60);
                         
                         sales.push({
@@ -3647,7 +3678,7 @@
                     const dateStr = saleDate.toISOString().split('T')[0];
                     
                     // Projected sales (fewer, for forecasting)
-                    const numSales = 5 + Math.floor(Math.random() * 10);
+                    const numSales = 8 + Math.floor(Math.random() * 12);
                     
                     for (let i = 0; i < numSales; i++) {
                         const p = products[Math.floor(Math.random() * products.length)];
@@ -5570,25 +5601,35 @@
                 document.getElementById('inventoryGrid').style.display = 'none';
                 document.getElementById('inventoryTable').style.display = 'block';
                 const totalValue = filtered.reduce((s, p) => s + p.cost * p.stock, 0);
-                document.getElementById('inventoryTableBody').innerHTML = filtered.map(p => {
+                document.getElementById('inventoryTableBody').innerHTML = filtered.map((p, index) => {
                     const margin = p.price > 0 ? Math.round((p.price - p.cost) / p.price * 100) : 0;
                     const stockClass = p.stock === 0 ? 'danger' : p.stock <= p.reorder ? 'warning' : 'success';
                     const unit = p.unit || 'units';
                     return `<tr>
                         <td>
                         ${p.productImage ? `<img src="${p.productImage}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;margin-right:10px;vertical-align:middle;">` : getEmoji(p.category) + ' '}
-                        <strong>${p.name}</strong>
+                        <strong>${p.name}</strong><br><small style="color:var(--text-muted)">${p.category}</small>
                     </td>
-                        <td><code>${p.sku || '-'}</code></td>
-                        <td>${p.category}</td>
-                        <td>${formatKsh(p.cost)}</td>
-                        <td>${formatKsh(p.price)}</td>
-                        <td><span class="table-status ${margin >= 20 ? 'success' : margin >= 10 ? 'warning' : 'danger'}">${margin}%</span></td>
                         <td><span class="table-status ${stockClass}">${p.stock} ${unit}</span></td>
-                        <td>${formatKsh(p.cost * p.stock)}</td>
-                        <td><button class="action-btn success" onclick="openRestockModal('${p.id}')">+Stock</button><button class="action-btn primary" onclick="editProduct('${p.id}')">Edit</button><button class="action-btn danger" onclick="deleteProduct('${p.id}')">Delete</button></td>
+                        <td>${formatKsh(p.price)}</td>
+                        <td>
+                            <div class="action-menu">
+                                <button class="action-menu-btn" onclick="toggleActionMenu(event, ${index})">⋮</button>
+                                <div class="action-dropdown" id="actionMenu${index}">
+                                    <div class="action-dropdown-item success" onclick="openRestockModal('${p.id}'); closeAllMenus()">
+                                        <span>📦</span> Add Stock
+                                    </div>
+                                    <div class="action-dropdown-item primary" onclick="editProduct('${p.id}'); closeAllMenus()">
+                                        <span>✏️</span> Edit
+                                    </div>
+                                    <div class="action-dropdown-item danger" onclick="deleteProduct('${p.id}'); closeAllMenus()">
+                                        <span>🗑️</span> Delete
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
                     </tr>`;
-                }).join('') + `<tr style="background:var(--bg-dark);font-weight:700"><td colspan="7">Total Inventory Value</td><td colspan="2">${formatKsh(totalValue)}</td></tr>`;
+                }).join('') + `<tr style="background:var(--bg-dark);font-weight:700"><td colspan="3">Total Inventory Value</td><td>${formatKsh(totalValue)}</td></tr>`;
             }
         }
         
@@ -5597,6 +5638,32 @@
             document.getElementById('restockBanner').classList.toggle('show', restockMode);
             filterInventory();
         }
+        
+        // Action menu functions for mobile-friendly inventory table
+        function toggleActionMenu(event, index) {
+            event.stopPropagation();
+            const menu = document.getElementById('actionMenu' + index);
+            const allMenus = document.querySelectorAll('.action-dropdown');
+            
+            // Close all other menus
+            allMenus.forEach(m => {
+                if (m !== menu) m.classList.remove('show');
+            });
+            
+            // Toggle current menu
+            menu.classList.toggle('show');
+        }
+        
+        function closeAllMenus() {
+            document.querySelectorAll('.action-dropdown').forEach(m => m.classList.remove('show'));
+        }
+        
+        // Close menus when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.action-menu')) {
+                closeAllMenus();
+            }
+        });
         
         function openRestockModal(productId) {
             restockProduct = products.find(p => p.id === productId);
@@ -7353,7 +7420,7 @@
         async function manualSyncToCloud() {
             // Check if online
             if (!navigator.onLine) {
-                showToast('⚠️ Cannot sync while offline', 'warning');
+                showToast('⚠️ Cannot sync - You are offline', 'warning');
                 return;
             }
             
@@ -7367,24 +7434,44 @@
             button.disabled = true;
             
             try {
-                // Process offline queue silently
-                if (offlineQueue && offlineQueue.length > 0) {
-                    await processOfflineQueue();
-                }
+                // First save to localStorage
+                saveAllData();
                 
-                // Sync all data silently
-                await saveAllData();
+                // Then sync to Firebase if available
+                if (config.businessId && db) {
+                    await syncToFirebase({
+                        config,
+                        products,
+                        sales,
+                        creditSales,
+                        expenses,
+                        categories,
+                        suppliers,
+                        journalEntries,
+                        users,
+                        lastUpdated: new Date().toISOString()
+                    });
+                    
+                    // Process offline queue if any
+                    if (offlineQueue && offlineQueue.length > 0) {
+                        await processOfflineQueue();
+                    }
+                    
+                    console.log('✅ Data synced to cloud successfully');
+                    showToast('✅ Synced', 'success');
+                } else {
+                    console.log('💾 Data saved locally (Firebase not configured)');
+                    showToast('💾 Saved locally', 'info');
+                }
                 
                 // Update sync display
                 if (typeof updateCloudSyncDisplay === 'function') {
                     updateCloudSyncDisplay();
                 }
                 
-                // Silent success - just log it
-                console.log('✅ Data synced successfully');
             } catch (error) {
                 console.error('Sync error:', error);
-                showToast('⚠️ Sync incomplete', 'warning');
+                showToast('⚠️ Sync failed: ' + error.message, 'error');
             } finally {
                 // Remove syncing state
                 button.classList.remove('syncing');
