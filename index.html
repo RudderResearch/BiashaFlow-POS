@@ -2658,7 +2658,7 @@
         ];
         let products = [], sales = [], creditSales = [], expenses = [], categories = [], suppliers = [], journalEntries = [];
         let creditors = [], loyaltyCustomers = [];
-        let cart = [], selectedPayment = 'Cash', selectedCategory = 'All', quickAddProduct = null, quickAddQty = 1;
+        let cart = JSON.parse(localStorage.getItem('pos_cart')) || [], selectedPayment = 'Cash', selectedCategory = 'All', quickAddProduct = null, quickAddQty = 1;
         let restockProduct = null, restockMode = false, mpesaConfirmed = false, mpesaData = null;
         let paymentCreditId = null, dateFilter = 'today', isOnline = navigator.onLine;
         let employeeFilterPeriod = 'today'; // ADDED: For employee comparison filtering
@@ -2890,6 +2890,7 @@
                 localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
             }
             
+            // Load ALL data from localStorage (works offline)
             products = JSON.parse(localStorage.getItem(STORAGE_KEYS.products)) || [];
             sales = JSON.parse(localStorage.getItem(STORAGE_KEYS.sales)) || [];
             creditSales = JSON.parse(localStorage.getItem(STORAGE_KEYS.credit)) || [];
@@ -2897,14 +2898,20 @@
             categories = JSON.parse(localStorage.getItem(STORAGE_KEYS.categories)) || [];
             suppliers = JSON.parse(localStorage.getItem(STORAGE_KEYS.suppliers)) || [];
             journalEntries = JSON.parse(localStorage.getItem(STORAGE_KEYS.journal)) || [];
+            creditors = JSON.parse(localStorage.getItem('creditors')) || [];
+            loyaltyCustomers = JSON.parse(localStorage.getItem('loyaltyCustomers')) || [];
             
-            // Second: Try to load from Firebase Cloud (gets latest across devices)
-            if (config.businessId && isOnline) {
+            console.log(`📦 Loaded from localStorage: ${products.length} products, ${sales.length} sales, ${creditors.length} creditors`);
+            
+            // Second: Try to load from Firebase Cloud (gets latest across devices) - ONLY if online
+            if (config.businessId && isOnline && db) {
                 try {
                     await loadFromFirebase();
                 } catch (error) {
                     console.log('⚠️ Cloud sync skipped, using local data:', error.message);
                 }
+            } else {
+                console.log('📴 Offline mode - using local data');
             }
         }
         
@@ -5156,6 +5163,9 @@
             document.getElementById('completeSaleBtn').disabled = cart.length === 0 || (selectedPayment === 'M-Pesa' && !mpesaConfirmed);
             // ADDED: Update M-Pesa amount
             updateMpesaAmount();
+            
+            // CRITICAL: Save cart to localStorage to prevent loss on refresh
+            localStorage.setItem('pos_cart', JSON.stringify(cart));
         }
         
         function updateCartQty(index, delta) {
@@ -5166,7 +5176,13 @@
         }
         
         function removeCartItem(index) { cart.splice(index, 1); renderCart(); }
-        function clearCart() { cart = []; mpesaConfirmed = false; mpesaData = null; renderCart(); }
+        function clearCart() { 
+            cart = []; 
+            mpesaConfirmed = false; 
+            mpesaData = null; 
+            localStorage.removeItem('pos_cart'); // Clear saved cart
+            renderCart(); 
+        }
         
         // Payment
         function selectPayment(method, btn) {
@@ -5536,10 +5552,11 @@
             
             showReceipt(sale);
             
-            // Reset cart
+            // Reset cart and clear localStorage
             cart = [];
             mpesaConfirmed = false;
             mpesaData = null;
+            localStorage.removeItem('pos_cart'); // Clear saved cart
             
             // Stop IntaSend polling if active
             if (intasendPollingInterval) {
@@ -7628,20 +7645,44 @@
                 
                 // Then sync to Firebase if available
                 if (config.businessId && db) {
+                    const lastSync = localStorage.getItem('last_sync_timestamp') || '1970-01-01';
+                    const now = new Date().toISOString();
+                    
+                    // Find only new/modified data since last sync
+                    const newSales = sales.filter(s => !s.synced || s.date >= lastSync.split('T')[0]);
+                    const newExpenses = expenses.filter(e => !e.synced || e.date >= lastSync.split('T')[0]);
+                    const newCreditSales = creditSales.filter(c => !c.synced || c.date >= lastSync.split('T')[0]);
+                    
+                    // Mark items as synced
+                    newSales.forEach(s => s.synced = true);
+                    newExpenses.forEach(e => e.synced = true);
+                    newCreditSales.forEach(c => c.synced = true);
+                    
+                    // Sync incremental data (faster!)
                     await syncToFirebase({
                         config,
-                        products,
-                        sales,
-                        creditSales,
-                        expenses,
-                        categories,
-                        suppliers,
+                        products,  // Always sync full inventory (small dataset)
+                        sales: newSales.length > 0 ? newSales : undefined,  // Only new sales
+                        creditSales: newCreditSales.length > 0 ? newCreditSales : undefined,
+                        expenses: newExpenses.length > 0 ? newExpenses : undefined,
+                        categories,  // Always sync (small)
+                        suppliers,   // Always sync (small)
                         journalEntries,
                         users,
                         creditors,
                         loyaltyCustomers,
-                        lastUpdated: new Date().toISOString()
+                        lastUpdated: now,
+                        incrementalSync: true,
+                        newItemsCount: newSales.length + newExpenses.length + newCreditSales.length
                     });
+                    
+                    // Store last sync timestamp
+                    localStorage.setItem('last_sync_timestamp', now);
+                    
+                    // Save updated sync flags
+                    localStorage.setItem(STORAGE_KEYS.sales, JSON.stringify(sales));
+                    localStorage.setItem(STORAGE_KEYS.expenses, JSON.stringify(expenses));
+                    localStorage.setItem(STORAGE_KEYS.credit, JSON.stringify(creditSales));
                     
                     // Quick offline queue processing - no individual waits
                     if (offlineQueue && offlineQueue.length > 0) {
@@ -7650,8 +7691,9 @@
                         updateQueueDisplay();
                     }
                     
-                    console.log('✅ Data synced to cloud successfully');
-                    showToast('✅ Synced successfully', 'success');
+                    const itemCount = newSales.length + newExpenses.length + newCreditSales.length;
+                    console.log(`✅ Synced ${itemCount} new items to cloud`);
+                    showToast(`✅ Synced ${itemCount} new items`, 'success');
                 } else {
                     console.log('💾 Data saved locally (Firebase not configured)');
                     showToast('💾 Saved locally', 'info');
