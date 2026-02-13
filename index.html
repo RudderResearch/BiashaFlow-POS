@@ -78,7 +78,8 @@
         .sidebar{width:260px;background:var(--bg-sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:100;transition:transform .3s;overflow-y:auto}
         .sidebar-header{padding:20px;border-bottom:1px solid var(--border)}
         .logo{display:flex;align-items:center;gap:12px}
-        .logo-text{font-size:1.3rem;font-weight:800;color:var(--text-primary)}
+        .logo-icon{width:44px;height:44px;background:var(--gradient-blue);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:1.4rem;box-shadow:var(--shadow-glow-blue)}
+        .logo-text{font-size:1.3rem;font-weight:800;background:linear-gradient(135deg,#fff,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
         .logo-subtitle{font-size:.7rem;color:var(--text-muted);font-weight:500}
         .sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto}
         .nav-section{margin-bottom:24px}
@@ -212,10 +213,7 @@
         .chart-container.large{height:350px}
         
         /* KRA Section */
-        .kra-status-card{background:linear-gradient(135deg,#059669,#047857);border-radius:var(--radius-lg);padding:20px;margin-bottom:24px}
-        .kra-status-card, .kra-stat-value, .kra-stat-label{color:white}
-        body.light-mode .kra-status-card{background:linear-gradient(135deg,#10b981,#059669)}
-        body.light-mode .kra-status-card, body.light-mode .kra-stat-value, body.light-mode .kra-stat-label{color:white}
+        .kra-status-card{background:linear-gradient(135deg,#059669,#047857);border-radius:var(--radius-lg);padding:20px;color:white;margin-bottom:24px}
         .kra-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
         .kra-title{font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:10px}
         .kra-badge{background:rgba(255,255,255,.2);padding:4px 12px;border-radius:12px;font-size:.75rem;font-weight:600}
@@ -822,6 +820,7 @@
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="logo">
+                    <div class="logo-icon">🏪</div>
                     <div>
                         <div class="logo-text">BiasharaFlow POS</div>
                         <div class="logo-subtitle">Business Management</div>
@@ -844,12 +843,12 @@
                         <span class="nav-item-icon">📋</span>Sales History
                     </div>
                     <div class="nav-item" data-tab="credit" data-role="admin" onclick="switchTab('credit')">
-                        <span class="nav-item-icon">💳</span>Shop Credit
+                        <span class="nav-item-icon">💳</span>Credit Sales
                         <span class="nav-badge warning" id="creditBadge">0</span>
                     </div>
-                    <div class="nav-item" data-tab="creditors" data-role="admin" onclick="switchTab('creditors')">
-                        <span class="nav-item-icon">💰</span>Creditors
-                        <span class="nav-badge danger" id="creditorsBadge">0</span>
+                    <div class="nav-item" data-tab="debtors" data-role="admin" onclick="switchTab('debtors')">
+                        <span class="nav-item-icon">💰</span>Debtors
+                        <span class="nav-badge danger" id="debtorsBadge">0</span>
                     </div>
                     <div class="nav-item" data-tab="loyalty" data-role="admin" onclick="switchTab('loyalty')">
                         <span class="nav-item-icon">⭐</span>Loyalty Points
@@ -1225,7 +1224,7 @@
                 <!-- Credit Sales Tab -->
                 <div class="tab-content" id="creditTab">
                     <div class="inventory-header">
-                        <h2 class="inventory-title">Credit Sales (Shop Credit)</h2>
+                        <h2 class="inventory-title">Credit Sales Management</h2>
                     </div>
                     <div class="stats-grid" style="margin-bottom:24px">
                         <div class="stat-card orange">
@@ -1251,28 +1250,28 @@
                     </div>
                 </div>
                 
-                <!-- Creditors Tab (Suppliers/People You Owe Money) -->
-                <div class="tab-content" id="creditorsTab">
+                <!-- Debtors Tab -->
+                <div class="tab-content" id="debtorsTab">
                     <div class="inventory-header">
-                        <h2 class="inventory-title">Creditors (Accounts Payable)</h2>
-                        <button class="inv-btn primary" onclick="showAddCreditorModal()">➕ Add Creditor</button>
+                        <h2 class="inventory-title">Debtors Management</h2>
+                        <button class="inv-btn primary" onclick="showAddDebtorModal()">➕ Add Debtor</button>
                     </div>
                     <div class="stats-grid" style="margin-bottom:24px">
                         <div class="stat-card red">
-                            <div class="stat-header"><span class="stat-label">Total We Owe</span><div class="stat-icon red">💸</div></div>
-                            <div class="stat-value" id="creditorsTotal">Ksh 0</div>
+                            <div class="stat-header"><span class="stat-label">Total Owed To Us</span><div class="stat-icon red">💸</div></div>
+                            <div class="stat-value" id="debtorsTotal">Ksh 0</div>
                         </div>
                         <div class="stat-card green">
-                            <div class="stat-header"><span class="stat-label">Paid This Month</span><div class="stat-icon green">✅</div></div>
-                            <div class="stat-value" id="creditorsPaid">Ksh 0</div>
+                            <div class="stat-header"><span class="stat-label">Received This Month</span><div class="stat-icon green">✅</div></div>
+                            <div class="stat-value" id="debtorsReceived">Ksh 0</div>
                         </div>
                     </div>
                     <div class="table-container">
                         <table class="data-table">
                             <thead>
-                                <tr><th>Creditor Name</th><th>Amount Owed</th><th>Amount Paid</th><th>Balance</th><th>Due Date</th><th>Actions</th></tr>
+                                <tr><th>Debtor Name</th><th>Amount Owed</th><th>Amount Received</th><th>Balance</th><th>Due Date</th><th>Actions</th></tr>
                             </thead>
-                            <tbody id="creditorsTableBody"></tbody>
+                            <tbody id="debtorsTableBody"></tbody>
                         </table>
                     </div>
                 </div>
@@ -1281,7 +1280,6 @@
                 <div class="tab-content" id="loyaltyTab">
                     <div class="inventory-header">
                         <h2 class="inventory-title">Customer Loyalty Program</h2>
-                        <button class="inv-btn primary" onclick="showAddLoyaltyCustomerModal()">➕ Add Customer</button>
                     </div>
                     <div class="alert info" style="margin-bottom:20px">
                         <strong>💡 How it works:</strong> Customers earn 1 point for every KSh 100 spent. 100 points = KSh 100 discount on next purchase.
@@ -2491,20 +2489,6 @@
             firebase.initializeApp(firebaseConfig);
             auth = firebase.auth();
             db = firebase.firestore();
-            
-            // Enable offline persistence to prevent timeout errors
-            db.enablePersistence({ synchronizeTabs: true })
-                .then(() => {
-                    console.log('✅ Firebase offline persistence enabled');
-                })
-                .catch((err) => {
-                    if (err.code === 'failed-precondition') {
-                        console.warn('⚠️ Multiple tabs open, persistence enabled in first tab only');
-                    } else if (err.code === 'unimplemented') {
-                        console.warn('⚠️ Browser does not support offline persistence');
-                    }
-                });
-            
             console.log('✅ Firebase initialized successfully');
         } catch (error) {
             console.error('Firebase initialization error:', error);
@@ -2657,7 +2641,6 @@
             { id: 2, name: 'Sales Staff', email: 'seller@biasharaflow.demo', username: 'seller', password: 'demo2024', role: 'seller', status: 'active', lastLogin: null }
         ];
         let products = [], sales = [], creditSales = [], expenses = [], categories = [], suppliers = [], journalEntries = [];
-        let creditors = [], loyaltyCustomers = [];
         let cart = [], selectedPayment = 'Cash', selectedCategory = 'All', quickAddProduct = null, quickAddQty = 1;
         let restockProduct = null, restockMode = false, mpesaConfirmed = false, mpesaData = null;
         let paymentCreditId = null, dateFilter = 'today', isOnline = navigator.onLine;
@@ -2761,96 +2744,66 @@
         
 
         function init() {
-            try {
-                // Clean up old redundant cloud backups to free localStorage space
-                const allKeys = Object.keys(localStorage);
-                let cleanedCount = 0;
-                allKeys.forEach(key => {
-                    if (key.startsWith('cloud_')) {
-                        localStorage.removeItem(key);
-                        cleanedCount++;
-                    }
-                });
-                if (cleanedCount > 0) {
-                    console.log(`🧹 Cleaned ${cleanedCount} old cloud backups to free space`);
+            loadSavedTheme();
+            
+            // Load chart of accounts and journal entries from localStorage
+            if (localStorage.getItem('chartOfAccounts')) {
+                window.chartOfAccounts = JSON.parse(localStorage.getItem('chartOfAccounts'));
+            } // Load saved theme and logo
+            loadAllData();
+            initializeDebtorsAndLoyalty(); // Initialize debtors and loyalty
+            updateTime();
+            setInterval(updateTime, 1000);
+            if (!isOnline) document.getElementById('offlineIndicator').classList.add('show');
+            
+            // Update queue display
+            updateQueueDisplay();
+            
+            // Load KRA configuration
+            loadKRAConfig();
+            
+            // Hide demo accounts if real user exists
+            updateDemoVisibility();
+            
+            // Initialize Admin login button as selected by default
+            setTimeout(() => {
+                selectLoginType('admin');
+            }, 100);
+            
+            // CRITICAL FIX: Check if user is already logged in (session or last logged user)
+            let savedUser = sessionStorage.getItem('currentUser');
+            
+            // If no session but we have a lastLoggedUser, restore from there (for page refresh while offline)
+            if (!savedUser) {
+                const lastUser = localStorage.getItem('lastLoggedUser');
+                if (lastUser) {
+                    console.log('📱 Restoring session from last logged user (offline refresh detected)');
+                    savedUser = lastUser;
+                    sessionStorage.setItem('currentUser', savedUser);
+                }
+            }
+            
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                
+                // Restore businessId to config
+                if (currentUser.businessId) {
+                    config.businessId = currentUser.businessId;
                 }
                 
-                loadSavedTheme();
+                showApp();
+                // Check subscription status after login
+                checkSubscriptionStatus();
                 
-                // Load chart of accounts and journal entries from localStorage
-                if (localStorage.getItem('chartOfAccounts')) {
-                    window.chartOfAccounts = JSON.parse(localStorage.getItem('chartOfAccounts'));
+                // Process any pending offline queue after login
+                if (isOnline && offlineQueue.length > 0) {
+                    setTimeout(processOfflineQueue, 3000);
                 }
                 
-                loadAllData();
-                initializeDebtorsAndLoyalty(); // Initialize debtors and loyalty
-                updateTime();
-                setInterval(updateTime, 1000);
-                if (!isOnline) document.getElementById('offlineIndicator').classList.add('show');
-                
-                // Update queue display
-                updateQueueDisplay();
-                
-                // Load KRA configuration
-                loadKRAConfig();
-                
-                // Hide demo accounts if real user exists
-                updateDemoVisibility();
-                
-                // Initialize Admin login button as selected by default
-                setTimeout(() => {
-                    selectLoginType('admin');
-                }, 100);
-                
-                // CRITICAL FIX: Check if user is already logged in (session or last logged user)
-                let savedUser = sessionStorage.getItem('currentUser');
-                
-                // If no session but we have a lastLoggedUser, restore from there (for page refresh while offline)
-                if (!savedUser) {
-                    const lastUser = localStorage.getItem('lastLoggedUser');
-                    if (lastUser) {
-                        console.log('📱 Restoring session from last logged user (offline refresh detected)');
-                        savedUser = lastUser;
-                        sessionStorage.setItem('currentUser', savedUser);
-                    }
+                // Process KRA queue when coming online
+                if (isOnline && config.kraQueue && config.kraQueue.length > 0) {
+                    setTimeout(processKRAQueue, 5000);
                 }
-                
-                if (savedUser) {
-                    try {
-                        currentUser = JSON.parse(savedUser);
-                        
-                        // Restore businessId to config
-                        if (currentUser.businessId) {
-                            config.businessId = currentUser.businessId;
-                        }
-                        
-                        showApp();
-                        
-                        // Check subscription status after login (only if online)
-                        if (isOnline) {
-                            checkSubscriptionStatus();
-                        }
-                        
-                        // Process any pending offline queue after login (only if online)
-                        if (isOnline && offlineQueue.length > 0) {
-                            setTimeout(processOfflineQueue, 3000);
-                        }
-                        
-                        // Process KRA queue when coming online (only if online)
-                        if (isOnline && config.kraQueue && config.kraQueue.length > 0) {
-                            setTimeout(processKRAQueue, 5000);
-                        }
-                    } catch (err) {
-                        console.error('Error restoring user session:', err);
-                        // Clear corrupted session
-                        sessionStorage.removeItem('currentUser');
-                        localStorage.removeItem('lastLoggedUser');
-                    }
-                }
-            } catch (error) {
-                console.error('Critical error in init:', error);
-                // Try to show login screen at least
-                document.getElementById('loginScreen').classList.remove('hidden');
             }
         }
         
@@ -2919,14 +2872,32 @@
             localStorage.setItem(STORAGE_KEYS.categories, JSON.stringify(categories));
             localStorage.setItem(STORAGE_KEYS.suppliers, JSON.stringify(suppliers));
             localStorage.setItem(STORAGE_KEYS.journal, JSON.stringify(journalEntries));
-            localStorage.setItem('creditors', JSON.stringify(creditors));
-            localStorage.setItem('loyaltyCustomers', JSON.stringify(loyaltyCustomers));
             
-            // Note: Removed redundant cloud backup to prevent localStorage quota errors
-            // Data is already in localStorage + Firebase cloud when synced
+            // ALSO: Create a complete business backup for offline access
+            if (config.businessId) {
+                const completeBackup = {
+                    businessId: config.businessId,
+                    config: config,
+                    users: users,
+                    products: products,
+                    sales: sales,
+                    creditSales: creditSales,
+                    expenses: expenses,
+                    categories: categories,
+                    suppliers: suppliers,
+                    journalEntries: journalEntries,
+                    lastBackup: new Date().toISOString()
+                };
+                localStorage.setItem(`cloud_${config.businessId}`, JSON.stringify(completeBackup));
+            }
             
-            console.log('💾 All data saved to localStorage');
-        }
+            // Then sync to Firebase Cloud
+            if (config.businessId) {
+                const dataToSync = {
+                    config, products, sales, creditSales, expenses, 
+                    categories, suppliers, journalEntries,
+                    lastUpdated: new Date().toISOString()
+                };
                 
                 if (isOnline && db) {
                     try {
@@ -3922,54 +3893,93 @@
             const userKey = username.toLowerCase();
             
             if (offlineUsers[userKey] && offlineUsers[userKey].password === password) {
-                // Found cached authentication - load from localStorage
+                // Found cached authentication - load their business data
                 const cachedAuth = offlineUsers[userKey];
                 
-                // Load data from regular localStorage (no redundant cloud backup)
+                // Try to load their business data from cloud backup
                 if (cachedAuth.businessId) {
-                    config.businessId = cachedAuth.businessId;
-                    
-                    // Load from standard localStorage
-                    products = JSON.parse(localStorage.getItem(STORAGE_KEYS.products)) || [];
-                    sales = JSON.parse(localStorage.getItem(STORAGE_KEYS.sales)) || [];
-                    creditSales = JSON.parse(localStorage.getItem(STORAGE_KEYS.credit)) || [];
-                    expenses = JSON.parse(localStorage.getItem(STORAGE_KEYS.expenses)) || [];
-                    categories = JSON.parse(localStorage.getItem(STORAGE_KEYS.categories)) || [];
-                    suppliers = JSON.parse(localStorage.getItem(STORAGE_KEYS.suppliers)) || [];
-                    journalEntries = JSON.parse(localStorage.getItem(STORAGE_KEYS.journal)) || [];
-                    creditors = JSON.parse(localStorage.getItem('creditors')) || [];
-                    loyaltyCustomers = JSON.parse(localStorage.getItem('loyaltyCustomers')) || [];
-                    
-                    // Find the actual user object
-                    let user = users.find(u => 
-                        (u.username === username || u.email === username) && u.password === password
-                    );
-                    
-                    if (user) {
-                        const selectedType = document.getElementById('selectedLoginType').value;
-                        if (user.role !== selectedType) {
-                            showLoginError(`This account is ${user.role === 'admin' ? 'an Admin' : 'a Seller'}. Please select the correct login type.`);
-                            return;
+                    const businessKey = `cloud_${cachedAuth.businessId}`;
+                    try {
+                        const cloudData = JSON.parse(localStorage.getItem(businessKey));
+                        if (cloudData) {
+                            config.businessId = cloudData.businessId;
+                            config = { ...config, ...cloudData.config };
+                            users = cloudData.users || users;
+                            products = cloudData.products || [];
+                            sales = cloudData.sales || [];
+                            creditSales = cloudData.creditSales || [];
+                            expenses = cloudData.expenses || [];
+                            categories = cloudData.categories || [];
+                            suppliers = cloudData.suppliers || [];
+                            journalEntries = cloudData.journalEntries || [];
+                            
+                            // Find the actual user object
+                            let user = users.find(u => 
+                                (u.username === username || u.email === username) && u.password === password
+                            );
+                            
+                            if (user) {
+                                const selectedType = document.getElementById('selectedLoginType').value;
+                                if (user.role !== selectedType) {
+                                    showLoginError(`This account is ${user.role === 'admin' ? 'an Admin' : 'a Seller'}. Please select the correct login type.`);
+                                    return;
+                                }
+                                
+                                const sessionId = 'SESSION_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                                user.lastLogin = new Date().toISOString();
+                                user.currentSessionId = sessionId;
+                                
+                                currentUser = user;
+                                sessionStorage.setItem('currentUser', JSON.stringify(user));
+                                localStorage.setItem('lastLoggedUser', JSON.stringify(user));
+                                saveAllData();
+                                
+                                showApp();
+                                showToast(`Welcome back, ${user.name}!`, 'success');
+                                return;
+                            }
                         }
-                        
-                        const sessionId = 'SESSION_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                        user.lastLogin = new Date().toISOString();
-                        user.currentSessionId = sessionId;
-                        
-                        currentUser = user;
-                        sessionStorage.setItem('currentUser', JSON.stringify(user));
-                        localStorage.setItem('lastLoggedUser', JSON.stringify(user));
-                        saveAllData();
-                        
-                        showApp();
-                        showToast(`Welcome back, ${user.name}!`, 'success');
-                        return;
+                    } catch (e) {
+                        console.error('Error loading cached business data:', e);
                     }
                 }
             }
             
             // Fallback to original method - search in current users array
             let user = users.find(u => (u.username === username || u.email === username) && u.password === password);
+            
+            if (!user) {
+                const allKeys = Object.keys(localStorage);
+                for (const key of allKeys) {
+                    if (key.startsWith('cloud_BIZ')) {
+                        try {
+                            const cloudData = JSON.parse(localStorage.getItem(key));
+                            const cloudUser = cloudData.users?.find(u => 
+                                (u.username === username || u.email === username) && u.password === password
+                            );
+                            
+                            if (cloudUser) {
+                                config.businessId = cloudData.businessId;
+                                config = { ...config, ...cloudData.config };
+                                users = cloudData.users || users;
+                                products = cloudData.products || [];
+                                sales = cloudData.sales || [];
+                                creditSales = cloudData.creditSales || [];
+                                expenses = cloudData.expenses || [];
+                                categories = cloudData.categories || [];
+                                suppliers = cloudData.suppliers || [];
+                                journalEntries = cloudData.journalEntries || [];
+                                saveAllData();
+                                user = cloudUser;
+                                console.log(`Welcome back ${user.name}! Loaded your business data.`);
+                                break;
+                            }
+                        } catch (e) {
+                            console.error('Error checking cloud business:', e);
+                        }
+                    }
+                }
+            }
             
             if (user) {
                 if (user.status !== 'active') { 
@@ -4755,7 +4765,7 @@
                 if (tabEl) tabEl.classList.add('active');
                 document.querySelectorAll(`[data-tab="${tab}"]`).forEach(n => n.classList.add('active'));
                 
-                const titles = { dashboard: ['Dashboard', 'Overview of your business'], pos: ['Point of Sale', 'Process customer transactions'], sales: ['Sales History', 'View all transactions'], credit: ['Credit Sales', 'Manage customer credit'], creditors: ['Creditors', 'Track money you owe'], loyalty: ['Loyalty Points', 'Customer rewards program'], inventory: ['Inventory', 'Manage your products'], categories: ['Categories', 'Product categories'], suppliers: ['Suppliers', 'Manage suppliers'], expenses: ['Expenses', 'Track business expenses'], accounts: ['Chart of Accounts', 'Accounting structure'], journal: ['Journal Entries', 'Financial transactions'], reports: ['Analytics', 'Business insights'], kra: ['KRA Compliance', 'Tax reporting'], profit: ['Profit & Loss', 'Financial performance'], users: ['Users', 'Manage user accounts'], settings: ['Settings', 'System configuration'] };
+                const titles = { dashboard: ['Dashboard', 'Overview of your business'], pos: ['Point of Sale', 'Process customer transactions'], sales: ['Sales History', 'View all transactions'], credit: ['Credit Sales', 'Manage customer credit'], debtors: ['Debtors', 'Track money owed to you'], loyalty: ['Loyalty Points', 'Customer rewards program'], inventory: ['Inventory', 'Manage your products'], categories: ['Categories', 'Product categories'], suppliers: ['Suppliers', 'Manage suppliers'], expenses: ['Expenses', 'Track business expenses'], accounts: ['Chart of Accounts', 'Accounting structure'], journal: ['Journal Entries', 'Financial transactions'], reports: ['Analytics', 'Business insights'], kra: ['KRA Compliance', 'Tax reporting'], profit: ['Profit & Loss', 'Financial performance'], users: ['Users', 'Manage user accounts'], settings: ['Settings', 'System configuration'] };
                 const [title, subtitle] = titles[tab] || ['Dashboard', ''];
                 
                 const pageTitleEl = document.getElementById('pageTitle');
@@ -4770,7 +4780,7 @@
                 else if (tab === 'pos') renderPOS();
                 else if (tab === 'sales') renderSalesHistory();
                 else if (tab === 'credit') renderCreditSales();
-                else if (tab === 'creditors') renderCreditors();
+                else if (tab === 'debtors') renderDebtors();
                 else if (tab === 'loyalty') renderLoyalty();
                 else if (tab === 'inventory') renderInventory();
                 else if (tab === 'categories') renderCategories();
@@ -5049,17 +5059,11 @@
             const mpesaTotal = filtered.filter(s => s.paymentMethod === 'M-Pesa').reduce((s,x)=>s+x.total,0);
             const creditTotal = filtered.filter(s => s.paymentMethod === 'Credit').reduce((s,x)=>s+x.total,0);
             
-            // Get theme-appropriate colors
-            const isLightMode = document.body.classList.contains('light-mode');
-            const labelColor = isLightMode ? '#475569' : '#94a3b8';
-            const gridColor = isLightMode ? '#e2e8f0' : '#1e293b';
-            const tickColor = isLightMode ? '#64748b' : '#64748b';
-            
             if (charts.payment) charts.payment.destroy();
             charts.payment = new Chart(document.getElementById('paymentChart'), {
                 type: 'doughnut',
                 data: { labels: ['Cash', 'M-Pesa', 'Credit'], datasets: [{ data: [cashTotal, mpesaTotal, creditTotal], backgroundColor: ['#10b981', '#3b82f6', '#f97316'] }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: labelColor } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } } }
             });
             
             // Revenue trend chart
@@ -5075,7 +5079,7 @@
             charts.revenue = new Chart(document.getElementById('revenueChart'), {
                 type: 'line',
                 data: { labels: last7Days.map(d => d.date), datasets: [{ label: 'Revenue', data: last7Days.map(d => d.total), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.4 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: tickColor }, grid: { color: gridColor } }, x: { ticks: { color: tickColor }, grid: { display: false } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' } }, x: { ticks: { color: '#64748b' }, grid: { display: false } } } }
             });
             
             // Top products chart
@@ -5087,7 +5091,7 @@
             charts.products = new Chart(document.getElementById('productsChart'), {
                 type: 'bar',
                 data: { labels: topProducts.map(p => p[0].substring(0, 15)), datasets: [{ label: 'Units Sold', data: topProducts.map(p => p[1]), backgroundColor: ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'] }] },
-                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: tickColor }, grid: { color: gridColor } }, y: { ticks: { color: labelColor }, grid: { display: false } } } }
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' } }, y: { ticks: { color: '#94a3b8' }, grid: { display: false } } } }
             });
         }
         // ==================== POS ====================
@@ -5481,18 +5485,6 @@
             console.log(`✅ Sale created by ${currentUser.role} (${currentUser.username}):`, sale.id);
             console.log(`Total sales in array: ${sales.length}`);
             console.log(`Business ID: ${config.businessId}`);
-            
-            // Award loyalty points if M-Pesa payment (phone number available)
-            if (selectedPayment === 'M-Pesa' && mpesaData && mpesaData.phone) {
-                awardLoyaltyPoints(mpesaData.phone, subtotal);
-            }
-            // Award loyalty points for Credit sales (phone number available)
-            else if (selectedPayment === 'Credit') {
-                const creditSale = creditSales[creditSales.length - 1];
-                if (creditSale && creditSale.phone) {
-                    awardLoyaltyPoints(creditSale.phone, subtotal);
-                }
-            }
             
             // Submit to KRA eTIMS
             if (config.kraEnabled) {
@@ -6253,14 +6245,11 @@
             const categoryTotals = {};
             expenses.forEach(e => { categoryTotals[e.category] = (categoryTotals[e.category] || 0) + e.amount; });
             
-            const isLightMode = document.body.classList.contains('light-mode');
-            const labelColor = isLightMode ? '#475569' : '#94a3b8';
-            
             if (charts.expenseCategory) charts.expenseCategory.destroy();
             charts.expenseCategory = new Chart(document.getElementById('expenseCategoryChart'), {
                 type: 'pie',
                 data: { labels: Object.keys(categoryTotals), datasets: [{ data: Object.values(categoryTotals), backgroundColor: ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4'] }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: labelColor, boxWidth: 12 } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#94a3b8', boxWidth: 12 } } } }
             });
         }
         
@@ -6648,12 +6637,6 @@
         }
         
         function renderReportCharts() {
-            // Get theme colors
-            const isLightMode = document.body.classList.contains('light-mode');
-            const labelColor = isLightMode ? '#475569' : '#94a3b8';
-            const gridColor = isLightMode ? '#e2e8f0' : '#1e293b';
-            const tickColor = isLightMode ? '#64748b' : '#64748b';
-            
             // Sales trend (30 days)
             const days = [];
             for (let i = 29; i >= 0; i--) {
@@ -6667,7 +6650,7 @@
             charts.salesTrend = new Chart(document.getElementById('salesTrendChart'), {
                 type: 'line',
                 data: { labels: days.map(d => d.date), datasets: [{ label: 'Daily Sales', data: days.map(d => d.total), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.4 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: tickColor, callback: v => 'Ksh ' + v.toLocaleString() }, grid: { color: gridColor } }, x: { ticks: { color: tickColor }, grid: { display: false } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#64748b', callback: v => 'Ksh ' + v.toLocaleString() }, grid: { color: '#1e293b' } }, x: { ticks: { color: '#64748b' }, grid: { display: false } } } }
             });
             
             // Profit vs Expenses
@@ -6684,7 +6667,7 @@
             charts.profitExpense = new Chart(document.getElementById('profitExpenseChart'), {
                 type: 'bar',
                 data: { labels: months.map(m => m.month), datasets: [{ label: 'Profit', data: months.map(m => m.profit), backgroundColor: '#10b981' }, { label: 'Expenses', data: months.map(m => m.expense), backgroundColor: '#ef4444' }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: labelColor } } }, scales: { y: { ticks: { color: tickColor }, grid: { color: gridColor } }, x: { ticks: { color: tickColor }, grid: { display: false } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#94a3b8' } } }, scales: { y: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' } }, x: { ticks: { color: '#64748b' }, grid: { display: false } } } }
             });
             
             // Category sales
@@ -6699,7 +6682,7 @@
             charts.categorySales = new Chart(document.getElementById('categorySalesChart'), {
                 type: 'doughnut',
                 data: { labels: Object.keys(catSales), datasets: [{ data: Object.values(catSales), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'] }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: labelColor, boxWidth: 12 } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 12 } } } }
             });
             
             // Hourly sales
@@ -6715,7 +6698,7 @@
             charts.hourly = new Chart(document.getElementById('hourlyChart'), {
                 type: 'bar',
                 data: { labels: Array.from({ length: 24 }, (_, i) => i + ':00'), datasets: [{ label: 'Sales', data: hourly, backgroundColor: '#8b5cf6' }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: tickColor }, grid: { color: gridColor } }, x: { ticks: { color: tickColor, maxRotation: 45 }, grid: { display: false } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' } }, x: { ticks: { color: '#64748b', maxRotation: 45 }, grid: { display: false } } } }
             });
         }
         
@@ -7643,20 +7626,16 @@
                         suppliers,
                         journalEntries,
                         users,
-                        creditors,
-                        loyaltyCustomers,
                         lastUpdated: new Date().toISOString()
                     });
                     
-                    // Quick offline queue processing - no individual waits
+                    // Process offline queue if any
                     if (offlineQueue && offlineQueue.length > 0) {
-                        offlineQueue = []; // Clear queue after sync
-                        localStorage.setItem('offline_queue', JSON.stringify(offlineQueue));
-                        updateQueueDisplay();
+                        await processOfflineQueue();
                     }
                     
                     console.log('✅ Data synced to cloud successfully');
-                    showToast('✅ Synced successfully', 'success');
+                    showToast('✅ Synced', 'success');
                 } else {
                     console.log('💾 Data saved locally (Firebase not configured)');
                     showToast('💾 Saved locally', 'info');
@@ -8030,21 +8009,9 @@
                 throw new Error('No business ID or database connection');
             }
             
-            // Check if actually online
-            if (!navigator.onLine) {
-                throw new Error('Device is offline - using local data');
-            }
-            
             try {
                 const docRef = db.collection('businesses').doc(config.businessId);
-                
-                // Set a 8 second timeout for loading
-                const loadPromise = docRef.get();
-                const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Load timeout - using local data')), 8000)
-                );
-                
-                const doc = await Promise.race([loadPromise, timeoutPromise]);
+                const doc = await docRef.get();
                 
                 if (doc.exists) {
                     const cloudData = doc.data();
@@ -8058,8 +8025,6 @@
                     if (cloudData.categories) categories = cloudData.categories;
                     if (cloudData.suppliers) suppliers = cloudData.suppliers;
                     if (cloudData.journalEntries) journalEntries = cloudData.journalEntries;
-                    if (cloudData.creditors) creditors = cloudData.creditors;
-                    if (cloudData.loyaltyCustomers) loyaltyCustomers = cloudData.loyaltyCustomers;
                     if (cloudData.config) {
                         const localBusinessId = config.businessId;
                         config = { ...config, ...cloudData.config, businessId: localBusinessId };
@@ -8074,8 +8039,6 @@
                     localStorage.setItem(STORAGE_KEYS.categories, JSON.stringify(categories));
                     localStorage.setItem(STORAGE_KEYS.suppliers, JSON.stringify(suppliers));
                     localStorage.setItem(STORAGE_KEYS.journal, JSON.stringify(journalEntries));
-                    localStorage.setItem('creditors', JSON.stringify(creditors));
-                    localStorage.setItem('loyaltyCustomers', JSON.stringify(loyaltyCustomers));
                     
                     lastSyncTime = new Date().toISOString();
                     localStorage.setItem('last_sync_time', lastSyncTime);
@@ -8084,6 +8047,12 @@
                     return true;
                 } else {
                     console.log('ℹ️ No cloud data found - first time setup');
+                    // Save current local data to cloud
+                    await syncToFirebase({
+                        config, products, sales, creditSales, expenses,
+                        categories, suppliers, journalEntries,
+                        lastUpdated: new Date().toISOString()
+                    });
                     return false;
                 }
             } catch (error) {
@@ -8097,11 +8066,6 @@
                 throw new Error('No business ID or database connection');
             }
             
-            // Check if actually online
-            if (!navigator.onLine) {
-                throw new Error('Device is offline');
-            }
-            
             try {
                 const syncData = dataToSync || {
                     config,
@@ -8112,21 +8076,12 @@
                     categories,
                     suppliers,
                     journalEntries,
-                    creditors,
-                    loyaltyCustomers,
                     lastUpdated: new Date().toISOString(),
                     lastSyncTime: firebase.firestore.FieldValue.serverTimestamp()
                 };
                 
                 const docRef = db.collection('businesses').doc(config.businessId);
-                
-                // Set a 8 second timeout for the sync operation
-                const syncPromise = docRef.set(syncData, { merge: true });
-                const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Sync timeout - check internet connection')), 8000)
-                );
-                
-                await Promise.race([syncPromise, timeoutPromise]);
+                await docRef.set(syncData, { merge: true });
                 
                 lastSyncTime = new Date().toISOString();
                 localStorage.setItem('last_sync_time', lastSyncTime);
@@ -8397,16 +8352,6 @@
             // Save preference
             localStorage.setItem('theme', isLightMode ? 'light' : 'dark');
             
-            // Re-render charts with new theme colors
-            const currentTab = document.querySelector('.tab-content.active')?.id;
-            if (currentTab === 'dashboard') {
-                renderDashboard();
-            } else if (currentTab === 'analytics') {
-                renderAnalytics();
-            } else if (currentTab === 'expenses') {
-                renderExpenses();
-            }
-            
             console.log('Theme switched to:', isLightMode ? 'Light' : 'Dark');
         }
         
@@ -8448,101 +8393,99 @@
         window.addEventListener('offline', updateOnlineStatus);
         window.addEventListener('load', updateOnlineStatus);
         
-// Creditors and Loyalty Data (initialized above with other data arrays)
+    </script>
+</body>
+</html>
 
-// Initialize creditors and loyalty on load
+// Debtors and Loyalty Data
+let debtors = [];
+let loyaltyCustomers = [];
+
+// Initialize debtors and loyalty on load
 function initializeDebtorsAndLoyalty() {
-    creditors = JSON.parse(localStorage.getItem('creditors')) || [];
+    debtors = JSON.parse(localStorage.getItem('debtors')) || [];
     loyaltyCustomers = JSON.parse(localStorage.getItem('loyaltyCustomers')) || [];
 }
 
-// Render Creditors
-function renderCreditors() {
+// Render Debtors
+function renderDebtors() {
     const today = getTodayDate();
     const thisMonth = today.substring(0, 7);
     
-    const totalOwed = creditors.reduce((s, c) => s + (c.amount - c.paid), 0);
-    const paidThisMonth = creditors.reduce((s, c) => {
-        const payments = c.payments || [];
+    const totalOwed = debtors.reduce((s, d) => s + (d.amount - d.received), 0);
+    const receivedThisMonth = debtors.reduce((s, d) => {
+        const payments = d.payments || [];
         return s + payments.filter(p => p.date.startsWith(thisMonth)).reduce((sum, p) => sum + p.amount, 0);
     }, 0);
     
-    document.getElementById('creditorsTotal').textContent = formatKsh(totalOwed);
-    document.getElementById('creditorsPaid').textContent = formatKsh(paidThisMonth);
+    document.getElementById('debtorsTotal').textContent = formatKsh(totalOwed);
+    document.getElementById('debtorsReceived').textContent = formatKsh(receivedThisMonth);
     
-    // Update badge
-    const pendingCreditors = creditors.filter(c => (c.amount - c.paid) > 0).length;
-    const badge = document.getElementById('creditorsBadge');
-    if (badge) {
-        badge.textContent = pendingCreditors;
-        badge.style.display = pendingCreditors > 0 ? 'inline' : 'none';
-    }
-    
-    const tbody = document.getElementById('creditorsTableBody');
-    tbody.innerHTML = creditors.map(c => {
-        const balance = c.amount - c.paid;
-        const isOverdue = new Date(c.dueDate) < new Date(today);
+    const tbody = document.getElementById('debtorsTableBody');
+    tbody.innerHTML = debtors.map(d => {
+        const balance = d.amount - d.received;
+        const isOverdue = new Date(d.dueDate) < new Date(today);
         const statusClass = balance === 0 ? 'success' : isOverdue ? 'danger' : 'warning';
         
         return `<tr>
-            <td><strong>${c.name}</strong></td>
-            <td style="color:var(--accent-red);font-weight:700">${formatKsh(c.amount)}</td>
-            <td style="color:var(--accent-green)">${formatKsh(c.paid)}</td>
+            <td><strong>${d.name}</strong></td>
+            <td style="color:var(--accent-red);font-weight:700">${formatKsh(d.amount)}</td>
+            <td style="color:var(--accent-green)">${formatKsh(d.received)}</td>
             <td style="font-weight:700">${formatKsh(balance)}</td>
-            <td>${c.dueDate}</td>
+            <td>${d.dueDate}</td>
             <td>
-                ${balance > 0 ? `<button class="action-btn success" onclick="recordCreditorPayment('${c.id}')">💰 Make Payment</button>` : ''}
-                <button class="action-btn danger" onclick="deleteCreditor('${c.id}')">Delete</button>
+                ${balance > 0 ? `<button class="action-btn success" onclick="recordDebtorPayment('${d.id}')">💰 Record Payment</button>` : ''}
+                <button class="action-btn danger" onclick="deleteDebtor('${d.id}')">Delete</button>
             </td>
         </tr>`;
-    }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-muted)">No creditors</td></tr>';
+    }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-muted)">No debtors</td></tr>';
 }
 
-function recordCreditorPayment(creditorId) {
-    const creditor = creditors.find(c => c.id === creditorId);
-    if (!creditor) return;
+function recordDebtorPayment(debtorId) {
+    const debtor = debtors.find(d => d.id === debtorId);
+    if (!debtor) return;
     
-    const balance = creditor.amount - creditor.paid;
-    const amount = parseFloat(prompt(`Make payment to ${creditor.name}
+    const balance = debtor.amount - debtor.received;
+    const amount = parseFloat(prompt(`Record payment for ${debtor.name}
 Balance: ${formatKsh(balance)}
-Enter amount to pay:`, balance));
+Enter amount received:`, balance));
     
     if (amount && amount > 0) {
-        creditor.paid = Math.min(creditor.amount, creditor.paid + amount);
-        if (!creditor.payments) creditor.payments = [];
-        creditor.payments.push({ date: getTodayDate(), amount });
+        debtor.received = Math.min(debtor.amount, debtor.received + amount);
+        if (!debtor.payments) debtor.payments = [];
+        debtor.payments.push({ date: getTodayDate(), amount });
         
-        localStorage.setItem('creditors', JSON.stringify(creditors));
+        localStorage.setItem('debtors', JSON.stringify(debtors));
         showToast(`Payment of ${formatKsh(amount)} recorded`, 'success');
-        renderCreditors();
+        renderDebtors();
     }
 }
 
-function showAddCreditorModal() {
-    const name = prompt('Creditor Name (Supplier/Person):');
-    const amount = parseFloat(prompt('Amount We Owe (KSh):'));
+function showAddDebtorModal() {
+    const name = prompt('Debtor Name:');
+    const amount = parseFloat(prompt('Amount Owed (KSh):'));
     const dueDate = prompt('Due Date (YYYY-MM-DD):', new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0]);
     
     if (name && amount) {
-        creditors.push({
-            id: 'CRD' + Date.now(),
+        debtors.push({
+            id: 'DBT' + Date.now(),
             name,
             amount,
-            paid: 0,
+            received: 0,
             dueDate: dueDate || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
             createdAt: getTodayDate()
         });
-        localStorage.setItem('creditors', JSON.stringify(creditors));
-        showToast('Creditor added', 'success');
-        renderCreditors();
+        localStorage.setItem('debtors', JSON.stringify(debtors));
+        showToast('Debtor added', 'success');
+        renderDebtors();
     }
 }
 
-function deleteCreditor(id) {
-    if (confirm('Delete this creditor?')) {
-        creditors = creditors.filter(c => c.id !== id);
-        localStorage.setItem('creditors', JSON.stringify(creditors));
-        renderCreditors();
+function deleteDebtor(id) {
+    if (confirm('Delete this debtor?')) {
+        debtors = debtors.filter(d => d.id !== id);
+        localStorage.setItem('debtors', JSON.stringify(debtors));
+        renderDebtors();
     }
 }
 
@@ -8564,103 +8507,10 @@ function renderLoyalty() {
             <td style="color:var(--accent-green);font-weight:700">${formatKsh(pointsValue)}</td>
             <td>${c.lastVisit}</td>
             <td>
-                <div style="position:relative;display:inline-block">
-                    <button class="action-btn secondary" onclick="toggleLoyaltyMenu('${c.id}')" style="padding:8px 12px">⋮</button>
-                    <div id="loyaltyMenu${c.id}" class="dropdown-menu" style="display:none;position:absolute;right:0;top:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow-lg);min-width:150px;z-index:1000;margin-top:4px">
-                        <div onclick="editLoyaltyCustomer('${c.id}')" style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);color:var(--text-primary)" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background='transparent'">✏️ Edit</div>
-                        <div onclick="redeemPoints('${c.id}')" style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);color:var(--text-primary)" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background='transparent'">🎁 Redeem Points</div>
-                        <div onclick="addLoyaltyPoints('${c.id}')" style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);color:var(--accent-green)" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background='transparent'">➕ Add Points</div>
-                        <div onclick="deleteLoyaltyCustomer('${c.id}')" style="padding:10px 16px;cursor:pointer;color:var(--accent-red)" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background='transparent'">🗑️ Delete</div>
-                    </div>
-                </div>
+                <button class="action-btn primary" onclick="redeemPoints('${c.id}')">🎁 Redeem</button>
             </td>
         </tr>`;
     }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-muted)">No loyalty customers yet</td></tr>';
-}
-
-function toggleLoyaltyMenu(customerId) {
-    const menu = document.getElementById('loyaltyMenu' + customerId);
-    const allMenus = document.querySelectorAll('[id^="loyaltyMenu"]');
-    allMenus.forEach(m => {
-        if (m.id !== 'loyaltyMenu' + customerId) m.style.display = 'none';
-    });
-    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-}
-
-// Close menus when clicking outside
-document.addEventListener('click', function(e) {
-    if (!e.target.closest('.action-btn')) {
-        const allMenus = document.querySelectorAll('[id^="loyaltyMenu"]');
-        allMenus.forEach(m => m.style.display = 'none');
-    }
-});
-
-function showAddLoyaltyCustomerModal() {
-    const name = prompt('Customer Name:');
-    const phone = prompt('Phone Number (e.g., 0712345678):');
-    const initialPoints = parseInt(prompt('Initial Points (optional):', '0')) || 0;
-    
-    if (name && phone) {
-        // Check if customer already exists
-        const existing = loyaltyCustomers.find(c => c.phone === phone);
-        if (existing) {
-            showToast('Customer with this phone number already exists', 'error');
-            return;
-        }
-        
-        loyaltyCustomers.push({
-            id: 'LOY' + Date.now(),
-            name,
-            phone,
-            points: initialPoints,
-            totalSpent: 0,
-            lastVisit: getTodayDate()
-        });
-        localStorage.setItem('loyaltyCustomers', JSON.stringify(loyaltyCustomers));
-        showToast('Customer added to loyalty program', 'success');
-        renderLoyalty();
-    }
-}
-
-function editLoyaltyCustomer(customerId) {
-    const customer = loyaltyCustomers.find(c => c.id === customerId);
-    if (!customer) return;
-    
-    const name = prompt('Customer Name:', customer.name);
-    const phone = prompt('Phone Number:', customer.phone);
-    
-    if (name && phone) {
-        customer.name = name;
-        customer.phone = phone;
-        localStorage.setItem('loyaltyCustomers', JSON.stringify(loyaltyCustomers));
-        showToast('Customer updated', 'success');
-        renderLoyalty();
-    }
-}
-
-function addLoyaltyPoints(customerId) {
-    const customer = loyaltyCustomers.find(c => c.id === customerId);
-    if (!customer) return;
-    
-    const points = parseInt(prompt(`Add points for ${customer.name}
-Current balance: ${customer.points} points
-Enter points to add:`, '100'));
-    
-    if (points && points > 0) {
-        customer.points += points;
-        localStorage.setItem('loyaltyCustomers', JSON.stringify(loyaltyCustomers));
-        showToast(`${points} points added to ${customer.name}`, 'success');
-        renderLoyalty();
-    }
-}
-
-function deleteLoyaltyCustomer(customerId) {
-    if (confirm('Remove this customer from loyalty program?')) {
-        loyaltyCustomers = loyaltyCustomers.filter(c => c.id !== customerId);
-        localStorage.setItem('loyaltyCustomers', JSON.stringify(loyaltyCustomers));
-        showToast('Customer removed', 'success');
-        renderLoyalty();
-    }
 }
 
 function awardLoyaltyPoints(phone, amountSpent) {
@@ -8712,6 +8562,3 @@ Enter points to redeem (multiples of 100):`, Math.min(100, maxRedeem)));
     }
 }
 
-    </script>
-</body>
-</html>
