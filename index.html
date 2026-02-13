@@ -2491,6 +2491,20 @@
             firebase.initializeApp(firebaseConfig);
             auth = firebase.auth();
             db = firebase.firestore();
+            
+            // Enable offline persistence to prevent timeout errors
+            db.enablePersistence({ synchronizeTabs: true })
+                .then(() => {
+                    console.log('✅ Firebase offline persistence enabled');
+                })
+                .catch((err) => {
+                    if (err.code === 'failed-precondition') {
+                        console.warn('⚠️ Multiple tabs open, persistence enabled in first tab only');
+                    } else if (err.code === 'unimplemented') {
+                        console.warn('⚠️ Browser does not support offline persistence');
+                    }
+                });
+            
             console.log('✅ Firebase initialized successfully');
         } catch (error) {
             console.error('Firebase initialization error:', error);
@@ -2748,6 +2762,19 @@
 
         function init() {
             try {
+                // Clean up old redundant cloud backups to free localStorage space
+                const allKeys = Object.keys(localStorage);
+                let cleanedCount = 0;
+                allKeys.forEach(key => {
+                    if (key.startsWith('cloud_')) {
+                        localStorage.removeItem(key);
+                        cleanedCount++;
+                    }
+                });
+                if (cleanedCount > 0) {
+                    console.log(`🧹 Cleaned ${cleanedCount} old cloud backups to free space`);
+                }
+                
                 loadSavedTheme();
                 
                 // Load chart of accounts and journal entries from localStorage
@@ -2895,33 +2922,11 @@
             localStorage.setItem('creditors', JSON.stringify(creditors));
             localStorage.setItem('loyaltyCustomers', JSON.stringify(loyaltyCustomers));
             
-            // ALSO: Create a complete business backup for offline access
-            if (config.businessId) {
-                const completeBackup = {
-                    businessId: config.businessId,
-                    config: config,
-                    users: users,
-                    products: products,
-                    sales: sales,
-                    creditSales: creditSales,
-                    expenses: expenses,
-                    categories: categories,
-                    suppliers: suppliers,
-                    journalEntries: journalEntries,
-                    creditors: creditors,
-                    loyaltyCustomers: loyaltyCustomers,
-                    lastBackup: new Date().toISOString()
-                };
-                localStorage.setItem(`cloud_${config.businessId}`, JSON.stringify(completeBackup));
-            }
+            // Note: Removed redundant cloud backup to prevent localStorage quota errors
+            // Data is already in localStorage + Firebase cloud when synced
             
-            // Then sync to Firebase Cloud
-            if (config.businessId) {
-                const dataToSync = {
-                    config, products, sales, creditSales, expenses, 
-                    categories, suppliers, journalEntries, creditors, loyaltyCustomers,
-                    lastUpdated: new Date().toISOString()
-                };
+            console.log('💾 All data saved to localStorage');
+        }
                 
                 if (isOnline && db) {
                     try {
@@ -3917,32 +3922,28 @@
             const userKey = username.toLowerCase();
             
             if (offlineUsers[userKey] && offlineUsers[userKey].password === password) {
-                // Found cached authentication - load their business data
+                // Found cached authentication - load from localStorage
                 const cachedAuth = offlineUsers[userKey];
                 
-                // Try to load their business data from cloud backup
+                // Load data from regular localStorage (no redundant cloud backup)
                 if (cachedAuth.businessId) {
-                    const businessKey = `cloud_${cachedAuth.businessId}`;
-                    try {
-                        const cloudData = JSON.parse(localStorage.getItem(businessKey));
-                        if (cloudData) {
-                            config.businessId = cloudData.businessId;
-                            config = { ...config, ...cloudData.config };
-                            users = cloudData.users || users;
-                            products = cloudData.products || [];
-                            sales = cloudData.sales || [];
-                            creditSales = cloudData.creditSales || [];
-                            expenses = cloudData.expenses || [];
-                            categories = cloudData.categories || [];
-                            suppliers = cloudData.suppliers || [];
-                            journalEntries = cloudData.journalEntries || [];
-                            creditors = cloudData.creditors || [];
-                            loyaltyCustomers = cloudData.loyaltyCustomers || [];
-                            
-                            // Find the actual user object
-                            let user = users.find(u => 
-                                (u.username === username || u.email === username) && u.password === password
-                            );
+                    config.businessId = cachedAuth.businessId;
+                    
+                    // Load from standard localStorage
+                    products = JSON.parse(localStorage.getItem(STORAGE_KEYS.products)) || [];
+                    sales = JSON.parse(localStorage.getItem(STORAGE_KEYS.sales)) || [];
+                    creditSales = JSON.parse(localStorage.getItem(STORAGE_KEYS.credit)) || [];
+                    expenses = JSON.parse(localStorage.getItem(STORAGE_KEYS.expenses)) || [];
+                    categories = JSON.parse(localStorage.getItem(STORAGE_KEYS.categories)) || [];
+                    suppliers = JSON.parse(localStorage.getItem(STORAGE_KEYS.suppliers)) || [];
+                    journalEntries = JSON.parse(localStorage.getItem(STORAGE_KEYS.journal)) || [];
+                    creditors = JSON.parse(localStorage.getItem('creditors')) || [];
+                    loyaltyCustomers = JSON.parse(localStorage.getItem('loyaltyCustomers')) || [];
+                    
+                    // Find the actual user object
+                    let user = users.find(u => 
+                        (u.username === username || u.email === username) && u.password === password
+                    );
                             
                             if (user) {
                                 const selectedType = document.getElementById('selectedLoginType').value;
@@ -3974,40 +3975,7 @@
             // Fallback to original method - search in current users array
             let user = users.find(u => (u.username === username || u.email === username) && u.password === password);
             
-            if (!user) {
-                const allKeys = Object.keys(localStorage);
-                for (const key of allKeys) {
-                    if (key.startsWith('cloud_BIZ')) {
-                        try {
-                            const cloudData = JSON.parse(localStorage.getItem(key));
-                            const cloudUser = cloudData.users?.find(u => 
-                                (u.username === username || u.email === username) && u.password === password
-                            );
-                            
-                            if (cloudUser) {
-                                config.businessId = cloudData.businessId;
-                                config = { ...config, ...cloudData.config };
-                                users = cloudData.users || users;
-                                products = cloudData.products || [];
-                                sales = cloudData.sales || [];
-                                creditSales = cloudData.creditSales || [];
-                                expenses = cloudData.expenses || [];
-                                categories = cloudData.categories || [];
-                                suppliers = cloudData.suppliers || [];
-                                journalEntries = cloudData.journalEntries || [];
-                                creditors = cloudData.creditors || [];
-                                loyaltyCustomers = cloudData.loyaltyCustomers || [];
-                                saveAllData();
-                                user = cloudUser;
-                                console.log(`Welcome back ${user.name}! Loaded your business data.`);
-                                break;
-                            }
-                        } catch (e) {
-                            console.error('Error checking cloud business:', e);
-                        }
-                    }
-                }
-            }
+            // No cloud backup fallback needed - data is in regular localStorage
             
             if (user) {
                 if (user.status !== 'active') { 
@@ -8068,9 +8036,21 @@
                 throw new Error('No business ID or database connection');
             }
             
+            // Check if actually online
+            if (!navigator.onLine) {
+                throw new Error('Device is offline - using local data');
+            }
+            
             try {
                 const docRef = db.collection('businesses').doc(config.businessId);
-                const doc = await docRef.get();
+                
+                // Set a 8 second timeout for loading
+                const loadPromise = docRef.get();
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Load timeout - using local data')), 8000)
+                );
+                
+                const doc = await Promise.race([loadPromise, timeoutPromise]);
                 
                 if (doc.exists) {
                     const cloudData = doc.data();
@@ -8110,12 +8090,6 @@
                     return true;
                 } else {
                     console.log('ℹ️ No cloud data found - first time setup');
-                    // Save current local data to cloud
-                    await syncToFirebase({
-                        config, products, sales, creditSales, expenses,
-                        categories, suppliers, journalEntries, creditors, loyaltyCustomers,
-                        lastUpdated: new Date().toISOString()
-                    });
                     return false;
                 }
             } catch (error) {
@@ -8129,6 +8103,11 @@
                 throw new Error('No business ID or database connection');
             }
             
+            // Check if actually online
+            if (!navigator.onLine) {
+                throw new Error('Device is offline');
+            }
+            
             try {
                 const syncData = dataToSync || {
                     config,
@@ -8139,12 +8118,21 @@
                     categories,
                     suppliers,
                     journalEntries,
+                    creditors,
+                    loyaltyCustomers,
                     lastUpdated: new Date().toISOString(),
                     lastSyncTime: firebase.firestore.FieldValue.serverTimestamp()
                 };
                 
                 const docRef = db.collection('businesses').doc(config.businessId);
-                await docRef.set(syncData, { merge: true });
+                
+                // Set a 8 second timeout for the sync operation
+                const syncPromise = docRef.set(syncData, { merge: true });
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Sync timeout - check internet connection')), 8000)
+                );
+                
+                await Promise.race([syncPromise, timeoutPromise]);
                 
                 lastSyncTime = new Date().toISOString();
                 localStorage.setItem('last_sync_time', lastSyncTime);
