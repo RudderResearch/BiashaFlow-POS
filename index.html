@@ -7653,28 +7653,47 @@
                     const newExpenses = expenses.filter(e => !e.synced || e.date >= lastSync.split('T')[0]);
                     const newCreditSales = creditSales.filter(c => !c.synced || c.date >= lastSync.split('T')[0]);
                     
-                    // Mark items as synced
-                    newSales.forEach(s => s.synced = true);
-                    newExpenses.forEach(e => e.synced = true);
-                    newCreditSales.forEach(c => c.synced = true);
+                    // CRITICAL: Use subcollections to avoid 1MB document limit
+                    const batch = db.batch();
+                    const businessRef = db.collection('businesses').doc(config.businessId);
                     
-                    // Sync incremental data (faster!)
-                    await syncToFirebase({
+                    // Sync config and small data to main document (under 1MB)
+                    batch.set(businessRef, {
                         config,
-                        products,  // Always sync full inventory (small dataset)
-                        sales: newSales.length > 0 ? newSales : undefined,  // Only new sales
-                        creditSales: newCreditSales.length > 0 ? newCreditSales : undefined,
-                        expenses: newExpenses.length > 0 ? newExpenses : undefined,
-                        categories,  // Always sync (small)
-                        suppliers,   // Always sync (small)
-                        journalEntries,
+                        products,  // Inventory (usually small)
+                        categories,
+                        suppliers,
                         users,
                         creditors,
                         loyaltyCustomers,
-                        lastUpdated: now,
-                        incrementalSync: true,
-                        newItemsCount: newSales.length + newExpenses.length + newCreditSales.length
+                        lastUpdated: now
+                    }, { merge: true });
+                    
+                    // Sync sales to subcollection (bypasses 1MB limit)
+                    newSales.forEach(sale => {
+                        const saleRef = businessRef.collection('sales').doc(sale.id);
+                        batch.set(saleRef, { ...sale, synced: true });
                     });
+                    
+                    // Sync expenses to subcollection
+                    newExpenses.forEach(expense => {
+                        const expenseRef = businessRef.collection('expenses').doc(expense.id);
+                        batch.set(expenseRef, { ...expense, synced: true });
+                    });
+                    
+                    // Sync credit sales to subcollection
+                    newCreditSales.forEach(credit => {
+                        const creditRef = businessRef.collection('creditSales').doc(credit.id);
+                        batch.set(creditRef, { ...credit, synced: true });
+                    });
+                    
+                    // Commit all at once (fast!)
+                    await batch.commit();
+                    
+                    // Mark items as synced locally
+                    newSales.forEach(s => s.synced = true);
+                    newExpenses.forEach(e => e.synced = true);
+                    newCreditSales.forEach(c => c.synced = true);
                     
                     // Store last sync timestamp
                     localStorage.setItem('last_sync_timestamp', now);
@@ -7684,16 +7703,16 @@
                     localStorage.setItem(STORAGE_KEYS.expenses, JSON.stringify(expenses));
                     localStorage.setItem(STORAGE_KEYS.credit, JSON.stringify(creditSales));
                     
-                    // Quick offline queue processing - no individual waits
+                    // Quick offline queue processing
                     if (offlineQueue && offlineQueue.length > 0) {
-                        offlineQueue = []; // Clear queue after sync
+                        offlineQueue = [];
                         localStorage.setItem('offline_queue', JSON.stringify(offlineQueue));
                         updateQueueDisplay();
                     }
                     
                     const itemCount = newSales.length + newExpenses.length + newCreditSales.length;
                     console.log(`✅ Synced ${itemCount} new items to cloud`);
-                    showToast(`✅ Synced ${itemCount} new items`, 'success');
+                    showToast(`✅ Synced ${itemCount} items`, 'success');
                 } else {
                     console.log('💾 Data saved locally (Firebase not configured)');
                     showToast('💾 Saved locally', 'info');
