@@ -27,6 +27,7 @@
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         :root{--bg-dark:#0a0e1a;--bg-card:#111827;--bg-card-hover:#1a2234;--bg-sidebar:#0d1320;--border:#1e293b;--border-light:#334155;--text-primary:#f8fafc;--text-secondary:#94a3b8;--text-muted:#64748b;--accent-blue:#3b82f6;--accent-green:#10b981;--accent-emerald:#059669;--accent-yellow:#f59e0b;--accent-orange:#f97316;--accent-red:#ef4444;--accent-purple:#8b5cf6;--accent-pink:#ec4899;--accent-cyan:#06b6d4;--gradient-blue:linear-gradient(135deg,#3b82f6,#1d4ed8);--gradient-green:linear-gradient(135deg,#10b981,#059669);--gradient-purple:linear-gradient(135deg,#8b5cf6,#6d28d9);--gradient-orange:linear-gradient(135deg,#f97316,#ea580c);--gradient-red:linear-gradient(135deg,#ef4444,#dc2626);--gradient-cyan:linear-gradient(135deg,#06b6d4,#0891b2);--shadow-sm:0 1px 2px rgba(0,0,0,0.4);--shadow-md:0 4px 6px rgba(0,0,0,0.4);--shadow-lg:0 10px 15px rgba(0,0,0,0.5);--shadow-glow-blue:0 0 20px rgba(59,130,246,0.3);--shadow-glow-green:0 0 20px rgba(16,185,129,0.3);--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:20px}
+        body.light-mode{--bg-dark:#ffffff;--bg-card:#f8fafc;--bg-card-hover:#f1f5f9;--bg-sidebar:#f8fafc;--border:#e2e8f0;--border-light:#cbd5e1;--text-primary:#0f172a;--text-secondary:#475569;--text-muted:#64748b;--shadow-sm:0 1px 2px rgba(0,0,0,0.1);--shadow-md:0 4px 6px rgba(0,0,0,0.1);--shadow-lg:0 10px 15px rgba(0,0,0,0.15)}
         body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg-dark);color:var(--text-primary);min-height:100vh;overflow-x:auto;-webkit-overflow-scrolling:touch}
         
         /* Login Screen */
@@ -845,6 +846,13 @@
                         <span class="nav-item-icon">💳</span>Credit Sales
                         <span class="nav-badge warning" id="creditBadge">0</span>
                     </div>
+                    <div class="nav-item" data-tab="debtors" data-role="admin" onclick="switchTab('debtors')">
+                        <span class="nav-item-icon">💰</span>Debtors
+                        <span class="nav-badge danger" id="debtorsBadge">0</span>
+                    </div>
+                    <div class="nav-item" data-tab="loyalty" data-role="admin" onclick="switchTab('loyalty')">
+                        <span class="nav-item-icon">⭐</span>Loyalty Points
+                    </div>
                 </div>
                 <div class="nav-section">
                     <div class="nav-section-title">Inventory</div>
@@ -925,6 +933,9 @@
                     </div>
                 </div>
                 <div class="top-bar-right">
+                    <button class="top-btn" id="themeToggle" onclick="toggleTheme()" title="Toggle Theme">
+                        <span id="themeIcon">🌙</span>
+                    </button>
                     <button class="top-btn sync-btn" id="syncButton" onclick="manualSyncToCloud()" title="Sync Data">
                         <span id="syncIcon">🔄</span>
                         <span>Sync</span>
@@ -960,10 +971,10 @@
                     
                     <div class="date-filter-bar">
                         <button class="date-btn active" onclick="setDateFilter('today')">Today</button>
-                        <button class="date-btn" onclick="setDateFilter('week')">This Week</button>
-                        <button class="date-btn" onclick="setDateFilter('month')">This Month</button>
-                        <button class="date-btn" onclick="setDateFilter('year')">This Year</button>
-                        <button class="date-btn" onclick="setDateFilter('all')">All Time</button>
+                        <button class="date-btn" onclick="setDateFilter('yesterday')">Yesterday</button>
+                        <button class="date-btn" onclick="setDateFilter('custom')">📅 Custom</button>
+                        <input type="date" id="customDateFrom" class="form-input" style="display:none;width:auto;padding:8px;" onchange="applyCustomDateFilter()">
+                        <input type="date" id="customDateTo" class="form-input" style="display:none;width:auto;padding:8px;" onchange="applyCustomDateFilter()">
                     </div>
                     
                     <div class="stats-grid">
@@ -1140,12 +1151,8 @@
                                             <div style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:8px;">🚀 Automatic Verification Enabled</div>
                                             <div style="font-size:1.6rem; font-weight:800; color:#10b981;" id="mpesaAmountIntasend">Ksh 0</div>
                                         </div>
-                                        <div style="margin-bottom:8px;">
-                                            <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:var(--text-secondary);">Customer Phone Number *</label>
-                                            <input type="tel" class="mpesa-input" id="mpesaPhoneIntasend" placeholder="07XXXXXXXX" style="font-size:1.1rem; text-align:center; letter-spacing:1px;">
-                                        </div>
                                         <button class="complete-sale-btn" onclick="sendIntasendSTKPush()" style="background:var(--gradient-green);">
-                                            📲 Send Payment Request to Customer
+                                            📲 Send Payment Request
                                         </button>
                                         <div id="intasendStatus" style="margin-top:12px; padding:12px; border-radius:8px; text-align:center; display:none;"></div>
                                     </div>
@@ -1170,15 +1177,11 @@
                                                 <strong style="color:#3b82f6;">📋 Steps:</strong><br>
                                                 1. Customer sends M-Pesa to the number above<br>
                                                 2. Wait for M-Pesa confirmation message<br>
-                                                3. Enter customer's phone number below to confirm
+                                                3. Click confirm below after receiving payment
                                             </div>
                                         </div>
-                                        <div style="margin-bottom:8px;">
-                                            <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:var(--text-secondary);">Customer Phone Number *</label>
-                                            <input type="tel" class="mpesa-input" id="mpesaPhoneConfirm" placeholder="07XXXXXXXX" oninput="updateMpesaConfirm(this.value)" style="font-size:1.1rem; text-align:center; letter-spacing:1px;">
-                                        </div>
                                         <div id="mpesaConfirmMsg" style="margin:12px 0; font-size:1.05rem; color:#10b981; min-height:28px; text-align:center; font-weight:600;"></div>
-                                        <button class="complete-sale-btn" id="confirmMpesaBtn" onclick="confirmManualMpesa()" disabled style="background:var(--gradient-green);">✓ Confirm Payment & Complete Sale</button>
+                                        <button class="complete-sale-btn" id="confirmMpesaBtn" onclick="confirmManualMpesa()" style="background:var(--gradient-green);">✓ Confirm Payment & Complete Sale</button>
                                     </div>
                                 </div>
                                 <button class="complete-sale-btn" id="completeSaleBtn" onclick="completeSale()" disabled>
@@ -1247,6 +1250,50 @@
                     </div>
                 </div>
                 
+                <!-- Debtors Tab -->
+                <div class="tab-content" id="debtorsTab">
+                    <div class="inventory-header">
+                        <h2 class="inventory-title">Debtors Management</h2>
+                        <button class="inv-btn primary" onclick="showAddDebtorModal()">➕ Add Debtor</button>
+                    </div>
+                    <div class="stats-grid" style="margin-bottom:24px">
+                        <div class="stat-card red">
+                            <div class="stat-header"><span class="stat-label">Total Owed To Us</span><div class="stat-icon red">💸</div></div>
+                            <div class="stat-value" id="debtorsTotal">Ksh 0</div>
+                        </div>
+                        <div class="stat-card green">
+                            <div class="stat-header"><span class="stat-label">Received This Month</span><div class="stat-icon green">✅</div></div>
+                            <div class="stat-value" id="debtorsReceived">Ksh 0</div>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Debtor Name</th><th>Amount Owed</th><th>Amount Received</th><th>Balance</th><th>Due Date</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody id="debtorsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Loyalty Points Tab -->
+                <div class="tab-content" id="loyaltyTab">
+                    <div class="inventory-header">
+                        <h2 class="inventory-title">Customer Loyalty Program</h2>
+                    </div>
+                    <div class="alert info" style="margin-bottom:20px">
+                        <strong>💡 How it works:</strong> Customers earn 1 point for every KSh 100 spent. 100 points = KSh 100 discount on next purchase.
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Customer</th><th>Phone</th><th>Total Spent</th><th>Points Balance</th><th>Points Value</th><th>Last Visit</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody id="loyaltyTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
                 <!-- Inventory Tab -->
                 <div class="tab-content" id="inventoryTab">
                     <div class="inventory-header">
@@ -1275,6 +1322,12 @@
                             <option value="all">All Stock Levels</option>
                             <option value="low">Low Stock</option>
                             <option value="out">Out of Stock</option>
+                        </select>
+                        <select class="filter-select" id="invExpiryFilter" onchange="filterInventory()">
+                            <option value="all">All Expiry</option>
+                            <option value="expired">Expired</option>
+                            <option value="expiring30">Expiring in 30 days</option>
+                            <option value="expiring90">Expiring in 90 days</option>
                         </select>
                         <input type="text" class="filter-input" id="invSearch" placeholder="🔍 Search products..." oninput="filterInventory()">
                     </div>
@@ -1986,6 +2039,16 @@
                     <input type="number" class="form-input" id="restockQty" value="10" min="1" oninput="updateRestockTotal()" style="text-align:center;font-size:1.2rem">
                     <div class="restock-quick-btns"><button class="restock-quick-btn" onclick="setRestockQty(5)">+5</button><button class="restock-quick-btn" onclick="setRestockQty(10)">+10</button><button class="restock-quick-btn" onclick="setRestockQty(20)">+20</button><button class="restock-quick-btn" onclick="setRestockQty(50)">+50</button></div>
                 </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Batch/Lot Number</label>
+                        <input type="text" class="form-input" id="restockBatch" placeholder="e.g. LOT2024-001">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Expiry Date</label>
+                        <input type="date" class="form-input" id="restockExpiry">
+                    </div>
+                </div>
                 <div class="restock-new-total"><div class="restock-new-label">New Stock Level</div><div class="restock-new-value" id="restockNewTotal">10</div></div>
             </div>
             <div class="modal-footer"><button class="modal-btn cancel" onclick="closeModal('restockModal')">Cancel</button><button class="modal-btn success" onclick="confirmRestock()">✓ Confirm Restock</button></div>
@@ -2030,6 +2093,16 @@
                 <div class="form-row">
                     <div class="form-group"><label class="form-label">Initial Stock</label><input type="number" class="form-input" id="newProductStock" placeholder="50" value="0"></div>
                     <div class="form-group"><label class="form-label">Reorder Level</label><input type="number" class="form-input" id="newProductReorder" placeholder="10" value="10"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Batch/Lot Number</label>
+                        <input type="text" class="form-input" id="newProductBatch" placeholder="e.g. LOT2024-001">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Expiry Date</label>
+                        <input type="date" class="form-input" id="newProductExpiry">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Unit/Measure</label>
@@ -2678,6 +2751,7 @@
                 window.chartOfAccounts = JSON.parse(localStorage.getItem('chartOfAccounts'));
             } // Load saved theme and logo
             loadAllData();
+            initializeDebtorsAndLoyalty(); // Initialize debtors and loyalty
             updateTime();
             setInterval(updateTime, 1000);
             if (!isOnline) document.getElementById('offlineIndicator').classList.add('show');
@@ -4624,12 +4698,38 @@
         }
         function getTodayDate() { return new Date().toISOString().split('T')[0]; }
         function getFilteredSales() {
-            const today = new Date(); const todayStr = getTodayDate();
+            const today = new Date(); 
+            const todayStr = getTodayDate();
+            
             return sales.filter(s => {
                 if (dateFilter === 'today') return s.date === todayStr;
-                if (dateFilter === 'week') { const weekAgo = new Date(today); weekAgo.setDate(weekAgo.getDate() - 7); return new Date(s.date) >= weekAgo; }
-                if (dateFilter === 'month') { const monthAgo = new Date(today); monthAgo.setMonth(monthAgo.getMonth() - 1); return new Date(s.date) >= monthAgo; }
-                if (dateFilter === 'year') { return new Date(s.date).getFullYear() === today.getFullYear(); }
+                if (dateFilter === 'yesterday') {
+                    const yesterday = new Date(today);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yesterdayStr = yesterday.toISOString().split('T')[0];
+                    return s.date === yesterdayStr;
+                }
+                if (dateFilter === 'custom') {
+                    const fromDate = document.getElementById('customDateFrom')?.value;
+                    const toDate = document.getElementById('customDateTo')?.value;
+                    if (fromDate && toDate) {
+                        return s.date >= fromDate && s.date <= toDate;
+                    }
+                    return true;
+                }
+                if (dateFilter === 'week') { 
+                    const weekAgo = new Date(today); 
+                    weekAgo.setDate(weekAgo.getDate() - 7); 
+                    return new Date(s.date) >= weekAgo; 
+                }
+                if (dateFilter === 'month') { 
+                    const monthAgo = new Date(today); 
+                    monthAgo.setMonth(monthAgo.getMonth() - 1); 
+                    return new Date(s.date) >= monthAgo; 
+                }
+                if (dateFilter === 'year') { 
+                    return new Date(s.date).getFullYear() === today.getFullYear(); 
+                }
                 return true;
             });
         }
@@ -4665,7 +4765,7 @@
                 if (tabEl) tabEl.classList.add('active');
                 document.querySelectorAll(`[data-tab="${tab}"]`).forEach(n => n.classList.add('active'));
                 
-                const titles = { dashboard: ['Dashboard', 'Overview of your business'], pos: ['Point of Sale', 'Process customer transactions'], sales: ['Sales History', 'View all transactions'], credit: ['Credit Sales', 'Manage customer credit'], inventory: ['Inventory', 'Manage your products'], categories: ['Categories', 'Product categories'], suppliers: ['Suppliers', 'Manage suppliers'], expenses: ['Expenses', 'Track business expenses'], accounts: ['Chart of Accounts', 'Accounting structure'], journal: ['Journal Entries', 'Financial transactions'], reports: ['Analytics', 'Business insights'], kra: ['KRA Compliance', 'Tax reporting'], profit: ['Profit & Loss', 'Financial performance'], users: ['Users', 'Manage user accounts'], settings: ['Settings', 'System configuration'] };
+                const titles = { dashboard: ['Dashboard', 'Overview of your business'], pos: ['Point of Sale', 'Process customer transactions'], sales: ['Sales History', 'View all transactions'], credit: ['Credit Sales', 'Manage customer credit'], debtors: ['Debtors', 'Track money owed to you'], loyalty: ['Loyalty Points', 'Customer rewards program'], inventory: ['Inventory', 'Manage your products'], categories: ['Categories', 'Product categories'], suppliers: ['Suppliers', 'Manage suppliers'], expenses: ['Expenses', 'Track business expenses'], accounts: ['Chart of Accounts', 'Accounting structure'], journal: ['Journal Entries', 'Financial transactions'], reports: ['Analytics', 'Business insights'], kra: ['KRA Compliance', 'Tax reporting'], profit: ['Profit & Loss', 'Financial performance'], users: ['Users', 'Manage user accounts'], settings: ['Settings', 'System configuration'] };
                 const [title, subtitle] = titles[tab] || ['Dashboard', ''];
                 
                 const pageTitleEl = document.getElementById('pageTitle');
@@ -4680,6 +4780,8 @@
                 else if (tab === 'pos') renderPOS();
                 else if (tab === 'sales') renderSalesHistory();
                 else if (tab === 'credit') renderCreditSales();
+                else if (tab === 'debtors') renderDebtors();
+                else if (tab === 'loyalty') renderLoyalty();
                 else if (tab === 'inventory') renderInventory();
                 else if (tab === 'categories') renderCategories();
                 else if (tab === 'suppliers') renderSuppliers();
@@ -4886,6 +4988,25 @@
             dateFilter = filter;
             document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
             event.target.classList.add('active');
+            
+            // Show/hide custom date inputs
+            const customFrom = document.getElementById('customDateFrom');
+            const customTo = document.getElementById('customDateTo');
+            if (filter === 'custom') {
+                customFrom.style.display = 'inline-block';
+                customTo.style.display = 'inline-block';
+                // Set default values if empty
+                if (!customFrom.value) customFrom.value = getTodayDate();
+                if (!customTo.value) customTo.value = getTodayDate();
+            } else {
+                customFrom.style.display = 'none';
+                customTo.style.display = 'none';
+            }
+            
+            renderDashboard();
+        }
+        
+        function applyCustomDateFilter() {
             renderDashboard();
         }
         
@@ -5102,9 +5223,6 @@
         }
 
         function confirmManualMpesa() {
-            const phone = document.getElementById('mpesaPhoneConfirm').value.trim().replace(/\D/g,'');
-            if (!phone.match(/^07\d{8}$/)) return showToast("Invalid phone number", "error");
-            
             // Check if ANY M-Pesa payment method is configured
             const hasMpesaConfig = config.mpesaTill || config.mpesaPaybillNumber || config.mpesaPochi || config.mpesaSend;
             
@@ -5113,30 +5231,29 @@
                 return;
             }
             
-            // Get the configured payment method details
+            // Get the configured payment method details (no phone required)
             let paymentDetails = {};
             if (config.mpesaTill) {
-                paymentDetails = { phone, method: 'M-Pesa Till', number: config.mpesaTill };
+                paymentDetails = { method: 'M-Pesa Till', number: config.mpesaTill };
             } else if (config.mpesaPaybillNumber) {
                 paymentDetails = { 
-                    phone, 
                     method: 'M-Pesa Paybill', 
                     paybill: config.mpesaPaybillNumber,
                     account: config.mpesaPaybillAccount || ''
                 };
             } else if (config.mpesaPochi) {
-                paymentDetails = { phone, method: 'M-Pesa Pochi', number: config.mpesaPochi };
+                paymentDetails = { method: 'M-Pesa Pochi', number: config.mpesaPochi };
             } else if (config.mpesaSend) {
-                paymentDetails = { phone, method: 'M-Pesa Send Money', number: config.mpesaSend };
+                paymentDetails = { method: 'M-Pesa Send Money', number: config.mpesaSend };
             }
 
             mpesaConfirmed = true;
             mpesaData = paymentDetails;
             
             // Show success message
-            showToast(`✓ M-Pesa payment confirmed from ${phone}`, "success");
+            showToast('✓ M-Pesa payment confirmed', 'success');
             
-            // FIXED: Enable the complete sale button after confirming payment
+            // Enable the complete sale button after confirming payment
             renderCart();
             
             // Hide confirm button and show completion ready message
@@ -5160,11 +5277,8 @@
         let intasendPollingInterval = null;
         
         async function sendIntasendSTKPush() {
-            const phone = document.getElementById('mpesaPhoneIntasend').value.trim().replace(/\D/g,'');
-            if (!phone.match(/^07\d{8}$/)) {
-                showToast("Invalid phone number. Use format: 07XXXXXXXX", "error");
-                return;
-            }
+            // Use configured business phone or default
+            const phone = config.phone || '0712345678';
             
             if (!config.intasendPublicKey || !config.intasendSecretKey) {
                 showToast("IntaSend API not configured. Check Settings.", "error");
@@ -5181,7 +5295,7 @@
             statusDiv.style.border = '1px solid rgba(59,130,246,0.3)';
             statusDiv.innerHTML = `
                 <div style="font-size:1.1rem; font-weight:600; color:#3b82f6; margin-bottom:8px;">📲 Sending payment request...</div>
-                <div style="font-size:0.85rem; color:var(--text-secondary);">Customer will receive prompt on ${phone}</div>
+                <div style="font-size:0.85rem; color:var(--text-secondary);">Processing payment of ${formatKsh(total)}</div>
             `;
             
             try {
@@ -5196,7 +5310,7 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        phone_number: '254' + phone.substring(1), // Convert 07XX to 2547XX
+                        phone_number: '254' + phone.replace(/\D/g,'').substring(1), // Convert 07XX to 2547XX
                         amount: total,
                         api_ref: invoiceId
                     })
@@ -5312,6 +5426,20 @@
         
         function completeSale() {
             if (cart.length === 0) return;
+            
+            // Validate stock availability before completing sale
+            for (const cartItem of cart) {
+                const product = products.find(p => p.id === cartItem.productId);
+                if (!product) {
+                    showToast(`Product ${cartItem.name} not found!`, 'error');
+                    return;
+                }
+                if (product.stock < cartItem.qty) {
+                    showToast(`Insufficient stock for ${product.name}. Available: ${product.stock}`, 'error');
+                    return;
+                }
+            }
+            
             if (selectedPayment === 'Credit') { openModal('creditSaleModal'); return; }
             processSale();
         }
@@ -5580,13 +5708,35 @@
         function filterInventory() {
             const catVal = document.getElementById('invCategoryFilter').value;
             const stockVal = document.getElementById('invStockFilter').value;
+            const expiryVal = document.getElementById('invExpiryFilter').value;
             const search = document.getElementById('invSearch').value.toLowerCase();
+            
+            // Get today's date for expiry comparisons
+            const today = new Date();
+            const in30Days = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+            const in90Days = new Date(today.getTime() + 90 * 24 * 60 * 60 * 1000);
             
             let filtered = products.filter(p => {
                 const matchCat = catVal === 'all' || p.category === catVal;
                 const matchStock = stockVal === 'all' || (stockVal === 'low' && p.stock <= p.reorder && p.stock > 0) || (stockVal === 'out' && p.stock === 0);
                 const matchSearch = !search || p.name.toLowerCase().includes(search);
-                return matchCat && matchStock && matchSearch;
+                
+                // Expiry filter
+                let matchExpiry = true;
+                if (expiryVal !== 'all' && p.expiryDate) {
+                    const expiryDate = new Date(p.expiryDate);
+                    if (expiryVal === 'expired') {
+                        matchExpiry = expiryDate < today;
+                    } else if (expiryVal === 'expiring30') {
+                        matchExpiry = expiryDate >= today && expiryDate <= in30Days;
+                    } else if (expiryVal === 'expiring90') {
+                        matchExpiry = expiryDate >= today && expiryDate <= in90Days;
+                    }
+                } else if (expiryVal !== 'all' && !p.expiryDate) {
+                    matchExpiry = false; // If filtering by expiry but product has no expiry date
+                }
+                
+                return matchCat && matchStock && matchSearch && matchExpiry;
             });
             
             if (restockMode) {
@@ -5686,7 +5836,16 @@
             if (!restockProduct) return;
             const qty = parseInt(document.getElementById('restockQty').value) || 0;
             if (qty <= 0) { showToast('Enter valid quantity', 'error'); return; }
+            
+            // Get batch and expiry date
+            const batch = document.getElementById('restockBatch').value.trim() || null;
+            const expiryDate = document.getElementById('restockExpiry').value || null;
+            
+            // Update product
             restockProduct.stock += qty;
+            if (batch) restockProduct.batch = batch;
+            if (expiryDate) restockProduct.expiryDate = expiryDate;
+            
             localStorage.setItem(STORAGE_KEYS.products, JSON.stringify(products));
             closeModal('restockModal');
             showToast(`Added ${qty} units to ${restockProduct.name}`, 'success', 'Stock Updated');
@@ -5783,7 +5942,25 @@
                 }
             }
             
-            products.push({ id: 'P' + Date.now(), sku, name, category, cost, price, stock, reorder, vat, unit, image: productImage });
+            // Get batch and expiry date
+            const batch = document.getElementById('newProductBatch')?.value.trim() || null;
+            const expiryDate = document.getElementById('newProductExpiry')?.value || null;
+            
+            products.push({ 
+                id: 'P' + Date.now(), 
+                sku, 
+                name, 
+                category, 
+                cost, 
+                price, 
+                stock, 
+                reorder, 
+                vat, 
+                unit, 
+                image: productImage,
+                batch,
+                expiryDate
+            });
             localStorage.setItem(STORAGE_KEYS.products, JSON.stringify(products));
             
             // Clear the image preview
@@ -8163,6 +8340,31 @@
             });
         }
         
+        // Theme Toggle Function
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            const isLightMode = body.classList.toggle('light-mode');
+            
+            // Update icon
+            themeIcon.textContent = isLightMode ? '☀️' : '🌙';
+            
+            // Save preference
+            localStorage.setItem('theme', isLightMode ? 'light' : 'dark');
+            
+            console.log('Theme switched to:', isLightMode ? 'Light' : 'Dark');
+        }
+        
+        // Load saved theme on init
+        function loadSavedTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-mode');
+                const themeIcon = document.getElementById('themeIcon');
+                if (themeIcon) themeIcon.textContent = '☀️';
+            }
+        }
+        
         // Online/Offline Status Monitoring (Manual Sync Only)
         function updateOnlineStatus() {
             const isOnline = navigator.onLine;
@@ -8194,3 +8396,169 @@
     </script>
 </body>
 </html>
+
+// Debtors and Loyalty Data
+let debtors = [];
+let loyaltyCustomers = [];
+
+// Initialize debtors and loyalty on load
+function initializeDebtorsAndLoyalty() {
+    debtors = JSON.parse(localStorage.getItem('debtors')) || [];
+    loyaltyCustomers = JSON.parse(localStorage.getItem('loyaltyCustomers')) || [];
+}
+
+// Render Debtors
+function renderDebtors() {
+    const today = getTodayDate();
+    const thisMonth = today.substring(0, 7);
+    
+    const totalOwed = debtors.reduce((s, d) => s + (d.amount - d.received), 0);
+    const receivedThisMonth = debtors.reduce((s, d) => {
+        const payments = d.payments || [];
+        return s + payments.filter(p => p.date.startsWith(thisMonth)).reduce((sum, p) => sum + p.amount, 0);
+    }, 0);
+    
+    document.getElementById('debtorsTotal').textContent = formatKsh(totalOwed);
+    document.getElementById('debtorsReceived').textContent = formatKsh(receivedThisMonth);
+    
+    const tbody = document.getElementById('debtorsTableBody');
+    tbody.innerHTML = debtors.map(d => {
+        const balance = d.amount - d.received;
+        const isOverdue = new Date(d.dueDate) < new Date(today);
+        const statusClass = balance === 0 ? 'success' : isOverdue ? 'danger' : 'warning';
+        
+        return `<tr>
+            <td><strong>${d.name}</strong></td>
+            <td style="color:var(--accent-red);font-weight:700">${formatKsh(d.amount)}</td>
+            <td style="color:var(--accent-green)">${formatKsh(d.received)}</td>
+            <td style="font-weight:700">${formatKsh(balance)}</td>
+            <td>${d.dueDate}</td>
+            <td>
+                ${balance > 0 ? `<button class="action-btn success" onclick="recordDebtorPayment('${d.id}')">💰 Record Payment</button>` : ''}
+                <button class="action-btn danger" onclick="deleteDebtor('${d.id}')">Delete</button>
+            </td>
+        </tr>`;
+    }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-muted)">No debtors</td></tr>';
+}
+
+function recordDebtorPayment(debtorId) {
+    const debtor = debtors.find(d => d.id === debtorId);
+    if (!debtor) return;
+    
+    const balance = debtor.amount - debtor.received;
+    const amount = parseFloat(prompt(`Record payment for ${debtor.name}
+Balance: ${formatKsh(balance)}
+Enter amount received:`, balance));
+    
+    if (amount && amount > 0) {
+        debtor.received = Math.min(debtor.amount, debtor.received + amount);
+        if (!debtor.payments) debtor.payments = [];
+        debtor.payments.push({ date: getTodayDate(), amount });
+        
+        localStorage.setItem('debtors', JSON.stringify(debtors));
+        showToast(`Payment of ${formatKsh(amount)} recorded`, 'success');
+        renderDebtors();
+    }
+}
+
+function showAddDebtorModal() {
+    const name = prompt('Debtor Name:');
+    const amount = parseFloat(prompt('Amount Owed (KSh):'));
+    const dueDate = prompt('Due Date (YYYY-MM-DD):', new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0]);
+    
+    if (name && amount) {
+        debtors.push({
+            id: 'DBT' + Date.now(),
+            name,
+            amount,
+            received: 0,
+            dueDate: dueDate || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
+            createdAt: getTodayDate()
+        });
+        localStorage.setItem('debtors', JSON.stringify(debtors));
+        showToast('Debtor added', 'success');
+        renderDebtors();
+    }
+}
+
+function deleteDebtor(id) {
+    if (confirm('Delete this debtor?')) {
+        debtors = debtors.filter(d => d.id !== id);
+        localStorage.setItem('debtors', JSON.stringify(debtors));
+        renderDebtors();
+    }
+}
+
+// Render Loyalty Customers
+function renderLoyalty() {
+    const tbody = document.getElementById('loyaltyTableBody');
+    
+    // Sort by points descending
+    const sorted = [...loyaltyCustomers].sort((a, b) => b.points - a.points);
+    
+    tbody.innerHTML = sorted.map(c => {
+        const pointsValue = Math.floor(c.points / 100) * 100; // KSh value
+        
+        return `<tr>
+            <td><strong>${c.name}</strong></td>
+            <td>${c.phone}</td>
+            <td style="font-weight:700">${formatKsh(c.totalSpent)}</td>
+            <td><span class="badge info">${c.points} pts</span></td>
+            <td style="color:var(--accent-green);font-weight:700">${formatKsh(pointsValue)}</td>
+            <td>${c.lastVisit}</td>
+            <td>
+                <button class="action-btn primary" onclick="redeemPoints('${c.id}')">🎁 Redeem</button>
+            </td>
+        </tr>`;
+    }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-muted)">No loyalty customers yet</td></tr>';
+}
+
+function awardLoyaltyPoints(phone, amountSpent) {
+    const points = Math.floor(amountSpent / 100); // 1 point per KSh 100
+    if (points === 0) return;
+    
+    let customer = loyaltyCustomers.find(c => c.phone === phone);
+    if (!customer) {
+        customer = {
+            id: 'LOY' + Date.now(),
+            name: 'Customer',
+            phone,
+            points: 0,
+            totalSpent: 0,
+            lastVisit: getTodayDate()
+        };
+        loyaltyCustomers.push(customer);
+    }
+    
+    customer.points += points;
+    customer.totalSpent += amountSpent;
+    customer.lastVisit = getTodayDate();
+    
+    localStorage.setItem('loyaltyCustomers', JSON.stringify(loyaltyCustomers));
+    showToast(`${points} loyalty points awarded!`, 'success');
+}
+
+function redeemPoints(customerId) {
+    const customer = loyaltyCustomers.find(c => c.id === customerId);
+    if (!customer) return;
+    
+    const maxRedeem = Math.floor(customer.points / 100) * 100;
+    if (maxRedeem === 0) {
+        showToast('Not enough points to redeem', 'warning');
+        return;
+    }
+    
+    const points = parseInt(prompt(`Redeem points for ${customer.name}
+Available: ${customer.points} points (${formatKsh(maxRedeem)} value)
+Enter points to redeem (multiples of 100):`, Math.min(100, maxRedeem)));
+    
+    if (points && points > 0 && points <= customer.points && points % 100 === 0) {
+        customer.points -= points;
+        localStorage.setItem('loyaltyCustomers', JSON.stringify(loyaltyCustomers));
+        showToast(`${points} points redeemed = ${formatKsh(points)} discount!`, 'success');
+        renderLoyalty();
+    } else if (points) {
+        showToast('Invalid points amount (must be multiple of 100)', 'error');
+    }
+}
+
