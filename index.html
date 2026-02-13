@@ -940,6 +940,7 @@
                     <button class="top-btn sync-btn" id="syncButton" onclick="manualSyncToCloud()" title="Sync Data">
                         <span id="syncIcon">🔄</span>
                         <span>Sync</span>
+                        <span class="nav-badge info" id="unsyncedBadge" style="display:none;">0</span>
                     </button>
                     <div class="sync-status online" id="syncStatus">
                         <span class="sync-dot"></span>
@@ -2782,11 +2783,17 @@
                     window.chartOfAccounts = JSON.parse(localStorage.getItem('chartOfAccounts'));
                 }
                 
+                // CRITICAL: Load all data FIRST before checking session
                 loadAllData();
                 initializeDebtorsAndLoyalty(); // Initialize debtors and loyalty
                 updateTime();
                 setInterval(updateTime, 1000);
-                if (!isOnline) document.getElementById('offlineIndicator').classList.add('show');
+                
+                // Show offline indicator if offline
+                if (!isOnline) {
+                    document.getElementById('offlineIndicator').classList.add('show');
+                    console.log('📴 App started in offline mode');
+                }
                 
                 // Update queue display
                 updateQueueDisplay();
@@ -2802,7 +2809,7 @@
                     selectLoginType('admin');
                 }, 100);
                 
-                // CRITICAL FIX: Check if user is already logged in (session or last logged user)
+                // CRITICAL OFFLINE FIX: Check if user is already logged in (session or last logged user)
                 let savedUser = sessionStorage.getItem('currentUser');
                 
                 // If no session but we have a lastLoggedUser, restore from there (for page refresh while offline)
@@ -2824,7 +2831,22 @@
                             config.businessId = currentUser.businessId;
                         }
                         
+                        // OFFLINE FIX: Always show the app if we have a valid saved session
+                        // Don't require online status to show the app
                         showApp();
+                        
+                        // Update unsynced badge
+                        setTimeout(() => updateUnsyncedBadge(), 500);
+                        
+                        // Render the appropriate tab based on user role
+                        if (currentUser.role === 'seller') {
+                            setTimeout(() => switchTab('pos'), 100);
+                        } else {
+                            setTimeout(() => {
+                                switchTab('dashboard');
+                                renderDashboard();
+                            }, 100);
+                        }
                         
                         // Check subscription status after login (only if online)
                         if (isOnline) {
@@ -2840,17 +2862,27 @@
                         if (isOnline && config.kraQueue && config.kraQueue.length > 0) {
                             setTimeout(processKRAQueue, 5000);
                         }
+                        
+                        console.log('✅ Session restored for:', currentUser.name, isOnline ? '(online)' : '(offline)');
                     } catch (err) {
                         console.error('Error restoring user session:', err);
                         // Clear corrupted session
                         sessionStorage.removeItem('currentUser');
                         localStorage.removeItem('lastLoggedUser');
+                        // Show login screen
+                        document.getElementById('loginScreen').classList.remove('hidden');
+                        document.getElementById('appContainer').classList.add('hidden');
                     }
+                } else {
+                    // No saved session - show login screen
+                    document.getElementById('loginScreen').classList.remove('hidden');
+                    document.getElementById('appContainer').classList.add('hidden');
                 }
             } catch (error) {
                 console.error('Critical error in init:', error);
                 // Try to show login screen at least
                 document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('appContainer').classList.add('hidden');
             }
         }
         
@@ -3408,9 +3440,20 @@
                 return;
             }
             
-            // Check if offline or Firebase not configured - go straight to local login
-            if (!navigator.onLine || !auth || !db) {
-                console.log('📴 Offline mode or Firebase not configured - using local login');
+            // OFFLINE FIX: Check if offline - go straight to local login with cached credentials
+            if (!navigator.onLine) {
+                console.log('📴 Offline mode - using local/cached login');
+                showToast('📴 Offline mode - using cached login', 'info');
+                setTimeout(() => {
+                    hideLoginLoading();
+                    handleLocalLogin(emailOrUsername, password);
+                }, 500);
+                return;
+            }
+            
+            // Check if Firebase not configured - go straight to local login
+            if (!auth || !db) {
+                console.log('⚠️ Firebase not configured - using local login');
                 setTimeout(() => {
                     hideLoginLoading();
                     handleLocalLogin(emailOrUsername, password);
@@ -4505,6 +4548,12 @@
                 realtimeSyncUnsubscribe();
             }
             
+            // Don't set up real-time sync if offline
+            if (!navigator.onLine) {
+                console.log('📴 Offline - skipping real-time sync setup');
+                return;
+            }
+            
             // Set up real-time listener
             realtimeSyncUnsubscribe = db.collection('data').doc(businessId).onSnapshot(
                 (doc) => {
@@ -4515,8 +4564,12 @@
                         const cloudLastSync = data.lastSync?.toDate();
                         const localLastSync = config.lastSyncTime ? new Date(config.lastSyncTime) : new Date(0);
                         
-                        if (!cloudLastSync || cloudLastSync > localLastSync) {
+                        // Also check if the sync was by a different user/device
+                        const syncedBySomeoneElse = data.lastSyncBy && data.lastSyncBy !== (currentUser ? currentUser.name : '');
+                        
+                        if (!cloudLastSync || cloudLastSync > localLastSync || syncedBySomeoneElse) {
                             console.log('📥 Receiving updates from cloud...');
+                            console.log(`Cloud synced by: ${data.lastSyncBy || 'Unknown'}`);
                             console.log(`Cloud sales count: ${data.sales?.length || 0}`);
                             console.log(`Local sales count before: ${sales.length}`);
                             
@@ -4525,20 +4578,36 @@
                                 users = data.users;
                             }
                             
-                            // Update local data
-                            products = data.products || products;
-                            sales = data.sales || sales;
-                            creditSales = data.creditSales || creditSales;
-                            expenses = data.expenses || expenses;
-                            categories = data.categories || categories;
-                            suppliers = data.suppliers || suppliers;
-                            journalEntries = data.journalEntries || journalEntries;
+                            // SMART MERGE: Merge cloud data with local data
+                            // This preserves any local changes that haven't been synced yet
+                            if (data.products) {
+                                products = mergeDataArrays(products, data.products, 'id');
+                            }
+                            if (data.sales) {
+                                sales = mergeDataArrays(sales, data.sales, 'id');
+                            }
+                            if (data.creditSales) {
+                                creditSales = mergeDataArrays(creditSales, data.creditSales, 'id');
+                            }
+                            if (data.expenses) {
+                                expenses = mergeDataArrays(expenses, data.expenses, 'id');
+                            }
+                            if (data.categories) {
+                                categories = data.categories;
+                            }
+                            if (data.suppliers) {
+                                suppliers = data.suppliers || suppliers;
+                            }
+                            if (data.journalEntries) {
+                                journalEntries = data.journalEntries || journalEntries;
+                            }
                             
                             console.log(`Local sales count after: ${sales.length}`);
                             
                             // Update config but preserve local settings
                             const localBusinessId = config.businessId;
-                            config = { ...data.config, businessId: localBusinessId };
+                            const localCloudSyncEnabled = config.cloudSyncEnabled;
+                            config = { ...config, ...data.config, businessId: localBusinessId, cloudSyncEnabled: localCloudSyncEnabled };
                             config.lastSyncTime = cloudLastSync ? cloudLastSync.toISOString() : new Date().toISOString();
                             
                             // CRITICAL: Update M-Pesa display when config changes
@@ -4550,14 +4619,52 @@
                             // Refresh UI if we're on a relevant tab
                             refreshCurrentView();
                             
+                            // Show notification if synced by someone else
+                            if (syncedBySomeoneElse && data.lastSyncBy) {
+                                showToast(`📥 Updates received from ${data.lastSyncBy}`, 'info');
+                            }
+                            
                             console.log('✅ Data synced from cloud');
                         }
                     }
                 },
                 (error) => {
                     console.error('Real-time sync error:', error);
+                    // Don't show error toast if offline
+                    if (navigator.onLine) {
+                        showToast('⚠️ Real-time sync error - working offline', 'warning');
+                    }
                 }
             );
+        }
+        
+        // Helper function to merge data arrays intelligently
+        function mergeDataArrays(localArray, cloudArray, idField) {
+            const merged = new Map();
+            
+            // Add cloud data first
+            cloudArray.forEach(item => {
+                merged.set(item[idField], item);
+            });
+            
+            // Add/update with local data that is newer or not synced
+            localArray.forEach(item => {
+                const cloudItem = merged.get(item[idField]);
+                if (!cloudItem) {
+                    // Item doesn't exist in cloud - keep local
+                    merged.set(item[idField], item);
+                } else if (!item.synced) {
+                    // Local item hasn't been synced yet - keep local version
+                    merged.set(item[idField], item);
+                } else if (item.lastModified && cloudItem.lastModified) {
+                    // Both have timestamps - keep the newer one
+                    if (new Date(item.lastModified) > new Date(cloudItem.lastModified)) {
+                        merged.set(item[idField], item);
+                    }
+                }
+            });
+            
+            return Array.from(merged.values());
         }
         
         // Save without triggering cloud sync (to prevent loops)
@@ -5457,7 +5564,19 @@
             const dueDate = document.getElementById('creditDueDate').value || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
             if (!customer || !phone) { showToast('Enter customer name and phone', 'error'); return; }
             const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
-            creditSales.push({ id: 'CR' + Date.now(), customer, phone, amount: total, paid: 0, date: getTodayDate(), dueDate });
+            const now = new Date().toISOString();
+            creditSales.push({ 
+                id: 'CR' + Date.now(), 
+                customer, 
+                phone, 
+                amount: total, 
+                paid: 0, 
+                date: getTodayDate(), 
+                dueDate,
+                synced: false,
+                lastModified: now,
+                createdAt: now
+            });
             localStorage.setItem(STORAGE_KEYS.credit, JSON.stringify(creditSales));
             closeModal('creditSaleModal');
             processSale();
@@ -5469,6 +5588,7 @@
             const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
             const vatAmount = cart.reduce((s, i) => s + (i.vat === 16 ? Math.round(i.price * i.qty * 16 / 116) : 0), 0);
             const profit = cart.reduce((s, i) => s + (i.price - i.cost) * i.qty, 0);
+            const now = new Date().toISOString();
             const sale = {
                 id: 'INV' + Date.now().toString().slice(-8),
                 date: getTodayDate(),
@@ -5483,7 +5603,11 @@
                 cashier: currentUser.name,
                 cashierUsername: currentUser.username, // Track seller username
                 cashierRole: currentUser.role, // Track if admin or seller
-                businessId: config.businessId || currentUser.businessId // Track business
+                businessId: config.businessId || currentUser.businessId, // Track business
+                // SYNC FLAGS: Track if item needs syncing
+                synced: false,
+                lastModified: now,
+                createdAt: now
             };
             
             sales.unshift(sale);
@@ -5510,6 +5634,7 @@
                 submitToKRA(sale).then(kraResponse => {
                     if (kraResponse) {
                         sale.kraData = kraResponse;
+                        sale.lastModified = new Date().toISOString();
                         localStorage.setItem(STORAGE_KEYS.sales, JSON.stringify(sales));
                     }
                 });
@@ -5522,12 +5647,15 @@
                 console.warn('⚠️ No businessId or db - working offline');
             }
             
-            // Update stock
+            // Update stock with sync flags
+            const stockUpdateTime = new Date().toISOString();
             cart.forEach(item => {
                 const product = products.find(p => p.id === item.productId);
                 if (product) {
                     const oldStock = product.stock;
                     product.stock = Math.max(0, product.stock - item.qty);
+                    product.synced = false;
+                    product.lastModified = stockUpdateTime;
                     console.log(`📦 Stock updated: ${product.name} (${oldStock} → ${product.stock})`);
                 }
             });
@@ -5538,7 +5666,7 @@
                 console.log('💾 Stock updated locally - Click sync to upload');
             }
             
-            // Create journal entry
+            // Create journal entry with sync flags
             journalEntries.push({
                 id: 'JE' + Date.now(),
                 date: getTodayDate(),
@@ -5546,7 +5674,9 @@
                 description: `Sales - ${selectedPayment}`,
                 debit: selectedPayment === 'Credit' ? 'Accounts Receivable' : (selectedPayment === 'M-Pesa' ? 'M-Pesa' : 'Cash'),
                 credit: 'Sales Revenue',
-                amount: subtotal
+                amount: subtotal,
+                synced: false,
+                lastModified: now
             });
             localStorage.setItem(STORAGE_KEYS.journal, JSON.stringify(journalEntries));
             
@@ -5585,6 +5715,9 @@
             
             renderAll();
             showToast('Sale completed!', 'success', 'Transaction Successful');
+            
+            // Update unsynced badge to show new items need syncing
+            updateUnsyncedBadge();
         }
         
         function showReceipt(sale) {
@@ -5861,10 +5994,12 @@
             const batch = document.getElementById('restockBatch').value.trim() || null;
             const expiryDate = document.getElementById('restockExpiry').value || null;
             
-            // Update product
+            // Update product with sync flags
             restockProduct.stock += qty;
             if (batch) restockProduct.batch = batch;
             if (expiryDate) restockProduct.expiryDate = expiryDate;
+            restockProduct.synced = false;
+            restockProduct.lastModified = new Date().toISOString();
             
             localStorage.setItem(STORAGE_KEYS.products, JSON.stringify(products));
             closeModal('restockModal');
@@ -5965,6 +6100,7 @@
             // Get batch and expiry date
             const batch = document.getElementById('newProductBatch')?.value.trim() || null;
             const expiryDate = document.getElementById('newProductExpiry')?.value || null;
+            const now = new Date().toISOString();
             
             products.push({ 
                 id: 'P' + Date.now(), 
@@ -5979,7 +6115,10 @@
                 unit, 
                 image: productImage,
                 batch,
-                expiryDate
+                expiryDate,
+                synced: false,
+                lastModified: now,
+                createdAt: now
             });
             localStorage.setItem(STORAGE_KEYS.products, JSON.stringify(products));
             
@@ -6060,6 +6199,10 @@
             product.stock = parseInt(document.getElementById('editProductStock').value) || 0;
             product.reorder = parseInt(document.getElementById('editProductReorder').value) || 10;
             product.vat = parseInt(document.getElementById('editProductVat').value) || 16;
+            
+            // SYNC FLAGS: Mark product as modified
+            product.synced = false;
+            product.lastModified = new Date().toISOString();
             
             // ADDED: Update unit value
             let unit = document.getElementById('editProductUnit').value;
@@ -6227,6 +6370,8 @@
             const amount = parseFloat(document.getElementById('paymentAmount').value) || 0;
             if (amount <= 0) { showToast('Enter valid amount', 'error'); return; }
             credit.paid = Math.min(credit.amount, credit.paid + amount);
+            credit.synced = false;
+            credit.lastModified = new Date().toISOString();
             localStorage.setItem(STORAGE_KEYS.credit, JSON.stringify(creditSales));
             closeModal('paymentModal');
             showToast(`Payment of ${formatKsh(amount)} recorded`, 'success');
@@ -6286,11 +6431,33 @@
             
             if (!description || amount <= 0) { showToast('Enter description and amount', 'error'); return; }
             
-            expenses.unshift({ id: 'EXP' + Date.now(), date: getTodayDate(), category, description, amount, ref, recordedBy: currentUser.name });
+            const now = new Date().toISOString();
+            expenses.unshift({ 
+                id: 'EXP' + Date.now(), 
+                date: getTodayDate(), 
+                category, 
+                description, 
+                amount, 
+                ref, 
+                recordedBy: currentUser.name,
+                synced: false,
+                lastModified: now,
+                createdAt: now
+            });
             localStorage.setItem(STORAGE_KEYS.expenses, JSON.stringify(expenses));
             
-            // Journal entry
-            journalEntries.push({ id: 'JE' + Date.now(), date: getTodayDate(), ref: 'EXP', description: `Expense: ${description}`, debit: category, credit: 'Cash', amount });
+            // Journal entry with sync flags
+            journalEntries.push({ 
+                id: 'JE' + Date.now(), 
+                date: getTodayDate(), 
+                ref: 'EXP', 
+                description: `Expense: ${description}`, 
+                debit: category, 
+                credit: 'Cash', 
+                amount,
+                synced: false,
+                lastModified: now
+            });
             localStorage.setItem(STORAGE_KEYS.journal, JSON.stringify(journalEntries));
             
             closeModal('addExpenseModal');
@@ -6300,6 +6467,9 @@
             showToast('Expense recorded', 'success');
             renderExpenses();
             renderDashboard();
+            
+            // Update unsynced badge
+            updateUnsyncedBadge();
         }
         
         function deleteExpense(id) {
@@ -7552,6 +7722,31 @@
             } else if (lastSyncEl) {
                 lastSyncEl.textContent = 'Never';
             }
+            
+            // Update unsynced badge
+            updateUnsyncedBadge();
+        }
+        
+        // Update badge showing number of unsynced items
+        function updateUnsyncedBadge() {
+            const badge = document.getElementById('unsyncedBadge');
+            if (!badge) return;
+            
+            // Count unsynced items
+            const unsyncedSales = sales.filter(s => !s.synced).length;
+            const unsyncedExpenses = expenses.filter(e => !e.synced).length;
+            const unsyncedCredits = creditSales.filter(c => !c.synced).length;
+            const unsyncedProducts = products.filter(p => !p.synced).length;
+            
+            const total = unsyncedSales + unsyncedExpenses + unsyncedCredits + unsyncedProducts;
+            
+            if (total > 0) {
+                badge.textContent = total > 99 ? '99+' : total;
+                badge.style.display = 'inline-block';
+                badge.style.backgroundColor = 'var(--accent-orange)';
+            } else {
+                badge.style.display = 'none';
+            }
         }
         
         function checkPendingIntasendRegistration() {
@@ -7593,6 +7788,9 @@
             config.intasendSecretKey = document.getElementById('settingIntasendSecretKey').value.trim();
             config.intasendEnvironment = document.getElementById('settingIntasendEnvironment').value;
             
+            // SYNC FLAG: Mark config as modified
+            config.lastModified = new Date().toISOString();
+            
             // Clear pending client registration if keys were just added
             if (config.intasendPublicKey && config.intasendSecretKey) {
                 const pending = localStorage.getItem('intasend_pending_client');
@@ -7622,7 +7820,7 @@
             showToast('✅ Settings saved!', 'success');
         }
         
-        // Manual cloud sync function (Silent Mode - No Firebase/localStorage messages)
+        // Manual cloud sync function - ONLY syncs new/updated data
         async function manualSyncToCloud() {
             // Check if online
             if (!navigator.onLine) {
@@ -7645,74 +7843,85 @@
                 
                 // Then sync to Firebase if available
                 if (config.businessId && db) {
-                    // Find only NEW data (not synced before)
-                    const newSales = sales.filter(s => !s.synced);
-                    const newExpenses = expenses.filter(e => !e.synced);
-                    const newCreditSales = creditSales.filter(c => !c.synced);
+                    // Get the last sync timestamp
+                    const lastSyncTimestamp = localStorage.getItem('last_sync_timestamp');
+                    const lastSyncDate = lastSyncTimestamp ? new Date(lastSyncTimestamp) : new Date(0);
                     
-                    const totalNew = newSales.length + newExpenses.length + newCreditSales.length;
+                    // Find only NEW data (not synced before) using 'synced' flag
+                    // Also find UPDATED data using 'lastModified' timestamp
+                    const newSales = sales.filter(s => !s.synced || (s.lastModified && new Date(s.lastModified) > lastSyncDate));
+                    const newExpenses = expenses.filter(e => !e.synced || (e.lastModified && new Date(e.lastModified) > lastSyncDate));
+                    const newCreditSales = creditSales.filter(c => !c.synced || (c.lastModified && new Date(c.lastModified) > lastSyncDate));
+                    const newProducts = products.filter(p => !p.synced || (p.lastModified && new Date(p.lastModified) > lastSyncDate));
+                    
+                    // Check for config/settings changes
+                    const configChanged = !config.lastSynced || new Date(config.lastModified || 0) > new Date(config.lastSynced || 0);
+                    
+                    const totalNew = newSales.length + newExpenses.length + newCreditSales.length + newProducts.length;
                     
                     // If nothing to sync, exit immediately
-                    if (totalNew === 0) {
-                        showToast('✅ No new data to sync', 'info');
+                    if (totalNew === 0 && !configChanged) {
+                        showToast('✅ Everything is up to date', 'success');
                         button.classList.remove('syncing');
                         button.disabled = false;
                         return;
                     }
                     
-                    // Limit to 50 items per sync to prevent freezing
-                    const LIMIT = 50;
-                    const itemsToSync = [
-                        ...newSales.slice(0, LIMIT),
-                        ...newExpenses.slice(0, Math.max(0, LIMIT - newSales.length)),
-                        ...newCreditSales.slice(0, Math.max(0, LIMIT - newSales.length - newExpenses.length))
-                    ].slice(0, LIMIT);
+                    console.log(`🔄 Found ${totalNew} items to sync (${newSales.length} sales, ${newExpenses.length} expenses, ${newCreditSales.length} credit sales, ${newProducts.length} products)`);
                     
-                    if (itemsToSync.length === 0) {
-                        showToast('✅ No new data to sync', 'info');
-                        button.classList.remove('syncing');
-                        button.disabled = false;
-                        return;
-                    }
+                    // Use the 'data' collection for full sync (better for real-time updates across devices)
+                    const dataRef = db.collection('data').doc(config.businessId);
                     
-                    console.log(`🔄 Syncing ${itemsToSync.length} items (${totalNew - itemsToSync.length} remaining)...`);
+                    // Build update object with only changed data
+                    const updateData = {
+                        lastSync: firebase.firestore.FieldValue.serverTimestamp(),
+                        lastSyncBy: currentUser ? currentUser.name : 'Unknown'
+                    };
                     
-                    const businessRef = db.collection('businesses').doc(config.businessId);
-                    
-                    // Sync items one by one (simple, no freezing)
-                    let syncCount = 0;
-                    for (const item of itemsToSync) {
-                        try {
-                            if (item.type === 'sale' || sales.includes(item)) {
-                                await businessRef.collection('sales').doc(item.id).set(item);
-                                item.synced = true;
-                            } else if (item.type === 'expense' || expenses.includes(item)) {
-                                await businessRef.collection('expenses').doc(item.id).set(item);
-                                item.synced = true;
-                            } else if (creditSales.includes(item)) {
-                                await businessRef.collection('creditSales').doc(item.id).set(item);
-                                item.synced = true;
-                            }
-                            syncCount++;
-                        } catch (err) {
-                            console.error('Failed to sync item:', err);
-                        }
-                    }
-                    
-                    // Save updated sync flags
-                    localStorage.setItem(STORAGE_KEYS.sales, JSON.stringify(sales));
-                    localStorage.setItem(STORAGE_KEYS.expenses, JSON.stringify(expenses));
-                    localStorage.setItem(STORAGE_KEYS.credit, JSON.stringify(creditSales));
-                    localStorage.setItem('last_sync_timestamp', new Date().toISOString());
-                    
-                    const remaining = totalNew - syncCount;
-                    if (remaining > 0) {
-                        showToast(`✅ Synced ${syncCount} items (${remaining} remaining - click sync again)`, 'success');
-                    } else {
-                        showToast(`✅ All ${syncCount} items synced`, 'success');
+                    // IMPORTANT: For real-time sync, we need to update full arrays
+                    // but mark items as synced locally to track what's new next time
+                    if (newSales.length > 0 || newExpenses.length > 0 || newCreditSales.length > 0 || newProducts.length > 0 || configChanged) {
+                        // Mark all items as synced before uploading
+                        const now = new Date().toISOString();
+                        
+                        sales.forEach(s => { if (!s.synced) s.synced = true; s.syncedAt = now; });
+                        expenses.forEach(e => { if (!e.synced) e.synced = true; e.syncedAt = now; });
+                        creditSales.forEach(c => { if (!c.synced) c.synced = true; c.syncedAt = now; });
+                        products.forEach(p => { if (!p.synced) p.synced = true; p.syncedAt = now; });
+                        
+                        // Update the full data document
+                        updateData.products = products;
+                        updateData.sales = sales;
+                        updateData.creditSales = creditSales;
+                        updateData.expenses = expenses;
+                        updateData.categories = categories;
+                        updateData.suppliers = suppliers;
+                        updateData.journalEntries = journalEntries;
+                        updateData.users = users;
+                        updateData.config = { ...config, lastSynced: now };
+                        
+                        // Perform the update
+                        await dataRef.set(updateData, { merge: true });
+                        
+                        // Save updated sync flags locally
+                        config.lastSynced = now;
+                        localStorage.setItem(STORAGE_KEYS.config, JSON.stringify(config));
+                        localStorage.setItem(STORAGE_KEYS.sales, JSON.stringify(sales));
+                        localStorage.setItem(STORAGE_KEYS.expenses, JSON.stringify(expenses));
+                        localStorage.setItem(STORAGE_KEYS.credit, JSON.stringify(creditSales));
+                        localStorage.setItem(STORAGE_KEYS.products, JSON.stringify(products));
+                        localStorage.setItem('last_sync_timestamp', now);
+                        
+                        showToast(`✅ Synced ${totalNew} changes to cloud`, 'success');
+                        console.log('✅ Sync complete');
+                        
+                        // Update the sync display and badge
+                        lastSyncTime = now;
+                        updateCloudSyncDisplay();
+                        updateUnsyncedBadge();
                     }
                 } else {
-                    showToast('💾 Saved locally', 'info');
+                    showToast('💾 Saved locally (cloud sync not configured)', 'info');
                 }
                 
             } catch (error) {
