@@ -2927,22 +2927,6 @@
             
             console.log('💾 All data saved to localStorage');
         }
-                
-                if (isOnline && db) {
-                    try {
-                        await syncToFirebase(dataToSync);
-                        console.log('☁️ Data synced to cloud');
-                    } catch (error) {
-                        console.log('⚠️ Online but sync failed, queuing:', error.message);
-                        queueOfflineOperation('saveAll', dataToSync);
-                    }
-                } else {
-                    // Offline - queue for later
-                    queueOfflineOperation('saveAll', dataToSync);
-                    console.log('📦 Data queued for cloud sync (offline)');
-                }
-            }
-        }
         
         // ==================== KRA eTIMS INTEGRATION ====================
         
