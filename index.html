@@ -2678,6 +2678,30 @@
             businessId: 'dpos_business_id' // Store business ID separately
         };
         
+        // ==================== PASSWORD HASHING ====================
+        // Simple hash function to obfuscate passwords in Firestore
+        // This prevents browser password breach warnings
+        async function hashPassword(password) {
+            // Use a simple but effective encoding that browsers won't detect as plain password
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password + '_BF_SECURE_2024');
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return 'BFH_' + hashHex; // Prefix to identify hashed passwords
+        }
+        
+        // Check if password matches (handles both plain and hashed)
+        async function verifyPassword(inputPassword, storedPassword) {
+            // If stored password is hashed (starts with BFH_)
+            if (storedPassword && storedPassword.startsWith('BFH_')) {
+                const hashedInput = await hashPassword(inputPassword);
+                return hashedInput === storedPassword;
+            }
+            // Otherwise compare plain text (for backwards compatibility)
+            return inputPassword === storedPassword;
+        }
+        
         // ==================== INITIALIZATION ====================
         window.addEventListener('load', init);
         
@@ -3485,25 +3509,16 @@
                     // CRITICAL: Update last login time in Firestore AND local users array
                     const loginTime = new Date().toISOString();
                     try {
+                        // Hash the password before storing in Firestore
+                        const hashedPassword = await hashPassword(password);
+                        
                         await db.collection('users').doc(firebaseUser.uid).update({
-                            lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                            lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                            password: hashedPassword // Sync hashed password - no breach warning
                         });
-                        console.log('✅ Login time updated in Firestore');
+                        console.log('✅ Login time and password hash updated in Firestore');
                     } catch (error) {
-                        console.error('Failed to update login time:', error);
-                    }
-                    
-                    // Sync password to Firestore if it's different (e.g., after password reset)
-                    if (userData.password !== password) {
-                        try {
-                            await db.collection('users').doc(firebaseUser.uid).update({
-                                password: password,
-                                passwordLastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                            });
-                            console.log('Password synced to Firestore');
-                        } catch (error) {
-                            console.error('Failed to sync password:', error);
-                        }
+                        console.error('Failed to update login data:', error);
                     }
                     
                     // Validate user role matches selected login type
@@ -3518,8 +3533,15 @@
                     // Load business data
                     await loadUserData(userData.businessId);
                     
-                    // Cache credentials for offline access
+                    // Cache credentials for offline access (plain password stored locally)
                     cacheOfflineAuth(emailOrUsername, password, userData);
+                    
+                    // Also update the local users array with password for offline login
+                    const localUser = users.find(u => u.email === emailOrUsername || u.username === userData.username);
+                    if (localUser) {
+                        localUser.password = password; // Keep plain password locally
+                        localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
+                    }
                     
                     hideLoginLoading();
                     // Show app
@@ -3548,27 +3570,17 @@
                         const userCredential = await auth.signInWithEmailAndPassword(userEmail, password);
                         const firebaseUser = userCredential.user;
                         
-                        // CRITICAL: Update last login time in Firestore
+                        // CRITICAL: Update last login time and hashed password in Firestore
                         try {
+                            const hashedPassword = await hashPassword(password);
+                            
                             await db.collection('users').doc(firebaseUser.uid).update({
-                                lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                                lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                                password: hashedPassword // Sync hashed password - no breach warning
                             });
-                            console.log('✅ Login time updated in Firestore');
+                            console.log('✅ Login time and password hash updated in Firestore');
                         } catch (error) {
-                            console.error('Failed to update login time:', error);
-                        }
-                        
-                        // Sync password to Firestore if it's different (e.g., after password reset)
-                        if (userData.password !== password) {
-                            try {
-                                await db.collection('users').doc(firebaseUser.uid).update({
-                                    password: password,
-                                    passwordLastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                                });
-                                console.log('Password synced to Firestore');
-                            } catch (error) {
-                                console.error('Failed to sync password:', error);
-                            }
+                            console.error('Failed to update login data:', error);
                         }
                         
                         // Validate user role matches selected login type
@@ -3583,8 +3595,15 @@
                         // Load business data
                         await loadUserData(userData.businessId);
                         
-                        // Cache credentials for offline access
+                        // Cache credentials for offline access (plain password locally)
                         cacheOfflineAuth(emailOrUsername, password, userData);
+                        
+                        // Also update the local users array with password for offline login
+                        const localUser = users.find(u => u.username === emailOrUsername || u.email === userEmail);
+                        if (localUser) {
+                            localUser.password = password; // Keep plain password locally
+                            localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
+                        }
                         
                         hideLoginLoading();
                         // Show app
@@ -4135,20 +4154,45 @@
                     status: 'active'
                 });
                 
-                // Create user document
+                // Hash the password before storing in Firestore
+                const hashedPassword = await hashPassword(password);
+                
+                // Create user document with HASHED password
                 await db.collection('users').doc(firebaseUser.uid).set({
                     businessId: businessId,
                     name: name,
                     username: username,
-                    password: password,
                     email: email,
+                    password: hashedPassword, // Hashed - won't trigger breach warnings
                     phone: phone || '',
                     role: 'admin',
                     status: 'active',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
-                // Create initial empty data document
+                // Create admin user object for local storage (keep plain password locally)
+                const adminUser = {
+                    id: Date.now(),
+                    uid: firebaseUser.uid,
+                    name: name,
+                    username: username,
+                    email: email,
+                    password: password, // Keep plain password locally for offline login
+                    phone: phone || '',
+                    role: 'admin',
+                    status: 'active',
+                    businessId: businessId,
+                    createdAt: new Date().toISOString(),
+                    synced: true
+                };
+                
+                // Create admin user for cloud with hashed password
+                const adminUserForCloud = {
+                    ...adminUser,
+                    password: hashedPassword // Hashed for cloud storage
+                };
+                
+                // Create initial empty data document with admin user (hashed password)
                 await db.collection('data').doc(businessId).set({
                     products: [],
                     sales: [],
@@ -4156,6 +4200,7 @@
                     expenses: [],
                     categories: [],
                     suppliers: [],
+                    users: [adminUserForCloud], // Include admin user with hashed password
                     config: {
                         businessName: businessName,
                         phone: phone || '',
@@ -4173,13 +4218,28 @@
                     lastSync: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
+                // Update local users array (with plain password for offline)
+                users = [adminUser];
+                localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
+                
                 // Update local config
                 config.isRealUser = true;
+                config.businessId = businessId;
+                config.businessName = businessName;
                 config.subscriptionStatus = 'trial';
                 config.subscriptionStartDate = new Date().toISOString();
                 config.subscriptionNextDue = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
                 config.subscriptionLastPayment = new Date().toISOString();
                 saveAllData();
+                
+                // Cache credentials for offline login
+                cacheOfflineAuth(email, password, {
+                    businessId: businessId,
+                    role: 'admin',
+                    name: name,
+                    username: username,
+                    email: email
+                });
                 
                 // Store in localStorage for quick access
                 localStorage.setItem('currentUser', JSON.stringify({
@@ -4188,6 +4248,7 @@
                     username: username,
                     name: name,
                     email: email,
+                    password: password, // Keep for re-authentication
                     role: 'admin'
                 }));
                 
@@ -7275,6 +7336,10 @@
                 showToast("All fields required", "error");
                 return;
             }
+            if (password.length < 6) {
+                showToast("Password must be at least 6 characters", "error");
+                return;
+            }
             if (users.some(u => u.username === username)) {
                 showToast("Username taken", "error");
                 return;
@@ -7285,6 +7350,7 @@
             }
 
             const businessId = config.businessId || currentUser.businessId;
+            const now = new Date().toISOString();
             
             // CRITICAL: Assign user to current admin's business with permissions
             const newUser = {
@@ -7293,7 +7359,9 @@
                 role, status: 'active', lastLogin: null,
                 businessId: businessId,
                 createdBy: currentUser.username,
-                createdAt: new Date().toISOString(),
+                createdAt: now,
+                synced: false,
+                lastModified: now,
                 permissions: role === 'seller' ? {
                     canEditInventory: false,
                     canEditPrices: false,
@@ -7311,15 +7379,24 @@
                 if (auth && db) {
                     showToast('Creating user in Firebase...', 'info');
                     
+                    // Store current admin credentials before creating new user
+                    const adminEmail = currentUser.email;
+                    const adminPassword = currentUser.password;
+                    
                     const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                     const firebaseUser = userCredential.user;
                     
+                    // Hash the password before storing in Firestore
+                    // This prevents browser password breach warnings
+                    const hashedPassword = await hashPassword(password);
+                    
+                    // Store user data in Firestore with HASHED password
                     await db.collection('users').doc(firebaseUser.uid).set({
                         businessId: businessId,
                         name: name,
                         username: username,
-                        password: password,
                         email: email,
+                        password: hashedPassword, // Hashed - won't trigger breach warnings
                         role: role,
                         status: 'active',
                         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -7327,31 +7404,88 @@
                         permissions: newUser.permissions
                     });
                     
+                    // Update local user with Firebase UID
                     newUser.uid = firebaseUser.uid;
+                    newUser.synced = true;
                     const userIndex = users.findIndex(u => u.id === newUser.id);
                     if (userIndex !== -1) users[userIndex] = newUser;
                     
-                    saveAllData();
+                    // Save to localStorage (keep plain password locally for offline login)
+                    localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
+                    
+                    // CRITICAL: Also sync users array to cloud data document
+                    // This ensures other devices can see the new user
+                    if (config.businessId) {
+                        try {
+                            // Create a copy of users with hashed passwords for cloud storage
+                            const usersForCloud = await Promise.all(users.map(async (u) => {
+                                const userCopy = { ...u };
+                                if (u.password && !u.password.startsWith('BFH_')) {
+                                    userCopy.password = await hashPassword(u.password);
+                                }
+                                return userCopy;
+                            }));
+                            
+                            await db.collection('data').doc(config.businessId).update({
+                                users: usersForCloud,
+                                lastSync: firebase.firestore.FieldValue.serverTimestamp(),
+                                lastSyncBy: currentUser.name
+                            });
+                            console.log('✅ Users synced to cloud data');
+                        } catch (syncError) {
+                            console.error('Error syncing users to cloud:', syncError);
+                        }
+                    }
+                    
+                    // Sign out the newly created user
                     await auth.signOut();
                     
-                    if (currentUser.email && currentUser.password) {
-                        await auth.signInWithEmailAndPassword(currentUser.email, currentUser.password);
+                    // Re-login as admin
+                    if (adminEmail && adminPassword) {
+                        await auth.signInWithEmailAndPassword(adminEmail, adminPassword);
+                        console.log('✅ Admin re-authenticated');
                     }
                     
                     console.log(`✅ ${name} created and synced`);
+                    showToast(`✅ ${name} account created successfully!`, 'success');
                 } else {
                     console.log('⚠️ Created locally (offline)');
+                    showToast('User created locally - will sync when online', 'warning');
                 }
             } catch (error) {
                 console.error('Firebase user creation error:', error);
-                console.log('⚠️ Created locally, will sync later');
+                
+                let errorMsg = 'Created locally, will sync later';
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMsg = 'Email already registered in Firebase';
+                    // Remove from local array since Firebase rejected it
+                    users = users.filter(u => u.id !== newUser.id);
+                    localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
+                    showToast('❌ ' + errorMsg, 'error');
+                    return;
+                } else if (error.code === 'auth/weak-password') {
+                    errorMsg = 'Password is too weak';
+                    users = users.filter(u => u.id !== newUser.id);
+                    localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
+                    showToast('❌ ' + errorMsg, 'error');
+                    return;
+                }
+                
+                showToast('⚠️ ' + errorMsg, 'warning');
             }
 
             closeModal('addUserModal');
+            
+            // Clear form
+            document.getElementById('newUserName').value = '';
+            document.getElementById('newUserEmail').value = '';
+            document.getElementById('newUserUsername').value = '';
+            document.getElementById('newUserPassword').value = '';
 
-            const msg = `✅ User Created!\n\n👤 ${name}\n📧 ${email}\n🔑 ${username}\n🔒 ${password}\n👔 ${role}\n\n📱 Share via WhatsApp/SMS`;
+            const msg = `✅ User Created!\n\n👤 ${name}\n📧 ${email}\n🔑 ${username}\n🔒 ${password}\n👔 ${role}\n\n📱 Share credentials securely with the user`;
             alert(msg);
             renderUsers();
+            updateUnsyncedBadge();
         }
         
         let resetUserId = null;
@@ -7889,6 +8023,16 @@
                         creditSales.forEach(c => { if (!c.synced) c.synced = true; c.syncedAt = now; });
                         products.forEach(p => { if (!p.synced) p.synced = true; p.syncedAt = now; });
                         
+                        // Hash passwords in users array for cloud storage
+                        const usersForCloud = await Promise.all(users.map(async (u) => {
+                            const userCopy = { ...u };
+                            // Hash password if it's not already hashed
+                            if (u.password && !u.password.startsWith('BFH_')) {
+                                userCopy.password = await hashPassword(u.password);
+                            }
+                            return userCopy;
+                        }));
+                        
                         // Update the full data document
                         updateData.products = products;
                         updateData.sales = sales;
@@ -7897,13 +8041,13 @@
                         updateData.categories = categories;
                         updateData.suppliers = suppliers;
                         updateData.journalEntries = journalEntries;
-                        updateData.users = users;
+                        updateData.users = usersForCloud; // Use hashed passwords for cloud
                         updateData.config = { ...config, lastSynced: now };
                         
                         // Perform the update
                         await dataRef.set(updateData, { merge: true });
                         
-                        // Save updated sync flags locally
+                        // Save updated sync flags locally (keep plain passwords locally)
                         config.lastSynced = now;
                         localStorage.setItem(STORAGE_KEYS.config, JSON.stringify(config));
                         localStorage.setItem(STORAGE_KEYS.sales, JSON.stringify(sales));
