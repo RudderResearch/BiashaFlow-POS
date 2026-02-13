@@ -4949,13 +4949,24 @@
         }
         
         function updateBadges() {
-            const pendingCredit = creditSales.filter(c => c.amount - c.paid > 0).length;
-            document.getElementById('creditBadge').textContent = pendingCredit;
-            document.getElementById('creditBadge').style.display = pendingCredit > 0 ? 'inline' : 'none';
-            
-            const lowStock = products.filter(p => p.stock <= p.reorder).length;
-            document.getElementById('lowStockBadge').textContent = lowStock;
-            document.getElementById('lowStockBadge').style.display = lowStock > 0 ? 'inline' : 'none';
+            try {
+                const creditBadge = document.getElementById('creditBadge');
+                const lowStockBadge = document.getElementById('lowStockBadge');
+                
+                if (creditBadge && Array.isArray(creditSales)) {
+                    const pendingCredit = creditSales.filter(c => c.amount - c.paid > 0).length;
+                    creditBadge.textContent = pendingCredit;
+                    creditBadge.style.display = pendingCredit > 0 ? 'inline' : 'none';
+                }
+                
+                if (lowStockBadge && Array.isArray(products)) {
+                    const lowStock = products.filter(p => p.stock <= (p.reorder || 0)).length;
+                    lowStockBadge.textContent = lowStock;
+                    lowStockBadge.style.display = lowStock > 0 ? 'inline' : 'none';
+                }
+            } catch (error) {
+                console.error('Error updating badges:', error);
+            }
         }
         
         function setDateFilter(filter) {
@@ -8022,13 +8033,8 @@
             try {
                 const docRef = db.collection('businesses').doc(config.businessId);
                 
-                // Set a 8 second timeout for loading
-                const loadPromise = docRef.get();
-                const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Load timeout - using local data')), 8000)
-                );
-                
-                const doc = await Promise.race([loadPromise, timeoutPromise]);
+                // Firebase offline persistence handles this - no timeout needed
+                const doc = await docRef.get();
                 
                 if (doc.exists) {
                     const cloudData = doc.data();
@@ -8104,13 +8110,9 @@
                 
                 const docRef = db.collection('businesses').doc(config.businessId);
                 
-                // Set a 8 second timeout for the sync operation
-                const syncPromise = docRef.set(syncData, { merge: true });
-                const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Sync timeout - check internet connection')), 8000)
-                );
-                
-                await Promise.race([syncPromise, timeoutPromise]);
+                // Firebase offline persistence handles timeouts automatically
+                // Just let it sync - it will queue if offline and sync when online
+                await docRef.set(syncData, { merge: true });
                 
                 lastSyncTime = new Date().toISOString();
                 localStorage.setItem('last_sync_time', lastSyncTime);
