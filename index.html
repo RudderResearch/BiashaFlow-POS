@@ -5327,7 +5327,7 @@
             }
         }
         
-        function startIntasendPolling(trackingId, phone, amount, invoiceId) {
+        async function startIntasendPolling(trackingId, phone, amount, invoiceId) {
             let attempts = 0;
             const maxAttempts = 40; // 40 attempts x 3 seconds = 2 minutes
             
