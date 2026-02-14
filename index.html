@@ -304,12 +304,12 @@
         .cart-item-remove:hover{color:var(--accent-red)}
         
         /* Cart Footer */
-        .cart-footer{padding:20px;border-top:1px solid var(--border);background:var(--bg-dark);max-height:50vh;overflow-y:auto;overflow-x:auto;-webkit-overflow-scrolling:touch}
-        .cart-totals{margin-bottom:16px}
-        .cart-row{display:flex;justify-content:space-between;padding:8px 0;font-size:.9rem}
+        .cart-footer{padding:16px;border-top:1px solid var(--border);background:var(--bg-dark);overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;flex-shrink:0}
+        .cart-totals{margin-bottom:12px}
+        .cart-row{display:flex;justify-content:space-between;padding:6px 0;font-size:.85rem}
         .cart-row.subtotal{color:var(--text-secondary)}
-        .cart-row.tax{color:var(--text-muted);font-size:.85rem}
-        .cart-row.total{font-size:1.4rem;font-weight:800;padding-top:14px;margin-top:10px;border-top:2px dashed var(--border)}
+        .cart-row.tax{color:var(--text-muted);font-size:.8rem}
+        .cart-row.total{font-size:1.3rem;font-weight:800;padding-top:12px;margin-top:8px;border-top:2px dashed var(--border)}
         .cart-row.total span:last-child{color:var(--accent-green);font-family:'JetBrains Mono',monospace}
         
         /* Payment Methods */
@@ -599,41 +599,78 @@
             .quick-actions{grid-template-columns:1fr 1fr}
             .pos-product-grid{grid-template-columns:repeat(2,1fr)}
             .page-content{padding:12px;height:calc(100vh - 56px);overflow-y:auto;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:90px}
-            .pos-cart{position:fixed;bottom:0;left:0;right:0;height:65vh;border-radius:var(--radius-xl) var(--radius-xl) 0 0;transform:translateY(calc(100% - 80px));transition:transform .3s;z-index:100}
+            
+            /* FIXED: Mobile cart - better layout for viewing cart items */
+            .pos-cart{position:fixed;bottom:0;left:0;right:0;height:75vh;border-radius:var(--radius-xl) var(--radius-xl) 0 0;transform:translateY(calc(100% - 60px));transition:transform .3s;z-index:100;display:flex;flex-direction:column}
             .pos-cart.expanded{transform:translateY(0)}
-            .pos-products{height:calc(100vh - 180px);padding-bottom:90px}
+            .pos-products{height:calc(100vh - 160px);padding-bottom:80px}
+            
+            /* FIXED: Cart header compact */
+            .cart-header{padding:10px 14px}
+            .cart-title{font-size:0.95rem}
+            .cart-count{padding:3px 8px;font-size:0.7rem}
+            .cart-clear-btn{padding:6px 10px;font-size:0.7rem}
+            
+            /* FIXED: Cart items - MORE scrollable space */
+            .cart-items{flex:1;overflow-y:auto;padding:10px;padding-bottom:10px;min-height:80px}
+            .cart-item{padding:8px 10px;margin-bottom:6px}
+            .cart-item-name{font-size:0.75rem}
+            .cart-item-price{font-size:0.65rem}
+            .cart-item-total{font-size:0.8rem;min-width:60px}
+            .qty-btn{width:26px;height:26px;font-size:0.85rem}
+            .cart-item-qty{font-size:0.85rem;min-width:20px}
+            .cart-item-remove{font-size:0.9rem;padding:4px}
+            
+            /* FIXED: Cart footer - COMPACT to give more space to cart items */
+            .cart-footer{padding:10px 12px;max-height:none;flex-shrink:0}
+            .cart-totals{margin-bottom:8px}
+            .cart-row{padding:4px 0;font-size:0.75rem}
+            .cart-row.total{font-size:1rem;padding-top:8px;margin-top:6px}
+            .payment-section{margin-bottom:10px}
+            .payment-label{font-size:0.65rem;margin-bottom:6px}
+            .payment-grid{grid-template-columns:repeat(3,1fr);gap:4px}
+            .pay-btn{padding:8px 4px}
+            .pay-icon{font-size:1rem;margin-bottom:2px}
+            .pay-label{font-size:0.65rem}
+            .complete-sale-btn{padding:12px;font-size:0.9rem}
+            
             .form-row{grid-template-columns:1fr}
             .current-time{display:none}
             
             /* Mobile table styles - compact */
             .table-container{overflow-x:auto;-webkit-overflow-scrolling:touch}
-            .data-table{font-size:0.75rem;min-width:auto}
-            .data-table th{padding:8px 6px;font-size:0.65rem;white-space:nowrap}
-            .data-table td{padding:8px 6px;font-size:0.75rem}
-            .data-table code{font-size:0.7rem;padding:2px 4px}
-            .action-btn{padding:4px 6px;font-size:0.65rem;margin:2px}
-            .table-status{padding:2px 6px;font-size:0.65rem}
+            .data-table{font-size:0.7rem;min-width:auto}
+            .data-table th{padding:6px 4px;font-size:0.6rem;white-space:nowrap}
+            .data-table td{padding:6px 4px;font-size:0.7rem}
+            .data-table code{font-size:0.65rem;padding:2px 3px}
+            .action-btn{padding:3px 5px;font-size:0.6rem;margin:1px}
+            .table-status{padding:2px 4px;font-size:0.6rem}
             
             /* Card and form mobile styles */
             .card{min-width:auto}
-            .card-header{padding:12px 14px}
-            .card-title{font-size:0.9rem}
-            .card-body{padding:12px}
-            .form-label{font-size:0.8rem}
-            .form-input{font-size:0.85rem;padding:10px 12px}
-            .form-group{margin-bottom:14px}
+            .card-header{padding:10px 12px}
+            .card-title{font-size:0.85rem}
+            .card-body{padding:10px}
+            .form-label{font-size:0.75rem}
+            .form-input{font-size:0.8rem;padding:8px 10px}
+            .form-group{margin-bottom:12px}
             
             /* Inventory and settings mobile */
-            .inventory-title{font-size:1.1rem}
-            .inventory-actions{flex-wrap:wrap;gap:6px}
-            .inv-btn{padding:8px 12px;font-size:0.8rem}
+            .inventory-title{font-size:1rem}
+            .inventory-actions{flex-wrap:wrap;gap:4px}
+            .inv-btn{padding:6px 10px;font-size:0.75rem}
             
             /* Welcome section mobile */
-            .welcome-title{font-size:1.2rem}
-            .welcome-subtitle{font-size:0.8rem}
+            .welcome-title{font-size:1.1rem}
+            .welcome-subtitle{font-size:0.75rem}
             
             /* Dashboard grid mobile */
-            .dashboard-grid-full{gap:12px}
+            .dashboard-grid-full{gap:10px}
+            
+            /* Stat cards mobile */
+            .stat-card{padding:12px}
+            .stat-value{font-size:1.3rem}
+            .stat-label{font-size:0.7rem}
         }
         
         /* Compact table for users - always apply */
@@ -642,19 +679,39 @@
         .users-table-compact td{padding:10px 8px;font-size:0.8rem;vertical-align:top}
         .users-table-compact .action-btn{padding:4px 8px;font-size:0.7rem;margin:2px 2px 2px 0}
         
-        /* Action dropdown menu for mobile */
+        /* Compact table class for all tables */
+        .compact-table{font-size:0.85rem}
+        .compact-table th{padding:10px 8px;font-size:0.7rem;white-space:nowrap}
+        .compact-table td{padding:10px 8px;font-size:0.8rem}
+        
+        /* Mobile scroll container */
+        .mobile-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;position:relative}
+        .mobile-scroll table{min-width:400px}
+        
+        /* Action dropdown menu - FIXED to always appear on top */
         .action-menu{position:relative;display:inline-block}
-        .action-dots-btn{padding:6px 10px;background:var(--bg-dark);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:1rem;line-height:1;transition:all .2s}
-        .action-dots-btn:hover{background:var(--bg-card-hover);border-color:var(--accent-blue)}
-        .action-dropdown{position:absolute;right:0;top:100%;margin-top:4px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);min-width:140px;box-shadow:var(--shadow-lg);z-index:1000;display:none}
-        .action-dropdown.show{display:block}
-        .action-dropdown-item{padding:10px 14px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;font-size:0.8rem;border-bottom:1px solid var(--border);white-space:nowrap}
+        .action-dots-btn{padding:8px 14px;background:var(--accent-blue);border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:1.1rem;line-height:1;transition:all .2s;color:white}
+        .action-dots-btn:hover{background:var(--accent-purple);transform:scale(1.05)}
+        .action-dots-btn:active{transform:scale(0.95)}
+        .action-dropdown{position:fixed;background:var(--bg-card);border:2px solid var(--accent-blue);border-radius:var(--radius-md);min-width:170px;box-shadow:0 15px 50px rgba(0,0,0,0.6);z-index:999999;display:none}
+        .action-dropdown.show{display:block;animation:dropdownFade 0.2s ease}
+        @keyframes dropdownFade{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+        .action-dropdown-item{padding:14px 18px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:10px;font-size:0.9rem;border-bottom:1px solid var(--border);white-space:nowrap;background:var(--bg-card)}
         .action-dropdown-item:last-child{border-bottom:none}
         .action-dropdown-item:hover{background:var(--bg-card-hover)}
         .action-dropdown-item.success{color:var(--accent-green)}
         .action-dropdown-item.primary{color:var(--accent-blue)}
         .action-dropdown-item.warning{color:var(--accent-yellow)}
         .action-dropdown-item.danger{color:var(--accent-red)}
+        
+        /* Mobile-friendly tables */
+        .mobile-table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+        .mobile-table table{min-width:100%}
+        @media(max-width:768px){
+            .data-table{font-size:0.7rem}
+            .data-table th,.data-table td{padding:8px 6px;font-size:0.7rem}
+            .table-container{overflow-x:auto;-webkit-overflow-scrolling:touch}
+        }
         .mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
         .mobile-overlay.show{display:block}
         .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg-sidebar);border-top:1px solid var(--border);padding:8px 16px;z-index:90}
@@ -1261,12 +1318,12 @@
                             <option value="M-Pesa">M-Pesa</option>
                             <option value="Credit">Credit</option>
                         </select>
-                        <button class="inv-btn primary" onclick="filterSales()">Apply Filter</button>
+                        <button class="inv-btn primary" onclick="filterSales()">Apply</button>
                     </div>
-                    <div class="table-container">
-                        <table class="data-table">
+                    <div class="table-container mobile-scroll">
+                        <table class="data-table compact-table">
                             <thead>
-                                <tr><th>Receipt #</th><th>Date/Time</th><th>Items</th><th>Total</th><th>VAT</th><th>Payment</th><th>Cashier</th><th>Actions</th></tr>
+                                <tr><th>Receipt</th><th>Date</th><th>Items</th><th>Total</th><th>Payment</th><th>Actions</th></tr>
                             </thead>
                             <tbody id="salesTableBody"></tbody>
                         </table>
@@ -1276,26 +1333,26 @@
                 <!-- Credit Sales Tab -->
                 <div class="tab-content" id="creditTab">
                     <div class="inventory-header">
-                        <h2 class="inventory-title">Credit Sales (Shop Credit)</h2>
+                        <h2 class="inventory-title">Credit Sales</h2>
                     </div>
                     <div class="stats-grid" style="margin-bottom:24px">
                         <div class="stat-card orange">
-                            <div class="stat-header"><span class="stat-label">Total Outstanding</span><div class="stat-icon orange">💰</div></div>
+                            <div class="stat-header"><span class="stat-label">Outstanding</span><div class="stat-icon orange">💰</div></div>
                             <div class="stat-value" id="creditOutstanding">Ksh 0</div>
                         </div>
                         <div class="stat-card green">
-                            <div class="stat-header"><span class="stat-label">Collected This Month</span><div class="stat-icon green">✅</div></div>
+                            <div class="stat-header"><span class="stat-label">Collected</span><div class="stat-icon green">✅</div></div>
                             <div class="stat-value" id="creditCollected">Ksh 0</div>
                         </div>
                         <div class="stat-card red">
-                            <div class="stat-header"><span class="stat-label">Overdue (>30 days)</span><div class="stat-icon red">⚠️</div></div>
+                            <div class="stat-header"><span class="stat-label">Overdue</span><div class="stat-icon red">⚠️</div></div>
                             <div class="stat-value" id="creditOverdue">Ksh 0</div>
                         </div>
                     </div>
-                    <div class="table-container">
-                        <table class="data-table">
+                    <div class="table-container mobile-scroll">
+                        <table class="data-table compact-table">
                             <thead>
-                                <tr><th>Customer</th><th>Phone</th><th>Total Owed</th><th>Paid</th><th>Balance</th><th>Due Date</th><th>Status</th><th>Actions</th></tr>
+                                <tr><th>Customer</th><th>Phone</th><th>Balance</th><th>Due</th><th>Status</th><th>Actions</th></tr>
                             </thead>
                             <tbody id="creditTableBody"></tbody>
                         </table>
@@ -1305,23 +1362,23 @@
                 <!-- Creditors Tab (Suppliers/People You Owe Money) -->
                 <div class="tab-content" id="creditorsTab">
                     <div class="inventory-header">
-                        <h2 class="inventory-title">Creditors (Accounts Payable)</h2>
-                        <button class="inv-btn primary" onclick="showAddCreditorModal()">➕ Add Creditor</button>
+                        <h2 class="inventory-title">Creditors</h2>
+                        <button class="inv-btn primary" onclick="showAddCreditorModal()">➕ Add</button>
                     </div>
                     <div class="stats-grid" style="margin-bottom:24px">
                         <div class="stat-card red">
-                            <div class="stat-header"><span class="stat-label">Total We Owe</span><div class="stat-icon red">💸</div></div>
+                            <div class="stat-header"><span class="stat-label">Total Owed</span><div class="stat-icon red">💸</div></div>
                             <div class="stat-value" id="creditorsTotal">Ksh 0</div>
                         </div>
                         <div class="stat-card green">
-                            <div class="stat-header"><span class="stat-label">Paid This Month</span><div class="stat-icon green">✅</div></div>
+                            <div class="stat-header"><span class="stat-label">Paid</span><div class="stat-icon green">✅</div></div>
                             <div class="stat-value" id="creditorsPaid">Ksh 0</div>
                         </div>
                     </div>
-                    <div class="table-container">
-                        <table class="data-table">
+                    <div class="table-container mobile-scroll">
+                        <table class="data-table compact-table">
                             <thead>
-                                <tr><th>Creditor Name</th><th>Amount Owed</th><th>Amount Paid</th><th>Balance</th><th>Due Date</th><th>Actions</th></tr>
+                                <tr><th>Creditor</th><th>Owed</th><th>Paid</th><th>Balance</th><th>Actions</th></tr>
                             </thead>
                             <tbody id="creditorsTableBody"></tbody>
                         </table>
@@ -1331,16 +1388,16 @@
                 <!-- Loyalty Points Tab -->
                 <div class="tab-content" id="loyaltyTab">
                     <div class="inventory-header">
-                        <h2 class="inventory-title">Customer Loyalty Program</h2>
-                        <button class="inv-btn primary" onclick="showAddLoyaltyCustomerModal()">➕ Add Customer</button>
+                        <h2 class="inventory-title">Loyalty Program</h2>
+                        <button class="inv-btn primary" onclick="showAddLoyaltyCustomerModal()">➕ Add</button>
                     </div>
-                    <div class="alert info" style="margin-bottom:20px">
-                        <strong>💡 How it works:</strong> Customers earn 1 point for every KSh 100 spent. 100 points = KSh 100 discount on next purchase.
+                    <div class="alert info" style="margin-bottom:20px;font-size:0.8rem;">
+                        <strong>💡</strong> 1 point per KSh 100 spent. 100 points = KSh 100 off.
                     </div>
-                    <div class="table-container">
-                        <table class="data-table">
+                    <div class="table-container mobile-scroll">
+                        <table class="data-table compact-table">
                             <thead>
-                                <tr><th>Customer</th><th>Phone</th><th>Total Spent</th><th>Points Balance</th><th>Points Value</th><th>Last Visit</th><th>Actions</th></tr>
+                                <tr><th>Customer</th><th>Phone</th><th>Points</th><th>Value</th><th>Actions</th></tr>
                             </thead>
                             <tbody id="loyaltyTableBody"></tbody>
                         </table>
@@ -1385,8 +1442,8 @@
                         <input type="text" class="filter-input" id="invSearch" placeholder="🔍 Search products..." oninput="filterInventory()">
                     </div>
                     <div class="inventory-grid" id="inventoryGrid"></div>
-                    <div class="table-container" id="inventoryTable">
-                        <table class="data-table">
+                    <div class="table-container mobile-scroll" id="inventoryTable">
+                        <table class="data-table compact-table">
                             <thead>
                                 <tr><th>Product</th><th>Stock</th><th>Price</th><th>Actions</th></tr>
                             </thead>
@@ -1414,10 +1471,10 @@
                             <button class="inv-btn primary" onclick="showAddSupplierModal()">➕ Add Supplier</button>
                         </div>
                     </div>
-                    <div class="table-container">
-                        <table class="data-table">
+                    <div class="table-container mobile-scroll">
+                        <table class="data-table compact-table">
                             <thead>
-                                <tr><th>Supplier Name</th><th>Contact Person</th><th>Phone</th><th>Email</th><th>Products</th><th>Actions</th></tr>
+                                <tr><th>Supplier</th><th>Contact</th><th>Phone</th><th>Actions</th></tr>
                             </thead>
                             <tbody id="suppliersTableBody"></tbody>
                         </table>
@@ -1456,10 +1513,10 @@
                             <div class="card-body"><div class="chart-container small"><canvas id="expenseTrendChart"></canvas></div></div>
                         </div>
                     </div>
-                    <div class="table-container">
-                        <table class="data-table">
+                    <div class="table-container mobile-scroll">
+                        <table class="data-table compact-table">
                             <thead>
-                                <tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Recorded By</th><th>Actions</th></tr>
+                                <tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Actions</th></tr>
                             </thead>
                             <tbody id="expenseTableBody"></tbody>
                         </table>
@@ -1474,10 +1531,10 @@
                             <button class="inv-btn primary" onclick="showAddAccountModal()">➕ Add Account</button>
                         </div>
                     </div>
-                    <div class="table-container">
-                        <table class="data-table">
+                    <div class="table-container mobile-scroll">
+                        <table class="data-table compact-table">
                             <thead>
-                                <tr><th>Account Code</th><th>Account Name</th><th>Type</th><th>Balance</th><th>Actions</th></tr>
+                                <tr><th>Code</th><th>Account</th><th>Type</th><th>Balance</th><th>Actions</th></tr>
                             </thead>
                             <tbody id="accountsTableBody">
                                 <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">No accounts configured yet</td></tr>
@@ -1491,13 +1548,13 @@
                     <div class="inventory-header">
                         <h2 class="inventory-title">Journal Entries</h2>
                         <div class="inventory-actions">
-                            <button class="inv-btn primary" onclick="showAddJournalModal()">➕ Add Journal Entry</button>
+                            <button class="inv-btn primary" onclick="showAddJournalModal()">➕ Add Entry</button>
                         </div>
                     </div>
-                    <div class="table-container">
-                        <table class="data-table">
+                    <div class="table-container mobile-scroll">
+                        <table class="data-table compact-table">
                             <thead>
-                                <tr><th>Date</th><th>Reference</th><th>Description</th><th>Debit</th><th>Credit</th><th>Actions</th></tr>
+                                <tr><th>Date</th><th>Ref</th><th>Description</th><th>Debit</th><th>Credit</th><th>Actions</th></tr>
                             </thead>
                             <tbody id="journalTableBody"></tbody>
                         </table>
@@ -7295,7 +7352,7 @@
                     </td>
                     <td>
                         <div class="action-menu">
-                            <button class="action-dots-btn" onclick="toggleActionMenu(this)">⋮</button>
+                            <button class="action-dots-btn" onclick="toggleActionMenu(this, event)">⋮</button>
                             <div class="action-dropdown">
                                 <div class="action-dropdown-item primary" onclick="filterSalesBySeller('${u.username}'); closeAllMenus();">📊 View Sales</div>
                                 ${u.role === 'seller' ? `<div class="action-dropdown-item" onclick="openPermissionsModal(${u.id}); closeAllMenus();">🔐 Permissions</div>` : ''}
@@ -7313,26 +7370,59 @@
             console.log(`Showing ${myBusinessUsers.length} users from business ${myBusinessId}`);
         }
         
-        // Toggle action menu dropdown
-        function toggleActionMenu(btn) {
+        // Toggle action menu dropdown - FIXED positioning
+        function toggleActionMenu(btn, event) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            
             const dropdown = btn.nextElementSibling;
             const isOpen = dropdown.classList.contains('show');
+            
+            // Close all other menus first
             closeAllMenus();
+            
             if (!isOpen) {
+                // Position the dropdown near the button
+                const rect = btn.getBoundingClientRect();
+                const dropdownHeight = 250; // approximate max height
+                const viewportHeight = window.innerHeight;
+                
+                // Check if dropdown would go below viewport
+                let top = rect.bottom + 5;
+                if (rect.bottom + dropdownHeight > viewportHeight) {
+                    top = rect.top - dropdownHeight - 5;
+                    if (top < 0) top = 10;
+                }
+                
+                // Position dropdown
+                dropdown.style.position = 'fixed';
+                dropdown.style.top = top + 'px';
+                dropdown.style.right = (window.innerWidth - rect.right) + 'px';
+                dropdown.style.left = 'auto';
+                
                 dropdown.classList.add('show');
             }
         }
         
         // Close all action menus
         function closeAllMenus() {
-            document.querySelectorAll('.action-dropdown').forEach(d => d.classList.remove('show'));
+            document.querySelectorAll('.action-dropdown').forEach(d => {
+                d.classList.remove('show');
+            });
         }
         
-        // Close menus when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.action-menu')) {
-                closeAllMenus();
-            }
+        // Close menus when clicking outside - add after DOM ready
+        window.addEventListener('load', function() {
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.action-menu')) {
+                    closeAllMenus();
+                }
+            });
+            
+            // Also close on scroll
+            document.addEventListener('scroll', closeAllMenus, true);
         });
         
         // Helper function to copy text to clipboard
