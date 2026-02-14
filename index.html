@@ -1130,28 +1130,30 @@
                         </div>
                     </div>
                     
-                    <!-- KRA Status Card -->
-                    <div class="kra-status-card">
-                        <div class="kra-header">
-                            <div class="kra-title">🏛️ KRA Tax Compliance Status</div>
-                            <div class="kra-badge">eTIMS Ready</div>
+                    <!-- KRA Tax Compliance - Mobile Friendly -->
+                    <div class="card" style="margin-bottom:20px;overflow:hidden;">
+                        <div class="card-header" style="background:linear-gradient(135deg,#059669,#047857);border:none;">
+                            <h3 class="card-title" style="color:white;font-size:0.95rem;">🏛️ KRA Tax Compliance</h3>
+                            <span style="background:rgba(255,255,255,0.2);color:white;padding:4px 10px;border-radius:12px;font-size:0.7rem;font-weight:600;">eTIMS Ready</span>
                         </div>
-                        <div class="kra-stats">
-                            <div class="kra-stat">
-                                <div class="kra-stat-value" id="kraVatCollected">Ksh 0</div>
-                                <div class="kra-stat-label">VAT Collected (16%)</div>
-                            </div>
-                            <div class="kra-stat">
-                                <div class="kra-stat-value" id="kraTaxableSales">Ksh 0</div>
-                                <div class="kra-stat-label">Taxable Sales</div>
-                            </div>
-                            <div class="kra-stat">
-                                <div class="kra-stat-value" id="kraExemptSales">Ksh 0</div>
-                                <div class="kra-stat-label">Exempt Sales</div>
-                            </div>
-                            <div class="kra-stat">
-                                <div class="kra-stat-value" id="kraInvoices">0</div>
-                                <div class="kra-stat-label">eTIMS Invoices</div>
+                        <div class="card-body" style="padding:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;">
+                            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;min-width:280px;">
+                                <div style="background:var(--bg-dark);padding:12px;border-radius:8px;text-align:center;">
+                                    <div style="font-size:1.1rem;font-weight:800;color:var(--accent-green);font-family:'JetBrains Mono',monospace;" id="kraVatCollected">Ksh 0</div>
+                                    <div style="font-size:0.65rem;color:var(--text-muted);margin-top:4px;">VAT Collected (16%)</div>
+                                </div>
+                                <div style="background:var(--bg-dark);padding:12px;border-radius:8px;text-align:center;">
+                                    <div style="font-size:1.1rem;font-weight:800;color:var(--accent-blue);font-family:'JetBrains Mono',monospace;" id="kraTaxableSales">Ksh 0</div>
+                                    <div style="font-size:0.65rem;color:var(--text-muted);margin-top:4px;">Taxable Sales</div>
+                                </div>
+                                <div style="background:var(--bg-dark);padding:12px;border-radius:8px;text-align:center;">
+                                    <div style="font-size:1.1rem;font-weight:800;color:var(--accent-purple);font-family:'JetBrains Mono',monospace;" id="kraExemptSales">Ksh 0</div>
+                                    <div style="font-size:0.65rem;color:var(--text-muted);margin-top:4px;">Exempt Sales</div>
+                                </div>
+                                <div style="background:var(--bg-dark);padding:12px;border-radius:8px;text-align:center;">
+                                    <div style="font-size:1.1rem;font-weight:800;color:var(--accent-cyan);font-family:'JetBrains Mono',monospace;" id="kraInvoices">0</div>
+                                    <div style="font-size:0.65rem;color:var(--text-muted);margin-top:4px;">eTIMS Invoices</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1809,6 +1811,24 @@
                                     <label class="form-label">Business Name</label>
                                     <input type="text" class="form-input" id="settingBusinessName" placeholder="Your Business Name">
                                 </div>
+                                
+                                <!-- Business Type Selector -->
+                                <div class="form-group">
+                                    <label class="form-label">Business Type</label>
+                                    <select class="form-select" id="settingBusinessType" onchange="saveBusinessType()">
+                                        <option value="retail">🛒 Retail / Supermarket / Shop</option>
+                                        <option value="pharmacy">💊 Pharmacy / Chemist</option>
+                                        <option value="hardware">🔧 Hardware / Building Materials</option>
+                                        <option value="agrovet">🌾 Agrovet / Farm Supplies</option>
+                                        <option value="electronics">📱 Electronics / Phone Shop</option>
+                                        <option value="restaurant">🍽️ Restaurant / Hotel / Food</option>
+                                        <option value="salon">💇 Salon / Beauty Shop</option>
+                                        <option value="wholesale">📦 Wholesale / Distributor</option>
+                                        <option value="general">🏪 General Business</option>
+                                    </select>
+                                    <small style="color:var(--text-muted);font-size:0.75rem;margin-top:6px;display:block;">This determines the unit measurements shown when adding products</small>
+                                </div>
+                                
                                 <div class="form-group">
                                     <label class="form-label">KRA PIN</label>
                                     <input type="text" class="form-input" id="settingKraPin" placeholder="P000000000X">
@@ -5390,6 +5410,7 @@
                 renderDashboard();
                 renderPOS();
                 updateBadges();
+                updateUnitOptions(); // Update unit options based on business type
             } catch (error) {
                 console.error('Error rendering UI:', error);
                 // Don't crash the app, just log the error
@@ -8220,6 +8241,7 @@
         // ==================== SETTINGS ====================
         function renderSettings() {
             document.getElementById('settingBusinessName').value = config.businessName || '';
+            document.getElementById('settingBusinessType').value = config.businessType || 'retail'; // Load business type
             document.getElementById('settingKraPin').value = config.kraPin || '';
             document.getElementById('settingPhone').value = config.phone || '';
             document.getElementById('settingMpesa').value = config.mpesaTill || '';
@@ -8236,6 +8258,9 @@
             document.getElementById('settingIntasendSecretKey').value = config.intasendSecretKey || '';
             document.getElementById('settingIntasendEnvironment').value = config.intasendEnvironment || 'test';
             toggleIntasendFields();
+            
+            // ADDED: Update unit options based on business type
+            updateUnitOptions();
             
             // ADDED: Display cloud sync status
             updateCloudSyncDisplay();
@@ -8318,6 +8343,7 @@
         
         function saveSettings() {
             config.businessName = document.getElementById('settingBusinessName').value.trim();
+            config.businessType = document.getElementById('settingBusinessType').value; // Save business type
             config.kraPin = document.getElementById('settingKraPin').value.trim();
             config.phone = document.getElementById('settingPhone').value.trim();
             config.mpesaTill = document.getElementById('settingMpesa').value.trim();
@@ -8357,6 +8383,9 @@
             // CRITICAL FIX: Update M-Pesa display in POS cart immediately
             updateMpesaDisplay();
             
+            // Update unit dropdowns based on business type
+            updateUnitOptions();
+            
             // ALSO: If on POS tab, re-render the POS to show updated payment options
             const posTab = document.getElementById('posTab');
             if (posTab && posTab.classList.contains('active')) {
@@ -8364,6 +8393,277 @@
             }
             
             showToast('✅ Settings saved!', 'success');
+        }
+        
+        // Save business type when changed
+        function saveBusinessType() {
+            config.businessType = document.getElementById('settingBusinessType').value;
+            config.lastModified = new Date().toISOString();
+            localStorage.setItem(STORAGE_KEYS.config, JSON.stringify(config));
+            updateUnitOptions();
+            showToast('✅ Business type updated! Unit measurements adjusted.', 'success');
+        }
+        
+        // Dynamic unit options based on business type
+        function updateUnitOptions() {
+            const businessType = config.businessType || 'retail';
+            const unitSelects = ['newProductUnit', 'editProductUnit'];
+            
+            const unitsByType = {
+                pharmacy: `
+                    <optgroup label="💊 Tablets/Capsules">
+                        <option value="tablet">Tablet(s)</option>
+                        <option value="capsule">Capsule(s)</option>
+                        <option value="strip">Strip</option>
+                        <option value="blister">Blister Pack</option>
+                        <option value="card">Card (10s/14s)</option>
+                        <option value="tin">Tin (100s/500s/1000s)</option>
+                        <option value="bottle-tabs">Bottle (Tablets)</option>
+                    </optgroup>
+                    <optgroup label="💉 Liquids/Syrups">
+                        <option value="5ml">5ml</option>
+                        <option value="10ml">10ml</option>
+                        <option value="15ml">15ml</option>
+                        <option value="30ml">30ml</option>
+                        <option value="50ml">50ml</option>
+                        <option value="60ml">60ml</option>
+                        <option value="100ml">100ml</option>
+                        <option value="120ml">120ml</option>
+                        <option value="200ml">200ml</option>
+                        <option value="500ml">500ml</option>
+                        <option value="syrup-bottle">Syrup Bottle</option>
+                        <option value="suspension">Suspension</option>
+                        <option value="drops">Drops (Bottle)</option>
+                    </optgroup>
+                    <optgroup label="💉 Injections/Vials">
+                        <option value="ampoule">Ampoule</option>
+                        <option value="vial">Vial</option>
+                        <option value="injection">Injection</option>
+                        <option value="prefilled-syringe">Prefilled Syringe</option>
+                        <option value="iv-bag">IV Bag</option>
+                    </optgroup>
+                    <optgroup label="🧴 Topicals">
+                        <option value="tube">Tube</option>
+                        <option value="cream-15g">Cream 15g</option>
+                        <option value="cream-30g">Cream 30g</option>
+                        <option value="ointment">Ointment</option>
+                        <option value="gel">Gel</option>
+                        <option value="lotion">Lotion</option>
+                        <option value="spray">Spray</option>
+                        <option value="inhaler">Inhaler</option>
+                        <option value="patch">Patch</option>
+                        <option value="suppository">Suppository</option>
+                        <option value="ear-drops">Ear Drops</option>
+                        <option value="eye-drops">Eye Drops</option>
+                        <option value="nasal-spray">Nasal Spray</option>
+                    </optgroup>
+                    <optgroup label="🩹 Medical Supplies">
+                        <option value="bandage">Bandage</option>
+                        <option value="plaster">Plaster</option>
+                        <option value="gauze">Gauze</option>
+                        <option value="cotton-roll">Cotton Roll</option>
+                        <option value="syringe">Syringe</option>
+                        <option value="gloves-box">Gloves (Box)</option>
+                        <option value="mask-box">Mask (Box)</option>
+                        <option value="test-kit">Test Kit</option>
+                    </optgroup>
+                    <optgroup label="📦 General">
+                        <option value="piece">Piece(s)</option>
+                        <option value="packet">Packet(s)</option>
+                        <option value="box">Box</option>
+                        <option value="sachet">Sachet</option>
+                        <option value="custom">Custom</option>
+                    </optgroup>`,
+                    
+                hardware: `
+                    <optgroup label="🔧 Hardware Items">
+                        <option value="piece">Piece(s)</option>
+                        <option value="pair">Pair</option>
+                        <option value="set">Set</option>
+                        <option value="meter">Meter</option>
+                        <option value="foot">Foot</option>
+                        <option value="inch">Inch</option>
+                        <option value="roll">Roll</option>
+                        <option value="sheet">Sheet</option>
+                        <option value="bag">Bag</option>
+                        <option value="bundle">Bundle</option>
+                    </optgroup>
+                    <optgroup label="🧱 Building Materials">
+                        <option value="bag-cement">Bag (Cement 50kg)</option>
+                        <option value="ton">Ton</option>
+                        <option value="cubic-meter">Cubic Meter</option>
+                        <option value="wheelbarrow">Wheelbarrow</option>
+                        <option value="lorry">Lorry Load</option>
+                    </optgroup>
+                    <optgroup label="📐 Length/Size">
+                        <option value="6inch">6 Inch</option>
+                        <option value="8inch">8 Inch</option>
+                        <option value="10inch">10 Inch</option>
+                        <option value="12inch">12 Inch (1ft)</option>
+                        <option value="2ft">2 Feet</option>
+                        <option value="3ft">3 Feet</option>
+                        <option value="4ft">4 Feet</option>
+                        <option value="6ft">6 Feet</option>
+                        <option value="8ft">8 Feet</option>
+                        <option value="10ft">10 Feet</option>
+                        <option value="12ft">12 Feet</option>
+                    </optgroup>
+                    <optgroup label="⚖️ Weight">
+                        <option value="100g">100g</option>
+                        <option value="250g">250g</option>
+                        <option value="500g">500g</option>
+                        <option value="1kg">1kg</option>
+                        <option value="2kg">2kg</option>
+                        <option value="5kg">5kg</option>
+                        <option value="10kg">10kg</option>
+                        <option value="25kg">25kg</option>
+                        <option value="50kg">50kg</option>
+                    </optgroup>
+                    <optgroup label="🎨 Paint/Liquids">
+                        <option value="250ml">250ml</option>
+                        <option value="500ml">500ml</option>
+                        <option value="1L">1 Liter</option>
+                        <option value="4L">4 Liters</option>
+                        <option value="20L">20 Liters</option>
+                        <option value="tin">Tin</option>
+                        <option value="gallon">Gallon</option>
+                    </optgroup>
+                    <optgroup label="📦 Packaging">
+                        <option value="packet">Packet</option>
+                        <option value="box">Box</option>
+                        <option value="carton">Carton</option>
+                        <option value="dozen">Dozen (12)</option>
+                        <option value="custom">Custom</option>
+                    </optgroup>`,
+                    
+                agrovet: `
+                    <optgroup label="🌾 Seeds/Planting">
+                        <option value="packet-seeds">Packet (Seeds)</option>
+                        <option value="kg-seeds">Kg (Seeds)</option>
+                        <option value="50g">50g</option>
+                        <option value="100g">100g</option>
+                        <option value="250g">250g</option>
+                        <option value="500g">500g</option>
+                        <option value="1kg">1kg</option>
+                        <option value="2kg">2kg</option>
+                        <option value="seedling">Seedling</option>
+                        <option value="tray">Tray</option>
+                    </optgroup>
+                    <optgroup label="🧪 Chemicals/Pesticides">
+                        <option value="10ml">10ml</option>
+                        <option value="50ml">50ml</option>
+                        <option value="100ml">100ml</option>
+                        <option value="250ml">250ml</option>
+                        <option value="500ml">500ml</option>
+                        <option value="1L">1 Liter</option>
+                        <option value="5L">5 Liters</option>
+                        <option value="sachet">Sachet</option>
+                        <option value="packet">Packet</option>
+                    </optgroup>
+                    <optgroup label="🐄 Animal Health">
+                        <option value="tablet">Tablet(s)</option>
+                        <option value="bolus">Bolus</option>
+                        <option value="dose">Dose</option>
+                        <option value="injection">Injection</option>
+                        <option value="vial">Vial</option>
+                        <option value="bottle">Bottle</option>
+                        <option value="sachet">Sachet</option>
+                    </optgroup>
+                    <optgroup label="🌿 Fertilizers">
+                        <option value="1kg">1kg</option>
+                        <option value="2kg">2kg</option>
+                        <option value="5kg">5kg</option>
+                        <option value="10kg">10kg</option>
+                        <option value="25kg">25kg</option>
+                        <option value="50kg">50kg Bag</option>
+                        <option value="ton">Ton</option>
+                    </optgroup>
+                    <optgroup label="🐔 Feeds">
+                        <option value="1kg">1kg</option>
+                        <option value="2kg">2kg</option>
+                        <option value="5kg">5kg</option>
+                        <option value="10kg">10kg</option>
+                        <option value="25kg">25kg</option>
+                        <option value="50kg">50kg Bag</option>
+                        <option value="70kg">70kg Bag</option>
+                    </optgroup>
+                    <optgroup label="📦 General">
+                        <option value="piece">Piece(s)</option>
+                        <option value="pair">Pair</option>
+                        <option value="set">Set</option>
+                        <option value="box">Box</option>
+                        <option value="custom">Custom</option>
+                    </optgroup>`,
+                    
+                retail: `
+                    <optgroup label="📦 General">
+                        <option value="piece">Piece(s)</option>
+                        <option value="packet">Packet(s)</option>
+                        <option value="box">Box</option>
+                        <option value="carton">Carton</option>
+                        <option value="dozen">Dozen (12)</option>
+                        <option value="pair">Pair</option>
+                        <option value="set">Set</option>
+                        <option value="bundle">Bundle</option>
+                    </optgroup>
+                    <optgroup label="⚖️ Weight">
+                        <option value="50g">50g</option>
+                        <option value="100g">100g</option>
+                        <option value="250g">250g</option>
+                        <option value="500g">500g</option>
+                        <option value="1kg">1kg</option>
+                        <option value="2kg">2kg</option>
+                        <option value="5kg">5kg</option>
+                        <option value="10kg">10kg</option>
+                        <option value="25kg">25kg</option>
+                        <option value="50kg">50kg</option>
+                    </optgroup>
+                    <optgroup label="🥤 Volume">
+                        <option value="100ml">100ml</option>
+                        <option value="250ml">250ml</option>
+                        <option value="500ml">500ml</option>
+                        <option value="1L">1 Liter</option>
+                        <option value="2L">2 Liters</option>
+                        <option value="5L">5 Liters</option>
+                        <option value="10L">10 Liters</option>
+                        <option value="20L">20 Liters</option>
+                    </optgroup>
+                    <optgroup label="🍞 Containers">
+                        <option value="bottle">Bottle</option>
+                        <option value="can">Can</option>
+                        <option value="tin">Tin</option>
+                        <option value="jar">Jar</option>
+                        <option value="sachet">Sachet</option>
+                        <option value="tube">Tube</option>
+                        <option value="roll">Roll</option>
+                    </optgroup>
+                    <optgroup label="🔧 Other">
+                        <option value="unit">Unit</option>
+                        <option value="custom">Custom</option>
+                    </optgroup>`
+            };
+            
+            // Default/general units for other business types
+            const defaultUnits = unitsByType.retail;
+            
+            // Get the right units for the business type
+            let unitsHTML = unitsByType[businessType] || defaultUnits;
+            
+            // Update both selects
+            unitSelects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (select) {
+                    const currentValue = select.value;
+                    select.innerHTML = unitsHTML;
+                    // Try to restore the previously selected value
+                    if (currentValue) {
+                        const hasOption = Array.from(select.options).some(opt => opt.value === currentValue);
+                        if (hasOption) {
+                            select.value = currentValue;
+                        }
+                    }
+                }
+            });
         }
         
         // Manual cloud sync function - ONLY syncs new/updated data
