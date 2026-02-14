@@ -303,8 +303,8 @@
         .cart-item-remove{background:transparent;border:none;color:var(--text-muted);cursor:pointer;padding:6px;margin-left:8px;font-size:1.1rem;transition:all .2s}
         .cart-item-remove:hover{color:var(--accent-red)}
         
-        /* Cart Footer */
-        .cart-footer{padding:16px;border-top:1px solid var(--border);background:var(--bg-dark);overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;flex-shrink:0}
+        /* Cart Footer - SCROLLABLE for M-Pesa */
+        .cart-footer{padding:16px;border-top:1px solid var(--border);background:var(--bg-dark);overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;max-height:60vh}
         .cart-totals{margin-bottom:12px}
         .cart-row{display:flex;justify-content:space-between;padding:6px 0;font-size:.85rem}
         .cart-row.subtotal{color:var(--text-secondary)}
@@ -348,6 +348,11 @@
         .complete-sale-btn{width:100%;padding:18px;background:var(--gradient-green);border:none;border-radius:var(--radius-md);color:white;font-size:1.1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:var(--shadow-glow-green);transition:all .2s}
         .complete-sale-btn:hover{transform:translateY(-2px)}
         .complete-sale-btn:disabled{background:var(--bg-card);box-shadow:none;cursor:not-allowed;opacity:.6}
+        
+        /* Cancel/Undo Sale Button */
+        .cancel-sale-btn{width:100%;padding:12px;background:transparent;border:2px solid var(--accent-yellow);border-radius:var(--radius-md);color:var(--accent-yellow);font-size:0.9rem;font-weight:600;cursor:pointer;display:none;align-items:center;justify-content:center;gap:8px;margin-top:10px;transition:all .2s}
+        .cancel-sale-btn:hover{background:rgba(245,158,11,.1)}
+        .cancel-sale-btn.show{display:flex}
         /* Inventory Styles */
         .inventory-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px}
         .inventory-title{font-size:1.3rem;font-weight:700}
@@ -612,7 +617,7 @@
             .cart-clear-btn{padding:6px 10px;font-size:0.7rem}
             
             /* FIXED: Cart items - MORE scrollable space */
-            .cart-items{flex:1;overflow-y:auto;padding:10px;padding-bottom:10px;min-height:80px}
+            .cart-items{flex:1;overflow-y:auto;padding:10px;padding-bottom:10px;min-height:60px}
             .cart-item{padding:8px 10px;margin-bottom:6px}
             .cart-item-name{font-size:0.75rem}
             .cart-item-price{font-size:0.65rem}
@@ -621,18 +626,22 @@
             .cart-item-qty{font-size:0.85rem;min-width:20px}
             .cart-item-remove{font-size:0.9rem;padding:4px}
             
-            /* FIXED: Cart footer - COMPACT to give more space to cart items */
-            .cart-footer{padding:10px 12px;max-height:none;flex-shrink:0}
-            .cart-totals{margin-bottom:8px}
-            .cart-row{padding:4px 0;font-size:0.75rem}
-            .cart-row.total{font-size:1rem;padding-top:8px;margin-top:6px}
-            .payment-section{margin-bottom:10px}
-            .payment-label{font-size:0.65rem;margin-bottom:6px}
+            /* FIXED: Cart footer - SCROLLABLE for M-Pesa */
+            .cart-footer{padding:10px 12px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;max-height:55vh;flex-shrink:0}
+            .cart-totals{margin-bottom:6px}
+            .cart-row{padding:3px 0;font-size:0.7rem}
+            .cart-row.total{font-size:0.95rem;padding-top:6px;margin-top:4px}
+            .payment-section{margin-bottom:8px}
+            .payment-label{font-size:0.6rem;margin-bottom:4px}
             .payment-grid{grid-template-columns:repeat(3,1fr);gap:4px}
-            .pay-btn{padding:8px 4px}
-            .pay-icon{font-size:1rem;margin-bottom:2px}
-            .pay-label{font-size:0.65rem}
-            .complete-sale-btn{padding:12px;font-size:0.9rem}
+            .pay-btn{padding:6px 4px}
+            .pay-icon{font-size:0.9rem;margin-bottom:2px}
+            .pay-label{font-size:0.6rem}
+            .mpesa-panel{padding:10px;margin-bottom:8px}
+            .mpesa-input{padding:8px 10px;font-size:0.8rem;margin-bottom:8px}
+            .stk-push-btn{padding:10px;font-size:0.8rem}
+            .complete-sale-btn{padding:10px;font-size:0.85rem}
+            .cancel-sale-btn{padding:8px;font-size:0.75rem;margin-top:6px}
             
             .form-row{grid-template-columns:1fr}
             .current-time{display:none}
@@ -1296,6 +1305,9 @@
                                 <button class="complete-sale-btn" id="completeSaleBtn" onclick="completeSale()" disabled>
                                     ✓ Complete Sale
                                 </button>
+                                <button class="cancel-sale-btn" id="cancelSaleBtn" onclick="cancelLastSale()">
+                                    ↩️ Cancel Last Receipt
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1639,97 +1651,97 @@
                         <p class="welcome-subtitle">eTIMS integration and tax reporting</p>
                     </div>
                     
-                    <div class="kra-status-card" id="kraStatusCardMain" style="cursor:pointer" onclick="openKRAConfig()">
-                        <div class="kra-status-icon">⚠️</div>
-                        <div class="kra-status-info">
-                            <div class="kra-status-title">KRA eTIMS Not Configured</div>
-                            <div class="kra-status-desc">Click to configure your KRA credentials for real-time tax compliance</div>
-                        </div>
-                        <button class="action-btn success" onclick="event.stopPropagation();openKRAConfig()">Configure Now</button>
-                    </div>
-                    
-                    <div class="kra-status-card" style="background:linear-gradient(135deg,#1e40af,#3b82f6)">
-                        <div class="kra-header">
+                    <!-- Tax Period Summary - MOVED TO TOP -->
+                    <div class="kra-status-card mobile-scroll" style="background:linear-gradient(135deg,#1e40af,#3b82f6);margin-bottom:16px;">
+                        <div class="kra-header" style="flex-wrap:wrap;gap:10px;">
                             <div class="kra-title">📋 Tax Period Summary</div>
-                            <select class="filter-select" style="background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.3);color:white" id="kraPeriod" onchange="updateKRAReport()">
+                            <select class="filter-select" style="background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.3);color:white;min-width:120px;" id="kraPeriod" onchange="updateKRAReport()">
                                 <option value="month">This Month</option>
                                 <option value="quarter">This Quarter</option>
                                 <option value="year">This Year</option>
                             </select>
                         </div>
-                        <div class="kra-stats">
+                        <div class="kra-stats" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
                             <div class="kra-stat">
-                                <div class="kra-stat-value" id="kraTotalSales">Ksh 0</div>
-                                <div class="kra-stat-label">Total Sales (Incl. VAT)</div>
+                                <div class="kra-stat-value" id="kraTotalSales" style="font-size:1rem;">Ksh 0</div>
+                                <div class="kra-stat-label" style="font-size:0.65rem;">Total Sales</div>
                             </div>
                             <div class="kra-stat">
-                                <div class="kra-stat-value" id="kraOutputVat">Ksh 0</div>
-                                <div class="kra-stat-label">Output VAT (16%)</div>
+                                <div class="kra-stat-value" id="kraOutputVat" style="font-size:1rem;">Ksh 0</div>
+                                <div class="kra-stat-label" style="font-size:0.65rem;">Output VAT</div>
                             </div>
                             <div class="kra-stat">
-                                <div class="kra-stat-value" id="kraInputVat">Ksh 0</div>
-                                <div class="kra-stat-label">Input VAT (Expenses)</div>
+                                <div class="kra-stat-value" id="kraInputVat" style="font-size:1rem;">Ksh 0</div>
+                                <div class="kra-stat-label" style="font-size:0.65rem;">Input VAT</div>
                             </div>
                             <div class="kra-stat">
-                                <div class="kra-stat-value" id="kraNetVat">Ksh 0</div>
-                                <div class="kra-stat-label">Net VAT Payable</div>
-                            </div>
-                            <div class="kra-stat">
-                                <div class="kra-stat-value" id="kraVatClaimable">Ksh 0</div>
-                                <div class="kra-stat-label">VAT Claimable</div>
+                                <div class="kra-stat-value" id="kraNetVat" style="font-size:1rem;">Ksh 0</div>
+                                <div class="kra-stat-label" style="font-size:0.65rem;">Net VAT</div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="dashboard-grid-full">
+                    <!-- KRA Status Card -->
+                    <div class="kra-status-card" id="kraStatusCardMain" style="cursor:pointer;margin-bottom:16px;" onclick="openKRAConfig()">
+                        <div class="kra-status-icon">⚠️</div>
+                        <div class="kra-status-info">
+                            <div class="kra-status-title" style="font-size:0.9rem;">KRA eTIMS Not Configured</div>
+                            <div class="kra-status-desc" style="font-size:0.75rem;">Click to configure</div>
+                        </div>
+                        <button class="action-btn success" onclick="event.stopPropagation();openKRAConfig()" style="font-size:0.7rem;padding:6px 10px;">Configure</button>
+                    </div>
+                    
+                    <!-- Cards in vertical stack for mobile -->
+                    <div style="display:flex;flex-direction:column;gap:16px;">
                         <div class="card">
-                            <div class="card-header">
-                                <h3 class="card-title">eTIMS Invoice Summary</h3>
-                                <button class="action-btn primary" onclick="generateETIMSReport()">📄 Generate Report</button>
+                            <div class="card-header" style="flex-wrap:wrap;gap:8px;">
+                                <h3 class="card-title" style="font-size:0.9rem;">eTIMS Invoice Summary</h3>
+                                <button class="action-btn primary" onclick="generateETIMSReport()" style="font-size:0.7rem;padding:4px 8px;">📄 Report</button>
                             </div>
                             <div class="card-body">
                                 <div class="breakdown-list">
-                                    <div class="breakdown-item">
-                                        <div class="breakdown-left"><div class="breakdown-icon" style="background:rgba(16,185,129,.15);color:var(--accent-green)">📃</div><div><div class="breakdown-label">Total Invoices Issued</div><div class="breakdown-sublabel">eTIMS compliant receipts</div></div></div>
-                                        <div class="breakdown-value" id="kraInvoiceCount">0</div>
+                                    <div class="breakdown-item" style="padding:10px;">
+                                        <div class="breakdown-left"><div class="breakdown-icon" style="background:rgba(16,185,129,.15);color:var(--accent-green);width:30px;height:30px;font-size:0.9rem;">📃</div><div><div class="breakdown-label" style="font-size:0.75rem;">Total Invoices</div></div></div>
+                                        <div class="breakdown-value" id="kraInvoiceCount" style="font-size:0.85rem;">0</div>
                                     </div>
-                                    <div class="breakdown-item">
-                                        <div class="breakdown-left"><div class="breakdown-icon" style="background:rgba(59,130,246,.15);color:var(--accent-blue)">💰</div><div><div class="breakdown-label">Standard Rated (16%)</div><div class="breakdown-sublabel">Taxable supplies</div></div></div>
-                                        <div class="breakdown-value" id="kraStandardRated">Ksh 0</div>
+                                    <div class="breakdown-item" style="padding:10px;">
+                                        <div class="breakdown-left"><div class="breakdown-icon" style="background:rgba(59,130,246,.15);color:var(--accent-blue);width:30px;height:30px;font-size:0.9rem;">💰</div><div><div class="breakdown-label" style="font-size:0.75rem;">Standard (16%)</div></div></div>
+                                        <div class="breakdown-value" id="kraStandardRated" style="font-size:0.85rem;">Ksh 0</div>
                                     </div>
-                                    <div class="breakdown-item">
-                                        <div class="breakdown-left"><div class="breakdown-icon" style="background:rgba(139,92,246,.15);color:var(--accent-purple)">🏷️</div><div><div class="breakdown-label">Zero Rated (0%)</div><div class="breakdown-sublabel">Exempt supplies</div></div></div>
-                                        <div class="breakdown-value" id="kraZeroRated">Ksh 0</div>
+                                    <div class="breakdown-item" style="padding:10px;">
+                                        <div class="breakdown-left"><div class="breakdown-icon" style="background:rgba(139,92,246,.15);color:var(--accent-purple);width:30px;height:30px;font-size:0.9rem;">🏷️</div><div><div class="breakdown-label" style="font-size:0.75rem;">Zero Rated</div></div></div>
+                                        <div class="breakdown-value" id="kraZeroRated" style="font-size:0.85rem;">Ksh 0</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="card">
                             <div class="card-header">
-                                <h3 class="card-title">Tax Calendar</h3>
+                                <h3 class="card-title" style="font-size:0.9rem;">Tax Calendar</h3>
                             </div>
                             <div class="card-body">
                                 <div class="breakdown-list">
-                                    <div class="breakdown-item">
-                                        <div class="breakdown-left"><div class="breakdown-icon" style="background:rgba(245,158,11,.15);color:var(--accent-yellow)">📅</div><div><div class="breakdown-label">VAT Return Due</div><div class="breakdown-sublabel">20th of every month</div></div></div>
-                                        <div class="breakdown-value" id="kraVatDue">20th Feb</div>
+                                    <div class="breakdown-item" style="padding:10px;">
+                                        <div class="breakdown-left"><div class="breakdown-icon" style="background:rgba(245,158,11,.15);color:var(--accent-yellow);width:30px;height:30px;font-size:0.9rem;">📅</div><div><div class="breakdown-label" style="font-size:0.75rem;">VAT Return Due</div></div></div>
+                                        <div class="breakdown-value" id="kraVatDue" style="font-size:0.85rem;">20th Feb</div>
                                     </div>
-                                    <div class="breakdown-item">
-                                        <div class="breakdown-left"><div class="breakdown-icon" style="background:rgba(239,68,68,.15);color:var(--accent-red)">⚠️</div><div><div class="breakdown-label">Days Until Due</div><div class="breakdown-sublabel">File on time to avoid penalties</div></div></div>
-                                        <div class="breakdown-value" id="kraDaysUntil" style="color:var(--accent-yellow)">16 days</div>
+                                    <div class="breakdown-item" style="padding:10px;">
+                                        <div class="breakdown-left"><div class="breakdown-icon" style="background:rgba(239,68,68,.15);color:var(--accent-red);width:30px;height:30px;font-size:0.9rem;">⚠️</div><div><div class="breakdown-label" style="font-size:0.75rem;">Days Until Due</div></div></div>
+                                        <div class="breakdown-value" id="kraDaysUntil" style="color:var(--accent-yellow);font-size:0.85rem;">16 days</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">VAT Return Details</h3>
-                            <button class="action-btn success" onclick="exportKRAReport()">📊 Export for KRA</button>
+                    <div class="card" style="margin-top:16px;">
+                        <div class="card-header" style="flex-wrap:wrap;gap:8px;">
+                            <h3 class="card-title" style="font-size:0.9rem;">VAT Return Details</h3>
+                            <button class="action-btn success" onclick="exportKRAReport()" style="font-size:0.7rem;padding:4px 8px;">📊 Export</button>
                         </div>
                         <div class="card-body">
-                            <table class="data-table">
+                            <div class="table-container mobile-scroll">
+                            <table class="data-table compact-table">
                                 <thead><tr><th>Description</th><th>Amount (Ksh)</th><th>VAT (Ksh)</th></tr></thead>
                                 <tbody id="kraDetailsTable"></tbody>
                             </table>
@@ -2225,35 +2237,121 @@
                 <div class="form-group">
                     <label class="form-label">Unit/Measure</label>
                     <select class="form-select" id="newProductUnit">
-                        <option value="piece">Piece(s)</option>
-                        <option value="packet">Packet(s)</option>
-                        <option value="250g">250g</option>
-                        <option value="500g">500g (½kg)</option>
-                        <option value="1kg">1kg</option>
-                        <option value="2kg">2kg</option>
-                        <option value="5kg">5kg</option>
-                        <option value="10kg">10kg</option>
-                        <option value="15kg">15kg</option>
-                        <option value="20kg">20kg</option>
-                        <option value="250ml">250ml</option>
-                        <option value="500ml">500ml (½L)</option>
-                        <option value="1L">1 Liter</option>
-                        <option value="2L">2 Liters</option>
-                        <option value="5L">5 Liters</option>
-                        <option value="10L">10 Liters</option>
-                        <option value="15L">15 Liters</option>
-                        <option value="20L">20 Liters</option>
-                        <option value="bottle">Bottle</option>
-                        <option value="can">Can</option>
-                        <option value="box">Box</option>
-                        <option value="carton">Carton</option>
-                        <option value="dozen">Dozen</option>
-                        <option value="custom">Custom</option>
+                        <optgroup label="📦 General">
+                            <option value="piece">Piece(s)</option>
+                            <option value="packet">Packet(s)</option>
+                            <option value="box">Box</option>
+                            <option value="carton">Carton</option>
+                            <option value="dozen">Dozen (12)</option>
+                            <option value="pair">Pair</option>
+                            <option value="set">Set</option>
+                            <option value="bundle">Bundle</option>
+                        </optgroup>
+                        <optgroup label="💊 Pharmacy - Tablets/Capsules">
+                            <option value="tablet">Tablet(s)</option>
+                            <option value="capsule">Capsule(s)</option>
+                            <option value="strip">Strip</option>
+                            <option value="blister">Blister Pack</option>
+                            <option value="card">Card (10s/14s)</option>
+                            <option value="tin">Tin (100s/500s/1000s)</option>
+                            <option value="bottle-tabs">Bottle (Tablets)</option>
+                        </optgroup>
+                        <optgroup label="💉 Pharmacy - Liquids/Syrups">
+                            <option value="5ml">5ml</option>
+                            <option value="10ml">10ml</option>
+                            <option value="15ml">15ml</option>
+                            <option value="30ml">30ml</option>
+                            <option value="50ml">50ml</option>
+                            <option value="60ml">60ml</option>
+                            <option value="100ml">100ml</option>
+                            <option value="120ml">120ml</option>
+                            <option value="150ml">150ml</option>
+                            <option value="200ml">200ml</option>
+                            <option value="250ml">250ml</option>
+                            <option value="300ml">300ml</option>
+                            <option value="500ml">500ml</option>
+                            <option value="1L">1 Liter</option>
+                            <option value="syrup-bottle">Syrup Bottle</option>
+                            <option value="suspension">Suspension</option>
+                            <option value="drops">Drops (Bottle)</option>
+                        </optgroup>
+                        <optgroup label="💉 Pharmacy - Injections/Vials">
+                            <option value="ampoule">Ampoule</option>
+                            <option value="vial">Vial</option>
+                            <option value="injection">Injection</option>
+                            <option value="prefilled-syringe">Prefilled Syringe</option>
+                            <option value="iv-bag">IV Bag</option>
+                            <option value="infusion">Infusion</option>
+                        </optgroup>
+                        <optgroup label="🧴 Pharmacy - Topicals/Externals">
+                            <option value="tube">Tube</option>
+                            <option value="cream-15g">Cream 15g</option>
+                            <option value="cream-30g">Cream 30g</option>
+                            <option value="cream-50g">Cream 50g</option>
+                            <option value="ointment">Ointment</option>
+                            <option value="gel">Gel</option>
+                            <option value="lotion">Lotion</option>
+                            <option value="spray">Spray</option>
+                            <option value="inhaler">Inhaler</option>
+                            <option value="nebule">Nebule</option>
+                            <option value="patch">Patch</option>
+                            <option value="suppository">Suppository</option>
+                            <option value="pessary">Pessary</option>
+                            <option value="ear-drops">Ear Drops</option>
+                            <option value="eye-drops">Eye Drops</option>
+                            <option value="nasal-drops">Nasal Drops</option>
+                            <option value="nasal-spray">Nasal Spray</option>
+                        </optgroup>
+                        <optgroup label="🩹 Medical Supplies">
+                            <option value="bandage">Bandage</option>
+                            <option value="plaster">Plaster</option>
+                            <option value="gauze">Gauze</option>
+                            <option value="cotton-roll">Cotton Roll</option>
+                            <option value="cotton-pack">Cotton Pack</option>
+                            <option value="syringe">Syringe</option>
+                            <option value="needle">Needle</option>
+                            <option value="gloves-pair">Gloves (Pair)</option>
+                            <option value="gloves-box">Gloves (Box)</option>
+                            <option value="mask">Mask</option>
+                            <option value="mask-box">Mask (Box)</option>
+                            <option value="test-kit">Test Kit</option>
+                            <option value="lancet">Lancet</option>
+                            <option value="test-strip">Test Strip</option>
+                        </optgroup>
+                        <optgroup label="🍼 Baby/Nutrition">
+                            <option value="sachet">Sachet</option>
+                            <option value="sachet-ors">ORS Sachet</option>
+                            <option value="formula-tin">Formula Tin</option>
+                            <option value="diaper-pack">Diaper Pack</option>
+                        </optgroup>
+                        <optgroup label="⚖️ Weight Measures">
+                            <option value="1g">1g</option>
+                            <option value="5g">5g</option>
+                            <option value="10g">10g</option>
+                            <option value="15g">15g</option>
+                            <option value="25g">25g</option>
+                            <option value="30g">30g</option>
+                            <option value="50g">50g</option>
+                            <option value="100g">100g</option>
+                            <option value="250g">250g</option>
+                            <option value="500g">500g</option>
+                            <option value="1kg">1kg</option>
+                            <option value="2kg">2kg</option>
+                            <option value="5kg">5kg</option>
+                        </optgroup>
+                        <optgroup label="🔧 Other">
+                            <option value="bottle">Bottle</option>
+                            <option value="can">Can</option>
+                            <option value="roll">Roll</option>
+                            <option value="pack">Pack</option>
+                            <option value="unit">Unit</option>
+                            <option value="custom">Custom (Enter Below)</option>
+                        </optgroup>
                     </select>
                 </div>
                 <div class="form-group" id="customUnitGroup" style="display:none;">
                     <label class="form-label">Custom Unit Name</label>
-                    <input type="text" class="form-input" id="newProductCustomUnit" placeholder="e.g., Bundle, Set, Roll">
+                    <input type="text" class="form-input" id="newProductCustomUnit" placeholder="e.g., Vial 10ml, Strip of 10, Bottle 60ml">
                 </div>
                 <div class="form-group">
                     <label class="form-label">VAT Category</label>
@@ -2299,35 +2397,121 @@
                 <div class="form-group">
                     <label class="form-label">Unit/Measure</label>
                     <select class="form-select" id="editProductUnit">
-                        <option value="piece">Piece(s)</option>
-                        <option value="packet">Packet(s)</option>
-                        <option value="250g">250g</option>
-                        <option value="500g">500g (½kg)</option>
-                        <option value="1kg">1kg</option>
-                        <option value="2kg">2kg</option>
-                        <option value="5kg">5kg</option>
-                        <option value="10kg">10kg</option>
-                        <option value="15kg">15kg</option>
-                        <option value="20kg">20kg</option>
-                        <option value="250ml">250ml</option>
-                        <option value="500ml">500ml (½L)</option>
-                        <option value="1L">1 Liter</option>
-                        <option value="2L">2 Liters</option>
-                        <option value="5L">5 Liters</option>
-                        <option value="10L">10 Liters</option>
-                        <option value="15L">15 Liters</option>
-                        <option value="20L">20 Liters</option>
-                        <option value="bottle">Bottle</option>
-                        <option value="can">Can</option>
-                        <option value="box">Box</option>
-                        <option value="carton">Carton</option>
-                        <option value="dozen">Dozen</option>
-                        <option value="custom">Custom</option>
+                        <optgroup label="📦 General">
+                            <option value="piece">Piece(s)</option>
+                            <option value="packet">Packet(s)</option>
+                            <option value="box">Box</option>
+                            <option value="carton">Carton</option>
+                            <option value="dozen">Dozen (12)</option>
+                            <option value="pair">Pair</option>
+                            <option value="set">Set</option>
+                            <option value="bundle">Bundle</option>
+                        </optgroup>
+                        <optgroup label="💊 Pharmacy - Tablets/Capsules">
+                            <option value="tablet">Tablet(s)</option>
+                            <option value="capsule">Capsule(s)</option>
+                            <option value="strip">Strip</option>
+                            <option value="blister">Blister Pack</option>
+                            <option value="card">Card (10s/14s)</option>
+                            <option value="tin">Tin (100s/500s/1000s)</option>
+                            <option value="bottle-tabs">Bottle (Tablets)</option>
+                        </optgroup>
+                        <optgroup label="💉 Pharmacy - Liquids/Syrups">
+                            <option value="5ml">5ml</option>
+                            <option value="10ml">10ml</option>
+                            <option value="15ml">15ml</option>
+                            <option value="30ml">30ml</option>
+                            <option value="50ml">50ml</option>
+                            <option value="60ml">60ml</option>
+                            <option value="100ml">100ml</option>
+                            <option value="120ml">120ml</option>
+                            <option value="150ml">150ml</option>
+                            <option value="200ml">200ml</option>
+                            <option value="250ml">250ml</option>
+                            <option value="300ml">300ml</option>
+                            <option value="500ml">500ml</option>
+                            <option value="1L">1 Liter</option>
+                            <option value="syrup-bottle">Syrup Bottle</option>
+                            <option value="suspension">Suspension</option>
+                            <option value="drops">Drops (Bottle)</option>
+                        </optgroup>
+                        <optgroup label="💉 Pharmacy - Injections/Vials">
+                            <option value="ampoule">Ampoule</option>
+                            <option value="vial">Vial</option>
+                            <option value="injection">Injection</option>
+                            <option value="prefilled-syringe">Prefilled Syringe</option>
+                            <option value="iv-bag">IV Bag</option>
+                            <option value="infusion">Infusion</option>
+                        </optgroup>
+                        <optgroup label="🧴 Pharmacy - Topicals/Externals">
+                            <option value="tube">Tube</option>
+                            <option value="cream-15g">Cream 15g</option>
+                            <option value="cream-30g">Cream 30g</option>
+                            <option value="cream-50g">Cream 50g</option>
+                            <option value="ointment">Ointment</option>
+                            <option value="gel">Gel</option>
+                            <option value="lotion">Lotion</option>
+                            <option value="spray">Spray</option>
+                            <option value="inhaler">Inhaler</option>
+                            <option value="nebule">Nebule</option>
+                            <option value="patch">Patch</option>
+                            <option value="suppository">Suppository</option>
+                            <option value="pessary">Pessary</option>
+                            <option value="ear-drops">Ear Drops</option>
+                            <option value="eye-drops">Eye Drops</option>
+                            <option value="nasal-drops">Nasal Drops</option>
+                            <option value="nasal-spray">Nasal Spray</option>
+                        </optgroup>
+                        <optgroup label="🩹 Medical Supplies">
+                            <option value="bandage">Bandage</option>
+                            <option value="plaster">Plaster</option>
+                            <option value="gauze">Gauze</option>
+                            <option value="cotton-roll">Cotton Roll</option>
+                            <option value="cotton-pack">Cotton Pack</option>
+                            <option value="syringe">Syringe</option>
+                            <option value="needle">Needle</option>
+                            <option value="gloves-pair">Gloves (Pair)</option>
+                            <option value="gloves-box">Gloves (Box)</option>
+                            <option value="mask">Mask</option>
+                            <option value="mask-box">Mask (Box)</option>
+                            <option value="test-kit">Test Kit</option>
+                            <option value="lancet">Lancet</option>
+                            <option value="test-strip">Test Strip</option>
+                        </optgroup>
+                        <optgroup label="🍼 Baby/Nutrition">
+                            <option value="sachet">Sachet</option>
+                            <option value="sachet-ors">ORS Sachet</option>
+                            <option value="formula-tin">Formula Tin</option>
+                            <option value="diaper-pack">Diaper Pack</option>
+                        </optgroup>
+                        <optgroup label="⚖️ Weight Measures">
+                            <option value="1g">1g</option>
+                            <option value="5g">5g</option>
+                            <option value="10g">10g</option>
+                            <option value="15g">15g</option>
+                            <option value="25g">25g</option>
+                            <option value="30g">30g</option>
+                            <option value="50g">50g</option>
+                            <option value="100g">100g</option>
+                            <option value="250g">250g</option>
+                            <option value="500g">500g</option>
+                            <option value="1kg">1kg</option>
+                            <option value="2kg">2kg</option>
+                            <option value="5kg">5kg</option>
+                        </optgroup>
+                        <optgroup label="🔧 Other">
+                            <option value="bottle">Bottle</option>
+                            <option value="can">Can</option>
+                            <option value="roll">Roll</option>
+                            <option value="pack">Pack</option>
+                            <option value="unit">Unit</option>
+                            <option value="custom">Custom (Enter Below)</option>
+                        </optgroup>
                     </select>
                 </div>
                 <div class="form-group" id="editCustomUnitGroup" style="display:none;">
                     <label class="form-label">Custom Unit Name</label>
-                    <input type="text" class="form-input" id="editProductCustomUnit" placeholder="e.g., Bundle, Set, Roll">
+                    <input type="text" class="form-input" id="editProductCustomUnit" placeholder="e.g., Vial 10ml, Strip of 10, Bottle 60ml">
                 </div>
                 <div class="form-group">
                     <label class="form-label">VAT Category</label>
@@ -5868,6 +6052,74 @@
             
             // Update unsynced badge to show new items need syncing
             updateUnsyncedBadge();
+            
+            // Show cancel button for 60 seconds after sale
+            const cancelBtn = document.getElementById('cancelSaleBtn');
+            if (cancelBtn) {
+                cancelBtn.classList.add('show');
+                lastSaleData = sale;
+                
+                // Hide cancel button after 60 seconds
+                setTimeout(() => {
+                    cancelBtn.classList.remove('show');
+                    lastSaleData = null;
+                }, 60000);
+            }
+        }
+        
+        // Store last sale for potential cancellation
+        let lastSaleData = null;
+        
+        // Cancel/Undo last sale - restore items to cart
+        function cancelLastSale() {
+            if (!lastSaleData) {
+                showToast('No recent sale to cancel', 'warning');
+                return;
+            }
+            
+            if (!confirm(`Cancel receipt ${lastSaleData.id}?\n\nThis will:\n- Remove the sale from records\n- Restore product stock\n- Add items back to cart\n\nContinue?`)) {
+                return;
+            }
+            
+            // Restore stock
+            lastSaleData.items.forEach(item => {
+                const product = products.find(p => p.id === item.productId);
+                if (product) {
+                    product.stock += item.qty;
+                    product.synced = false;
+                    product.lastModified = new Date().toISOString();
+                }
+            });
+            localStorage.setItem(STORAGE_KEYS.products, JSON.stringify(products));
+            
+            // Remove sale from sales array
+            const saleIndex = sales.findIndex(s => s.id === lastSaleData.id);
+            if (saleIndex !== -1) {
+                sales.splice(saleIndex, 1);
+                localStorage.setItem(STORAGE_KEYS.sales, JSON.stringify(sales));
+            }
+            
+            // Remove related journal entry
+            const journalIndex = journalEntries.findIndex(j => j.ref === lastSaleData.id);
+            if (journalIndex !== -1) {
+                journalEntries.splice(journalIndex, 1);
+                localStorage.setItem(STORAGE_KEYS.journal, JSON.stringify(journalEntries));
+            }
+            
+            // Restore items to cart
+            cart = lastSaleData.items.map(item => ({
+                ...item
+            }));
+            
+            // Hide cancel button
+            const cancelBtn = document.getElementById('cancelSaleBtn');
+            if (cancelBtn) cancelBtn.classList.remove('show');
+            lastSaleData = null;
+            
+            // Re-render
+            renderAll();
+            showToast('✅ Sale cancelled - items restored to cart', 'success');
+            updateUnsyncedBadge();
         }
         
         function showReceipt(sale) {
@@ -6067,8 +6319,8 @@
                         <td>${formatKsh(p.price)}</td>
                         <td>
                             <div class="action-menu">
-                                <button class="action-menu-btn" onclick="toggleActionMenu(event, ${index})">⋮</button>
-                                <div class="action-dropdown" id="actionMenu${index}">
+                                <button class="action-dots-btn" onclick="toggleProductMenu(event, ${index})">⋮</button>
+                                <div class="action-dropdown" id="productMenu${index}">
                                     <div class="action-dropdown-item success" onclick="openRestockModal('${p.id}'); closeAllMenus()">
                                         <span>📦</span> Add Stock
                                     </div>
@@ -6092,31 +6344,44 @@
             filterInventory();
         }
         
-        // Action menu functions for mobile-friendly inventory table
-        function toggleActionMenu(event, index) {
-            event.stopPropagation();
-            const menu = document.getElementById('actionMenu' + index);
-            const allMenus = document.querySelectorAll('.action-dropdown');
-            
-            // Close all other menus
-            allMenus.forEach(m => {
-                if (m !== menu) m.classList.remove('show');
-            });
-            
-            // Toggle current menu
-            menu.classList.toggle('show');
-        }
-        
-        function closeAllMenus() {
-            document.querySelectorAll('.action-dropdown').forEach(m => m.classList.remove('show'));
-        }
-        
-        // Close menus when clicking outside
-        document.addEventListener('click', function(event) {
-            if (!event.target.closest('.action-menu')) {
-                closeAllMenus();
+        // Product action menu function
+        function toggleProductMenu(event, index) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
             }
-        });
+            const menu = document.getElementById('productMenu' + index);
+            if (!menu) return;
+            
+            const isOpen = menu.classList.contains('show');
+            
+            // Close all menus
+            closeAllMenus();
+            
+            if (!isOpen) {
+                // Position the dropdown
+                const btn = event.currentTarget || event.target;
+                const rect = btn.getBoundingClientRect();
+                const viewportHeight = window.innerHeight;
+                const viewportWidth = window.innerWidth;
+                
+                let top = rect.bottom + 5;
+                if (rect.bottom + 200 > viewportHeight) {
+                    top = rect.top - 200;
+                    if (top < 0) top = 10;
+                }
+                
+                let right = viewportWidth - rect.right;
+                if (right < 0) right = 10;
+                
+                menu.style.position = 'fixed';
+                menu.style.top = top + 'px';
+                menu.style.right = right + 'px';
+                menu.style.left = 'auto';
+                
+                menu.classList.add('show');
+            }
+        }
         
         function openRestockModal(productId) {
             restockProduct = products.find(p => p.id === productId);
@@ -7370,14 +7635,27 @@
             console.log(`Showing ${myBusinessUsers.length} users from business ${myBusinessId}`);
         }
         
-        // Toggle action menu dropdown - FIXED positioning
-        function toggleActionMenu(btn, event) {
-            if (event) {
+        // Toggle action menu dropdown - FIXED to handle all cases
+        function toggleActionMenu(btn, evt) {
+            // Handle event - might be passed as first arg or second arg
+            var event = evt;
+            if (btn && typeof btn.stopPropagation === 'function') {
+                event = btn;
+                btn = event.currentTarget || event.target;
+            }
+            
+            if (event && typeof event.stopPropagation === 'function') {
                 event.stopPropagation();
                 event.preventDefault();
             }
             
-            const dropdown = btn.nextElementSibling;
+            // Find the dropdown - it should be the next sibling
+            const dropdown = btn ? btn.nextElementSibling : null;
+            if (!dropdown || !dropdown.classList) {
+                console.error('Dropdown not found for button:', btn);
+                return;
+            }
+            
             const isOpen = dropdown.classList.contains('show');
             
             // Close all other menus first
@@ -7388,6 +7666,7 @@
                 const rect = btn.getBoundingClientRect();
                 const dropdownHeight = 250; // approximate max height
                 const viewportHeight = window.innerHeight;
+                const viewportWidth = window.innerWidth;
                 
                 // Check if dropdown would go below viewport
                 let top = rect.bottom + 5;
@@ -7396,10 +7675,14 @@
                     if (top < 0) top = 10;
                 }
                 
+                // Position dropdown - check if would go off right edge
+                let right = viewportWidth - rect.right;
+                if (right < 0) right = 10;
+                
                 // Position dropdown
                 dropdown.style.position = 'fixed';
                 dropdown.style.top = top + 'px';
-                dropdown.style.right = (window.innerWidth - rect.right) + 'px';
+                dropdown.style.right = right + 'px';
                 dropdown.style.left = 'auto';
                 
                 dropdown.classList.add('show');
